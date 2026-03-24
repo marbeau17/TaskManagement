@@ -90,7 +90,8 @@
       "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/api/workload/summary\")",
       "Bash(python3 -c \":*)",
       "Bash(curl -sL -o /dev/null -w \"%{http_code} %{redirect_url}\" \"https://task-management-nine-iota.vercel.app/dashboard\")",
-      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/login\")"
+      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/login\")",
+      "Bash(npx playwright:*)"
     ]
   }
 }
