@@ -244,7 +244,7 @@ export function assignMockTask(
     assigned_to: data.assigned_to,
     confirmed_deadline: data.confirmed_deadline,
     estimated_hours: data.estimated_hours,
-    director_id: 'u1', // default mock current user as director
+    director_id: 'u2', // 安田 修 — current director in mock data
     status: 'todo',
     is_draft: false,
   })

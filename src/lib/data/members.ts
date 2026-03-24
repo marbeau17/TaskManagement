@@ -4,6 +4,7 @@
 
 import type { User } from '@/types/database'
 import type { InviteMemberForm } from '@/types/member'
+import type { Database } from '@/lib/supabase/types'
 
 const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
 
@@ -72,9 +73,20 @@ export async function updateMember(
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
+  // Build a clean update payload with only defined fields
+  const payload: Record<string, unknown> = {}
+  if (updates.name !== undefined) payload.name = updates.name
+  if (updates.name_short !== undefined) payload.name_short = updates.name_short
+  if (updates.email !== undefined) payload.email = updates.email
+  if (updates.role !== undefined) payload.role = updates.role
+  if (updates.avatar_color !== undefined) payload.avatar_color = updates.avatar_color
+  if (updates.weekly_capacity_hours !== undefined) payload.weekly_capacity_hours = updates.weekly_capacity_hours
+  if (updates.is_active !== undefined) payload.is_active = updates.is_active
+  if (updates.must_change_password !== undefined) payload.must_change_password = updates.must_change_password
+
   const { data, error } = await supabase
     .from('users')
-    .update(updates)
+    .update(payload as Database['public']['Tables']['users']['Update'])
     .eq('id', id)
     .select()
     .single()
@@ -93,8 +105,10 @@ export async function addMember(data: InviteMemberForm): Promise<User> {
     return addMockMember({ ...data, password: 'workflow2026' })
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
+  // Use admin client (service-role) because auth.admin.createUser requires it.
+  // This function must only be called server-side (e.g. from an API route).
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const supabase = createAdminClient()
 
   // Create auth user with default password
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -116,6 +130,7 @@ export async function addMember(data: InviteMemberForm): Promise<User> {
       name_short: data.name_short,
       role: data.role,
       weekly_capacity_hours: data.weekly_capacity_hours,
+      must_change_password: true,
     })
     .select()
     .single()
@@ -160,9 +175,29 @@ export async function changePassword(
     return changeMockPassword(userId, oldPassword, newPassword)
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
+  // Called from API route (server-side). Use server client to access session.
+  const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+  const supabase = await createServerSupabaseClient()
 
+  // Verify the user is authenticated
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  // Verify old password by re-authenticating
+  const { createClient } = await import('@/lib/supabase/client')
+  const verifyClient = createClient()
+  const { error: signInError } = await verifyClient.auth.signInWithPassword({
+    email: authUser.email!,
+    password: oldPassword,
+  })
+
+  if (signInError) {
+    return { success: false, error: '現在のパスワードが正しくありません' }
+  }
+
+  // Update password
   const { error } = await supabase.auth.updateUser({ password: newPassword })
 
   if (error) {
@@ -184,15 +219,21 @@ export async function forceChangePassword(
     return forceChangeMockPassword(userId, newPassword)
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
+  // Use server client to update the current user's password via their session
+  const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+  const supabase = await createServerSupabaseClient()
 
   const { error: authError } = await supabase.auth.updateUser({ password: newPassword })
   if (authError) {
     return { success: false, error: authError.message }
   }
 
-  const { error: dbError } = await supabase
+  // Update the must_change_password flag in users table.
+  // Use admin client to ensure RLS doesn't block the update.
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminSupabase = createAdminClient()
+
+  const { error: dbError } = await adminSupabase
     .from('users')
     .update({ must_change_password: false })
     .eq('id', userId)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useTask } from '@/hooks/useTasks'
+import { useTask, useUpdateTaskProgress } from '@/hooks/useTasks'
 import { useAuth } from '@/hooks/useAuth'
 import { StatusChip } from '@/components/shared'
 import { TaskDetailInfo } from '@/components/tasks/TaskDetailInfo'
@@ -16,6 +16,31 @@ export default function TaskDetailPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { data: task, isLoading } = useTask(params.id)
+  const updateProgress = useUpdateTaskProgress()
+
+  const handleReject = () => {
+    if (!task) return
+    updateProgress.mutate({
+      taskId: task.id,
+      update: {
+        progress: task.progress,
+        status: 'rejected',
+        actual_hours: task.actual_hours,
+      },
+    })
+  }
+
+  const handleComplete = () => {
+    if (!task) return
+    updateProgress.mutate({
+      taskId: task.id,
+      update: {
+        progress: 100,
+        status: 'done',
+        actual_hours: task.actual_hours,
+      },
+    })
+  }
 
   if (isLoading) {
     return (
@@ -62,14 +87,18 @@ export default function TaskDetailPage() {
 
         <button
           type="button"
-          className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-danger-b text-danger bg-danger-bg hover:bg-danger hover:text-white transition-colors"
+          onClick={handleReject}
+          disabled={updateProgress.isPending}
+          className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-danger-b text-danger bg-danger-bg hover:bg-danger hover:text-white transition-colors disabled:opacity-50"
         >
           差し戻し
         </button>
 
         <button
           type="button"
-          className="px-3 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors"
+          onClick={handleComplete}
+          disabled={updateProgress.isPending}
+          className="px-3 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
         >
           ✓ 完了にする
         </button>

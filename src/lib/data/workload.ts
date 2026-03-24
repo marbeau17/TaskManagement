@@ -2,6 +2,7 @@
 // Data abstraction layer – Workload
 // =============================================================================
 
+import type { User } from '@/types/database'
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
 
 const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
@@ -27,6 +28,7 @@ export async function getWorkloadSummaries(): Promise<WorkloadSummary[]> {
     .in('role', ['creator', 'director'])
 
   if (usersError) throw usersError
+  const typedUsers = (users ?? []) as User[]
 
   // Fetch all non-rejected tasks with an assignee
   const { data: tasks, error: tasksError } = await supabase
@@ -37,7 +39,7 @@ export async function getWorkloadSummaries(): Promise<WorkloadSummary[]> {
 
   if (tasksError) throw tasksError
 
-  const summaries: WorkloadSummary[] = (users ?? []).map((user) => {
+  const summaries: WorkloadSummary[] = typedUsers.map((user) => {
     const userTasks = (tasks ?? []).filter((t) => t.assigned_to === user.id)
     const completedTasks = userTasks.filter((t) => t.status === 'done')
     const estimatedHours = userTasks.reduce(

@@ -13,7 +13,10 @@ function UnassignedItem({ task }: { task: TaskWithRelations }) {
     : '未設定'
 
   return (
-    <div className="px-[12px] py-[8px] border-b border-border2 last:border-b-0">
+    <Link
+      href={`/tasks/${task.id}`}
+      className="block px-[12px] py-[8px] border-b border-border2 last:border-b-0 hover:bg-surf2 transition-colors"
+    >
       <div className="text-[12px] text-text font-medium truncate">{task.title}</div>
       <div className="flex items-center gap-[8px] mt-[3px]">
         <span className="text-[10px] text-text2 bg-surf2 px-[6px] py-[1px] rounded border border-border2">
@@ -23,7 +26,7 @@ function UnassignedItem({ task }: { task: TaskWithRelations }) {
           希望: {deadline}
         </span>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -69,7 +72,7 @@ export function UnassignedTasks() {
       {/* Footer action */}
       <div className="px-[12px] py-[8px] border-t border-border2 bg-surf2">
         <Link
-          href="/tasks/new"
+          href="/tasks?status=waiting"
           className="text-[11px] text-mint-d font-semibold hover:text-mint-dd transition-colors"
         >
           アサインする →

@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, RoleChip } from '@/components/shared'
+import { AssignChangeModal } from '@/components/tasks/AssignChangeModal'
 
 interface AssignInfoProps {
   task: TaskWithRelations
@@ -14,6 +16,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export function AssignInfo({ task }: AssignInfoProps) {
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
   const user = task.assigned_user
   const estimatedHours = task.estimated_hours ?? 0
   const maxHours = Math.max(estimatedHours, task.actual_hours, 1)
@@ -101,10 +104,17 @@ export function AssignInfo({ task }: AssignInfoProps) {
       {/* Change assignee button */}
       <button
         type="button"
+        onClick={() => setAssignModalOpen(true)}
         className="w-full py-2 rounded-md text-[12px] font-bold border border-mint text-mint bg-surface hover:bg-mint-ll transition-colors"
       >
         アサイン変更
       </button>
+
+      <AssignChangeModal
+        open={assignModalOpen}
+        onOpenChange={setAssignModalOpen}
+        task={task}
+      />
     </div>
   )
 }

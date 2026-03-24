@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 // Paths that should never require authentication
 const PUBLIC_PATHS = ['/login', '/api/auth']
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip auth check for public paths
@@ -17,18 +18,52 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // In production, check for Supabase session cookie
-  const supabaseAuthToken = request.cookies.get('sb-access-token')?.value
-    ?? request.cookies.getAll().find(c => c.name.includes('auth-token'))?.value
+  // Create a response that we can modify (to refresh cookies if needed)
+  let supabaseResponse = NextResponse.next({
+    request: { headers: request.headers },
+  })
 
-  if (!supabaseAuthToken) {
-    // Redirect to login if no auth token found
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // Update request cookies for downstream server components
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
+          // Re-create response with updated request cookies
+          supabaseResponse = NextResponse.next({
+            request: { headers: request.headers },
+          })
+          // Also set cookies on the response so they persist in the browser
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+
+  // IMPORTANT: Do NOT use getSession() here - it reads from storage without
+  // verifying the JWT. getUser() sends a request to the Supabase Auth server
+  // to validate the token.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    // Redirect to login if no valid session
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {

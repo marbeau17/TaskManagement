@@ -151,7 +151,7 @@ export async function createTask(
   } = await supabase.auth.getUser()
   if (!authUser) throw new Error('Not authenticated')
 
-  const insertPayload: Record<string, unknown> = {
+  const insertPayload = {
     client_id: clientId,
     title: step1.title,
     description: step1.description ?? null,
@@ -162,12 +162,9 @@ export async function createTask(
     is_draft: !step2,
     progress: 0,
     actual_hours: 0,
-  }
-
-  if (step2) {
-    insertPayload.assigned_to = step2.assigned_to
-    insertPayload.confirmed_deadline = step2.confirmed_deadline
-    insertPayload.estimated_hours = step2.estimated_hours
+    assigned_to: step2?.assigned_to ?? null,
+    confirmed_deadline: step2?.confirmed_deadline ?? null,
+    estimated_hours: step2?.estimated_hours ?? null,
   }
 
   const { data, error } = await supabase
