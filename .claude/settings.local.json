@@ -87,7 +87,9 @@
       "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/_next/static/chunks/0-~txz.-ghsf-.js\")",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://ewlxqiowzdebksykxvuv.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAwMTUsImV4cCI6MjA4OTkxNjAxNX0.dAkBUdZ8VgOQIOiR5Ri3_f0LpoiHBgRpfqggDrPUcUc npm run build)",
       "Bash(ANON_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAwMTUsImV4cCI6MjA4OTkxNjAxNX0.dAkBUdZ8VgOQIOiR5Ri3_f0LpoiHBgRpfqggDrPUcUc\")",
-      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/api/workload/summary\")"
+      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/api/workload/summary\")",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -sL -o /dev/null -w \"%{http_code} %{redirect_url}\" \"https://task-management-nine-iota.vercel.app/dashboard\")"
     ]
   }
 }
