@@ -10,6 +10,7 @@ import type {
   Comment,
   ActivityLog,
   Attachment,
+  ProjectMember,
 } from '@/types/database'
 import type { TaskFilters, TaskFormStep1, TaskFormStep2, TaskProgressUpdate } from '@/types/task'
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
@@ -303,6 +304,10 @@ export function addMockMember(data: InviteMemberForm & { password?: string }): U
     avatar_color: avatarColors[users.length % avatarColors.length],
     weekly_capacity_hours: data.weekly_capacity_hours,
     is_active: true,
+    manager_id: null,
+    level: '',
+    department: '',
+    title: '',
     created_at: now,
     updated_at: now,
     password: data.password ?? DEFAULT_PASSWORD,
@@ -379,6 +384,39 @@ export function searchMockClients(query: string): Client[] {
   if (!query) return [...clients]
   const q = query.toLowerCase()
   return clients.filter((c) => c.name.toLowerCase().includes(q))
+}
+
+export function createMockClient(name: string): Client {
+  const now = new Date().toISOString()
+  const newClient: Client = {
+    id: genId('c'),
+    name,
+    created_at: now,
+  }
+  clients.push(newClient)
+  return newClient
+}
+
+export function updateMockClient(id: string, name: string): Client {
+  const client = clients.find((c) => c.id === id)
+  if (!client) throw new Error(`Client not found: ${id}`)
+  client.name = name
+  return { ...client }
+}
+
+export function deleteMockClient(id: string): boolean {
+  const index = clients.findIndex((c) => c.id === id)
+  if (index === -1) return false
+  clients.splice(index, 1)
+  return true
+}
+
+// ---------------------------------------------------------------------------
+// Subordinates (org hierarchy)
+// ---------------------------------------------------------------------------
+
+export function getSubordinates(managerId: string): User[] {
+  return users.filter((u) => u.manager_id === managerId && u.is_active)
 }
 
 // ---------------------------------------------------------------------------
@@ -515,4 +553,52 @@ export function getMockWorkloadKpi(): WorkloadKpiData {
     overloaded_count: overloadedMembers.length,
     overloaded_members: overloadedMembers,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Project Members
+// ---------------------------------------------------------------------------
+
+const projectMembers: ProjectMember[] = []
+
+export function getMockProjectMembers(projectName?: string): ProjectMember[] {
+  if (projectName) {
+    return projectMembers.filter((pm) => pm.project_name === projectName)
+  }
+  return [...projectMembers]
+}
+
+export function addMockProjectMember(
+  projectName: string,
+  pmId: string,
+  memberId: string,
+  allocatedHours: number
+): ProjectMember {
+  const now = new Date().toISOString()
+  const newMember: ProjectMember = {
+    id: genId('pm'),
+    project_name: projectName,
+    pm_id: pmId,
+    member_id: memberId,
+    allocated_hours: allocatedHours,
+    created_at: now,
+    pm: findUser(pmId),
+    member: findUser(memberId),
+  }
+  projectMembers.push(newMember)
+  return newMember
+}
+
+export function removeMockProjectMember(id: string): boolean {
+  const index = projectMembers.findIndex((pm) => pm.id === id)
+  if (index === -1) return false
+  projectMembers.splice(index, 1)
+  return true
+}
+
+export function updateMockProjectMemberHours(id: string, hours: number): ProjectMember {
+  const member = projectMembers.find((pm) => pm.id === id)
+  if (!member) throw new Error(`ProjectMember not found: ${id}`)
+  member.allocated_hours = hours
+  return { ...member }
 }

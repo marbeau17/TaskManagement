@@ -17,6 +17,10 @@ const MOCK_DIRECTOR: User = {
   weekly_capacity_hours: 40,
   is_active: true,
   must_change_password: false,
+  manager_id: 'u1',
+  level: 'L2',
+  department: 'コンサルティング事業本部',
+  title: 'COO',
   created_at: '2020-01-01T00:00:00Z',
   updated_at: '2020-01-01T00:00:00Z',
 }
@@ -106,6 +110,10 @@ export function useAuth() {
         weekly_capacity_hours: 16,
         is_active: true,
         must_change_password: false,
+        manager_id: null,
+        level: '',
+        department: '',
+        title: '',
         created_at: data.user.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }

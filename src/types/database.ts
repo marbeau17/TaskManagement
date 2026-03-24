@@ -40,6 +40,10 @@ export interface User {
   weekly_capacity_hours: number
   is_active: boolean
   must_change_password: boolean
+  manager_id: string | null
+  level: string
+  department: string
+  title: string
   created_at: string
   updated_at: string
 }
@@ -104,6 +108,17 @@ export interface Attachment {
   mime_type: string
   created_at: string
   uploader?: User
+}
+
+export interface ProjectMember {
+  id: string
+  project_name: string
+  pm_id: string
+  member_id: string
+  allocated_hours: number
+  created_at: string
+  pm?: User
+  member?: User
 }
 
 export interface ActivityLog {

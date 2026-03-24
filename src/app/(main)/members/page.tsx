@@ -10,6 +10,13 @@ import type { User, UserRole } from '@/types/database'
 import { useQueryClient } from '@tanstack/react-query'
 import { InviteMemberModal } from '@/components/members/InviteMemberModal'
 import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
+import { OrgChart } from '@/components/members/OrgChart'
+
+// ---------------------------------------------------------------------------
+// Tab type
+// ---------------------------------------------------------------------------
+
+type TabId = 'list' | 'orgchart'
 
 // ---------------------------------------------------------------------------
 // Feedback message component
@@ -50,9 +57,11 @@ function FeedbackMessage({
 
 function EditMemberModal({
   member,
+  allMembers,
   onClose,
 }: {
   member: User
+  allMembers: User[]
   onClose: () => void
 }) {
   const [name, setName] = useState(member.name)
@@ -63,6 +72,10 @@ function EditMemberModal({
   const [capacity, setCapacity] = useState(
     String(member.weekly_capacity_hours)
   )
+  const [managerId, setManagerId] = useState(member.manager_id ?? '')
+  const [department, setDepartment] = useState(member.department ?? '')
+  const [title, setTitle] = useState(member.title ?? '')
+  const [level, setLevel] = useState(member.level ?? '')
   const [saving, setSaving] = useState(false)
   const queryClient = useQueryClient()
 
@@ -74,6 +87,10 @@ function EditMemberModal({
         name_short: nameShort.trim() || undefined,
         role,
         weekly_capacity_hours: parseFloat(capacity) || 16,
+        manager_id: managerId || null,
+        department: department.trim(),
+        title: title.trim(),
+        level,
       })
       queryClient.invalidateQueries({ queryKey: ['members'] })
       onClose()
@@ -82,11 +99,16 @@ function EditMemberModal({
     } finally {
       setSaving(false)
     }
-  }, [member.id, member.name, name, nameShort, role, capacity, queryClient, onClose])
+  }, [member.id, member.name, name, nameShort, role, capacity, managerId, department, title, level, queryClient, onClose])
+
+  // Potential managers: all active members except the member being edited
+  const managerOptions = allMembers.filter(
+    (m) => m.id !== member.id && m.is_active
+  )
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[400px]">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[400px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           メンバー編集
         </h2>
@@ -198,6 +220,74 @@ function EditMemberModal({
               step={0.5}
             />
           </div>
+
+          {/* --- New org fields --- */}
+
+          {/* Manager */}
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              上司
+            </label>
+            <select
+              value={managerId}
+              onChange={(e) => setManagerId(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            >
+              <option value="">なし</option>
+              {managerOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Department */}
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              部署
+            </label>
+            <input
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              placeholder="例: デザイン部"
+            />
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              役職
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              placeholder="例: マネージャー"
+            />
+          </div>
+
+          {/* Level */}
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              レベル
+            </label>
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            >
+              <option value="">未設定</option>
+              <option value="L1">L1</option>
+              <option value="L2">L2</option>
+              <option value="L3">L3</option>
+              <option value="L4">L4</option>
+              <option value="L5">L5</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex justify-end gap-[8px] mt-[20px]">
@@ -226,6 +316,7 @@ function EditMemberModal({
 
 export default function MembersPage() {
   const { data: members, isLoading } = useMembers()
+  const [activeTab, setActiveTab] = useState<TabId>('list')
   const [editingMember, setEditingMember] = useState<User | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [deletingMember, setDeletingMember] = useState<User | null>(null)
@@ -256,6 +347,11 @@ export default function MembersPage() {
   const activeCount = members?.filter((m) => m.is_active).length ?? 0
   const totalCount = members?.length ?? 0
 
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'list', label: 'メンバー一覧' },
+    { id: 'orgchart', label: '組織図' },
+  ]
+
   return (
     <>
       <Topbar title="メンバー管理">
@@ -268,14 +364,25 @@ export default function MembersPage() {
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[20px]">
-        {/* Subtitle with count */}
-        <div className="flex items-center justify-between mb-[12px]">
-          <p className="text-[12px] text-text2">
-            メンバー数: {activeCount}名{' '}
-            {totalCount !== activeCount && (
-              <span className="text-text3">（全{totalCount}名）</span>
-            )}
-          </p>
+        {/* Tab bar */}
+        <div className="flex gap-[4px] mb-[16px] border-b border-border2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`
+                px-[16px] py-[8px] text-[12px] font-medium transition-colors
+                border-b-2 -mb-[1px]
+                ${
+                  activeTab === tab.id
+                    ? 'border-mint text-mint'
+                    : 'border-transparent text-text3 hover:text-text2'
+                }
+              `}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Feedback message */}
@@ -289,100 +396,128 @@ export default function MembersPage() {
           </div>
         )}
 
-        <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
-            <div>名前</div>
-            <div>メール</div>
-            <div className="text-center">ロール</div>
-            <div className="text-right">週キャパ</div>
-            <div className="text-center">ステータス</div>
-            <div className="text-center">操作</div>
-          </div>
-
-          {/* Rows */}
-          {isLoading ? (
-            <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-              読み込み中...
+        {/* Tab content */}
+        {activeTab === 'list' && (
+          <>
+            {/* Subtitle with count */}
+            <div className="flex items-center justify-between mb-[12px]">
+              <p className="text-[12px] text-text2">
+                メンバー数: {activeCount}名{' '}
+                {totalCount !== activeCount && (
+                  <span className="text-text3">（全{totalCount}名）</span>
+                )}
+              </p>
             </div>
-          ) : (
-            members?.map((member) => (
-              <div
-                key={member.id}
-                className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
-              >
-                {/* Name */}
-                <div className="flex items-center gap-[8px]">
-                  <Avatar
-                    name_short={member.name_short}
-                    color={member.avatar_color}
-                    size="sm"
-                  />
-                  <span className="font-medium truncate">{member.name}</span>
-                </div>
 
-                {/* Email */}
-                <div className="text-[11px] text-text2 truncate">
-                  {member.email}
-                </div>
-
-                {/* Role */}
-                <div className="text-center">
-                  <RoleChip role={member.role} />
-                </div>
-
-                {/* Weekly capacity */}
-                <div className="text-right text-[11px] text-text2">
-                  {member.weekly_capacity_hours}h
-                </div>
-
-                {/* Status */}
-                <div className="text-center">
-                  <span
-                    className={`
-                      text-[10px] px-[8px] py-[2px] rounded-full font-semibold border inline-block
-                      ${
-                        member.is_active
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-slate-50 text-slate-500 border-slate-200'
-                      }
-                    `}
-                  >
-                    {member.is_active ? '有効' : '無効'}
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-center gap-[8px]">
-                  <button
-                    onClick={() => setEditingMember(member)}
-                    className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
-                  >
-                    編集
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(member)}
-                    className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
-                  >
-                    削除
-                  </button>
-                </div>
+            <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+                <div>名前</div>
+                <div>メール</div>
+                <div className="text-center">ロール</div>
+                <div className="text-right">週キャパ</div>
+                <div className="text-center">ステータス</div>
+                <div className="text-center">操作</div>
               </div>
-            ))
-          )}
 
-          {!isLoading && members?.length === 0 && (
-            <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-              メンバーがいません
+              {/* Rows */}
+              {isLoading ? (
+                <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
+                  読み込み中...
+                </div>
+              ) : (
+                members?.map((member) => (
+                  <div
+                    key={member.id}
+                    className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                  >
+                    {/* Name */}
+                    <div className="flex items-center gap-[8px]">
+                      <Avatar
+                        name_short={member.name_short}
+                        color={member.avatar_color}
+                        size="sm"
+                      />
+                      <span className="font-medium truncate">{member.name}</span>
+                    </div>
+
+                    {/* Email */}
+                    <div className="text-[11px] text-text2 truncate">
+                      {member.email}
+                    </div>
+
+                    {/* Role */}
+                    <div className="text-center">
+                      <RoleChip role={member.role} />
+                    </div>
+
+                    {/* Weekly capacity */}
+                    <div className="text-right text-[11px] text-text2">
+                      {member.weekly_capacity_hours}h
+                    </div>
+
+                    {/* Status */}
+                    <div className="text-center">
+                      <span
+                        className={`
+                          text-[10px] px-[8px] py-[2px] rounded-full font-semibold border inline-block
+                          ${
+                            member.is_active
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-slate-50 text-slate-500 border-slate-200'
+                          }
+                        `}
+                      >
+                        {member.is_active ? '有効' : '無効'}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-center gap-[8px]">
+                      <button
+                        onClick={() => setEditingMember(member)}
+                        className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(member)}
+                        className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {!isLoading && members?.length === 0 && (
+                <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
+                  メンバーがいません
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
+
+        {activeTab === 'orgchart' && (
+          <>
+            {isLoading ? (
+              <div className="py-[32px] text-center text-[12px] text-text3">
+                読み込み中...
+              </div>
+            ) : members ? (
+              <OrgChart members={members} />
+            ) : null}
+          </>
+        )}
       </div>
 
       {/* Edit modal */}
       {editingMember && (
         <EditMemberModal
           member={editingMember}
+          allMembers={members ?? []}
           onClose={() => setEditingMember(null)}
         />
       )}

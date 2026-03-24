@@ -82,6 +82,10 @@ export async function updateMember(
   if (updates.weekly_capacity_hours !== undefined) payload.weekly_capacity_hours = updates.weekly_capacity_hours
   if (updates.is_active !== undefined) payload.is_active = updates.is_active
   if (updates.must_change_password !== undefined) payload.must_change_password = updates.must_change_password
+  if (updates.manager_id !== undefined) payload.manager_id = updates.manager_id
+  if (updates.department !== undefined) payload.department = updates.department
+  if (updates.title !== undefined) payload.title = updates.title
+  if (updates.level !== undefined) payload.level = updates.level
 
   const { data, error } = await supabase
     .from('users')
