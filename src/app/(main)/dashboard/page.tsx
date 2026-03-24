@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Topbar } from '@/components/layout'
 import { PeriodToggle } from '@/components/shared'
@@ -14,53 +13,6 @@ import {
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
 import { PERIOD_OPTIONS } from '@/lib/constants'
-import { useMock } from '@/lib/utils'
-
-function DebugPanel() {
-  const [info, setInfo] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    const debug: Record<string, string> = {
-      SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '(empty)',
-      ANON_KEY_PREFIX: (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').substring(0, 20) + '...',
-      USE_MOCK_RESULT: String(useMock()),
-      timestamp: new Date().toISOString(),
-    }
-
-    // Test Supabase connection
-    const testSupabase = async () => {
-      try {
-        const { createClient } = await import('@/lib/supabase/client')
-        const supabase = createClient()
-        const { data: { user }, error: authErr } = await supabase.auth.getUser()
-        debug.AUTH_USER = user ? `${user.email} (${user.id.substring(0,8)})` : 'null'
-        debug.AUTH_ERROR = authErr?.message || 'none'
-
-        const { data: tasks, error: taskErr } = await supabase.from('tasks').select('id').limit(3)
-        debug.TASKS_COUNT = tasks ? String(tasks.length) : 'null'
-        debug.TASKS_ERROR = taskErr?.message || 'none'
-
-        const { data: users, error: userErr } = await supabase.from('users').select('id').limit(3)
-        debug.USERS_COUNT = users ? String(users.length) : 'null'
-        debug.USERS_ERROR = userErr?.message || 'none'
-      } catch (e: unknown) {
-        debug.EXCEPTION = String(e)
-      }
-      setInfo({ ...debug })
-    }
-    testSupabase()
-  }, [])
-
-  return (
-    <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-3 mb-4 text-xs font-mono text-black">
-      <div className="font-bold mb-1">🔧 DEBUG PANEL (will be removed)</div>
-      {Object.entries(info).map(([k, v]) => (
-        <div key={k}><span className="font-semibold">{k}:</span> {v}</div>
-      ))}
-      {Object.keys(info).length === 0 && <div>Loading debug info...</div>}
-    </div>
-  )
-}
 
 export default function DashboardPage() {
   const {
@@ -74,10 +26,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Debug panel - TEMPORARY */}
-      <div className="p-4">
-        <DebugPanel />
-      </div>
       {/* Topbar */}
       <Topbar
         title="ダッシュボード"

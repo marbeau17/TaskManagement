@@ -14,6 +14,30 @@ ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
+-- Helper functions (SECURITY DEFINER to avoid RLS recursion)
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = 'public'
+AS $$
+  SELECT EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin');
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_director_or_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = 'public'
+AS $$
+  SELECT EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'director'));
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Users policies
 -- ---------------------------------------------------------------------------
 
@@ -22,16 +46,13 @@ CREATE POLICY "Users: select active" ON users
   FOR SELECT TO authenticated
   USING (is_active = true);
 
--- Admins can manage all users
+-- Admins can manage all users (uses SECURITY DEFINER function to avoid recursion)
 CREATE POLICY "Users: admin full access" ON users
   FOR ALL TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'admin'
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
--- Users can update their own profile (limited fields handled at app layer)
+-- Users can update their own profile
 CREATE POLICY "Users: self update" ON users
   FOR UPDATE TO authenticated
   USING (id = auth.uid())
@@ -49,11 +70,8 @@ CREATE POLICY "Clients: select all" ON clients
 -- Directors and admins can create/update clients
 CREATE POLICY "Clients: director/admin manage" ON clients
   FOR ALL TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('admin', 'director')
-    )
-  );
+  USING (public.is_director_or_admin())
+  WITH CHECK (public.is_director_or_admin());
 
 -- ---------------------------------------------------------------------------
 -- Tasks policies
@@ -72,11 +90,8 @@ CREATE POLICY "Tasks: insert by requester" ON tasks
 -- Directors and admins can update any task
 CREATE POLICY "Tasks: director/admin update" ON tasks
   FOR UPDATE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('admin', 'director')
-    )
-  );
+  USING (public.is_director_or_admin())
+  WITH CHECK (public.is_director_or_admin());
 
 -- Assigned creators can update their own tasks (progress, hours, status)
 CREATE POLICY "Tasks: creator update own" ON tasks
