@@ -63,7 +63,7 @@ export default function LoginPage() {
   )
 
   const handleDemoLogin = useCallback(() => {
-    setValue('email', 'tanaka@example.com')
+    setValue('email', 'o.yasuda@meetsc.co.jp')
     setValue('password', 'workflow2026')
   }, [setValue])
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
               デモモードでログイン
             </button>
             <p className="text-[10px] text-text3 text-center mt-[8px]">
-              tanaka@example.com / workflow2026 を自動入力します
+              o.yasuda@meetsc.co.jp / workflow2026 を自動入力します
             </p>
           </div>
         )}

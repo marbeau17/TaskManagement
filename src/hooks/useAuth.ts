@@ -7,16 +7,16 @@ import type { User } from '@/types/database'
 
 /** Default mock user: director (田中太郎) */
 const MOCK_DIRECTOR: User = {
-  id: 'user-1',
-  email: 'tanaka@example.com',
-  name: '田中太郎',
-  name_short: '田中',
+  id: 'u2',
+  email: 'o.yasuda@meetsc.co.jp',
+  name: '安田 修',
+  name_short: '安',
   role: 'director',
-  avatar_color: 'av-a',
+  avatar_color: 'av-b',
   weekly_capacity_hours: 40,
   is_active: true,
-  created_at: '2025-01-01T00:00:00Z',
-  updated_at: '2025-01-01T00:00:00Z',
+  created_at: '2020-01-01T00:00:00Z',
+  updated_at: '2020-01-01T00:00:00Z',
 }
 
 /**
