@@ -2,7 +2,7 @@
 // Member management types
 // =============================================================================
 
-import { UserRole } from './database'
+import type { UserRole } from './database'
 
 /** Filters applied to the member list view */
 export interface MemberFilters {

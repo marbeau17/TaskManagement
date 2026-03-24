@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { ThemeApplier } from "@/components/theme/ThemeApplier";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
@@ -27,11 +28,15 @@ export default function RootLayout({
               var theme = localStorage.getItem('workflow-theme') || 'system';
               var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
               if (dark) document.documentElement.classList.add('dark');
+              else document.documentElement.classList.remove('dark');
             } catch(e) {}
           })();
         `}} />
       </head>
-      <body>{children}</body>
+      <body>
+        <ThemeApplier />
+        {children}
+      </body>
     </html>
   );
 }

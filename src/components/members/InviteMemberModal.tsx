@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/dialog'
 import { useAddMember } from '@/hooks/useMembers'
 import { ROLE_LABELS } from '@/lib/constants'
-import type { UserRole } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Zod schema
@@ -26,7 +26,7 @@ const inviteSchema = z.object({
     .string()
     .min(1, '略称は必須です')
     .max(1, '略称は1文字で入力してください'),
-  role: z.enum(['admin', 'director', 'requester', 'creator']),
+  role: z.string().min(1, 'ロールは必須です'),
   weekly_capacity_hours: z.number().min(0).max(80),
 })
 
@@ -48,11 +48,14 @@ export function InviteMemberModal({
   onSuccess,
 }: InviteMemberModalProps) {
   const addMember = useAddMember()
+  const [useCustomRole, setUseCustomRole] = useState(false)
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
@@ -64,6 +67,8 @@ export function InviteMemberModal({
       weekly_capacity_hours: 16.0,
     },
   })
+
+  const currentRole = watch('role')
 
   const onSubmit = async (data: InviteFormValues) => {
     try {
@@ -80,6 +85,7 @@ export function InviteMemberModal({
     if (!nextOpen) {
       reset()
       addMember.reset()
+      setUseCustomRole(false)
     }
     onOpenChange(nextOpen)
   }
@@ -148,15 +154,52 @@ export function InviteMemberModal({
           {/* ロール */}
           <div>
             <label className={labelClass}>ロール</label>
-            <select className={inputClass} {...register('role')}>
-              {(Object.entries(ROLE_LABELS) as [UserRole, string][]).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                )
-              )}
-            </select>
+            {useCustomRole ? (
+              <div className="flex gap-[6px]">
+                <input
+                  type="text"
+                  placeholder="カスタムロール名"
+                  className={inputClass}
+                  {...register('role')}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCustomRole(false)
+                    setValue('role', 'creator')
+                  }}
+                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-text2 bg-surf2 border border-border2 rounded-[6px] hover:bg-border2 transition-colors"
+                >
+                  一覧
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-[6px]">
+                <select
+                  className={inputClass}
+                  value={currentRole}
+                  onChange={(e) => setValue('role', e.target.value)}
+                >
+                  {Object.entries(ROLE_LABELS).map(
+                    ([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    )
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCustomRole(true)
+                    setValue('role', '')
+                  }}
+                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap"
+                >
+                  + カスタム
+                </button>
+              </div>
+            )}
             {errors.role && (
               <p className={errorClass}>{errors.role.message}</p>
             )}

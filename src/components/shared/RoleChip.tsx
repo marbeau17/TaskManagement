@@ -1,15 +1,14 @@
 'use client'
 
-import type { UserRole } from '@/types/database'
-import { ROLE_LABELS, ROLE_STYLES } from '@/lib/constants'
+import { getRoleLabel, getRoleStyle } from '@/lib/constants'
 
 interface RoleChipProps {
-  role: UserRole
+  role: string
 }
 
 export function RoleChip({ role }: RoleChipProps) {
-  const style = ROLE_STYLES[role]
-  const label = ROLE_LABELS[role]
+  const style = getRoleStyle(role)
+  const label = getRoleLabel(role)
 
   return (
     <span

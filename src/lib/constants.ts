@@ -2,7 +2,7 @@
 // Application-wide constants
 // =============================================================================
 
-import type { TaskStatus, UserRole, AvatarColor } from '@/types/database'
+import type { TaskStatus, BuiltinRole, AvatarColor } from '@/types/database'
 import type { WorkloadStatus } from '@/types/workload'
 
 export const APP_NAME = 'WorkFlow'
@@ -54,7 +54,7 @@ export const STATUS_STYLES: Record<
 // User roles
 // ---------------------------------------------------------------------------
 
-export const ROLE_LABELS: Record<UserRole, string> = {
+export const ROLE_LABELS: Record<BuiltinRole, string> = {
   admin: '\u7BA1\u7406\u8005',
   director: 'Dir',
   requester: '\u4F9D\u983C\u8005',
@@ -62,7 +62,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 }
 
 export const ROLE_STYLES: Record<
-  UserRole,
+  BuiltinRole,
   { bg: string; text: string; border: string }
 > = {
   admin: {
@@ -85,6 +85,23 @@ export const ROLE_STYLES: Record<
     text: 'text-ok',
     border: 'border-ok-b',
   },
+}
+
+/** Default style for custom (non-builtin) roles */
+export const DEFAULT_ROLE_STYLE = {
+  bg: 'bg-slate-100',
+  text: 'text-slate-600',
+  border: 'border-slate-300',
+}
+
+/** Get label for any role, falling back to the raw role string for custom roles */
+export function getRoleLabel(role: string): string {
+  return (ROLE_LABELS as Record<string, string>)[role] ?? role
+}
+
+/** Get style for any role, falling back to a neutral default for custom roles */
+export function getRoleStyle(role: string): { bg: string; text: string; border: string } {
+  return (ROLE_STYLES as Record<string, { bg: string; text: string; border: string }>)[role] ?? DEFAULT_ROLE_STYLE
 }
 
 // ---------------------------------------------------------------------------

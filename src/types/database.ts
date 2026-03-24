@@ -2,7 +2,15 @@
 // Database type definitions matching Supabase schema
 // =============================================================================
 
-export type UserRole = 'admin' | 'director' | 'requester' | 'creator'
+/** Built-in roles. Custom roles are also allowed as free-text strings. */
+export type BuiltinRole = 'admin' | 'director' | 'requester' | 'creator'
+
+/**
+ * UserRole accepts both built-in roles and arbitrary custom role strings.
+ * The intersection with `(string & {})` lets TypeScript provide autocomplete
+ * for the known literals while still accepting any string at runtime.
+ */
+export type UserRole = BuiltinRole | (string & {})
 
 export type TaskStatus = 'waiting' | 'todo' | 'in_progress' | 'done' | 'rejected'
 

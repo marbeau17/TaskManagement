@@ -151,12 +151,25 @@ export async function deleteMember(id: string): Promise<boolean> {
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  const { error } = await supabase
+  console.log('[deleteMember] Soft-deleting user:', id)
+
+  const { data, error } = await supabase
     .from('users')
     .update({ is_active: false })
     .eq('id', id)
+    .select()
 
-  if (error) throw error
+  if (error) {
+    console.error('[deleteMember] Supabase error:', error.message, error.code)
+    throw new Error(`メンバー削除に失敗しました: ${error.message}`)
+  }
+
+  if (!data || data.length === 0) {
+    console.error('[deleteMember] No rows updated. RLS may have blocked the operation.')
+    throw new Error('メンバー削除が許可されていません。管理者またはディレクター権限が必要です。')
+  }
+
+  console.log('[deleteMember] Successfully soft-deleted user:', id)
   return true
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useDeleteMember } from '@/hooks/useMembers'
-import { ROLE_LABELS } from '@/lib/constants'
+import { getRoleLabel } from '@/lib/constants'
 import type { User } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -30,21 +31,27 @@ export function DeleteMemberDialog({
   onSuccess,
 }: DeleteMemberDialogProps) {
   const deleteMember = useDeleteMember()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleDelete = async () => {
     if (!member) return
+    setErrorMessage(null)
     try {
       await deleteMember.mutateAsync(member.id)
       onOpenChange(false)
       onSuccess?.()
-    } catch {
-      // Error is handled by mutation state
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : '不明なエラーが発生しました'
+      setErrorMessage(message)
+      console.error('[DeleteMember] Failed to delete member:', err)
     }
   }
 
   const handleClose = (nextOpen: boolean) => {
     if (!nextOpen) {
       deleteMember.reset()
+      setErrorMessage(null)
     }
     onOpenChange(nextOpen)
   }
@@ -69,7 +76,7 @@ export function DeleteMemberDialog({
             {member.name}
           </div>
           <div className="text-[11px] text-text2">
-            {member.email} / {ROLE_LABELS[member.role]}
+            {member.email} / {getRoleLabel(member.role)}
           </div>
         </div>
 
@@ -79,9 +86,9 @@ export function DeleteMemberDialog({
         </div>
 
         {/* Mutation error */}
-        {deleteMember.isError && (
+        {(deleteMember.isError || errorMessage) && (
           <div className="bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-danger">
-            削除に失敗しました。もう一度お試しください。
+            削除に失敗しました: {errorMessage ?? 'もう一度お試しください。'}
           </div>
         )}
 

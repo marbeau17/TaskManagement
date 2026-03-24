@@ -5,7 +5,7 @@ import { Topbar } from '@/components/layout'
 import { Avatar, RoleChip } from '@/components/shared'
 import { useMembers } from '@/hooks/useMembers'
 import { updateMember } from '@/lib/data/members'
-import { ROLE_LABELS } from '@/lib/constants'
+import { ROLE_LABELS, getRoleLabel } from '@/lib/constants'
 import type { User, UserRole } from '@/types/database'
 import { useQueryClient } from '@tanstack/react-query'
 import { InviteMemberModal } from '@/components/members/InviteMemberModal'
@@ -55,7 +55,11 @@ function EditMemberModal({
   member: User
   onClose: () => void
 }) {
+  const [name, setName] = useState(member.name)
+  const [nameShort, setNameShort] = useState(member.name_short ?? '')
   const [role, setRole] = useState<UserRole>(member.role)
+  const isBuiltinRole = role in ROLE_LABELS
+  const [useCustomRole, setUseCustomRole] = useState(!isBuiltinRole)
   const [capacity, setCapacity] = useState(
     String(member.weekly_capacity_hours)
   )
@@ -66,6 +70,8 @@ function EditMemberModal({
     setSaving(true)
     try {
       await updateMember(member.id, {
+        name: name.trim() || member.name,
+        name_short: nameShort.trim() || undefined,
         role,
         weekly_capacity_hours: parseFloat(capacity) || 16,
       })
@@ -76,7 +82,7 @@ function EditMemberModal({
     } finally {
       setSaving(false)
     }
-  }, [member.id, role, capacity, queryClient, onClose])
+  }, [member.id, member.name, name, nameShort, role, capacity, queryClient, onClose])
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -86,14 +92,33 @@ function EditMemberModal({
         </h2>
 
         <div className="space-y-[12px]">
-          {/* Name (read-only) */}
+          {/* Name */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
               名前
             </label>
-            <div className="text-[13px] text-text px-[10px] py-[7px] bg-surf2 rounded-[6px]">
-              {member.name}
-            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              placeholder="フルネーム"
+            />
+          </div>
+
+          {/* Short name */}
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              表示名（短縮）
+            </label>
+            <input
+              type="text"
+              value={nameShort}
+              onChange={(e) => setNameShort(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              placeholder="例: 太郎"
+              maxLength={10}
+            />
           </div>
 
           {/* Email (read-only) */}
@@ -111,19 +136,51 @@ function EditMemberModal({
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
               ロール
             </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-            >
-              {(
-                Object.entries(ROLE_LABELS) as [UserRole, string][]
-              ).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            {useCustomRole ? (
+              <div className="flex gap-[6px]">
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="カスタムロール名"
+                  className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCustomRole(false)
+                    setRole('creator')
+                  }}
+                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-text2 bg-surf2 border border-border2 rounded-[6px] hover:bg-border2 transition-colors"
+                >
+                  一覧
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-[6px]">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
+                  className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                >
+                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCustomRole(true)
+                    setRole('')
+                  }}
+                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap"
+                >
+                  + カスタム
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Weekly capacity */}

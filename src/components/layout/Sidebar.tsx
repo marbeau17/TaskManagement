@@ -73,6 +73,7 @@ export function Sidebar({ activePage }: SidebarProps) {
     requester: '依頼者',
     creator: 'クリエイター',
   }
+  // For custom roles, fall back to the raw role string
 
   return (
     <aside className="w-[192px] bg-mint-dd flex flex-col h-full shrink-0 select-none">

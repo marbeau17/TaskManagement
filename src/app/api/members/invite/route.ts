@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import type { UserRole } from '@/types/database'
 import { useMock } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
@@ -9,7 +8,7 @@ export async function POST(request: NextRequest) {
     const { email, name, role } = body as {
       email: string
       name: string
-      role: UserRole
+      role: string
     }
 
     if (!email || !name || !role) {

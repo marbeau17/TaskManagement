@@ -10,8 +10,15 @@ export function useTheme() {
   useEffect(() => {
     const root = document.documentElement
     const apply = (isDark: boolean) => {
-      root.classList.toggle('dark', isDark)
+      if (isDark) {
+        root.classList.add('dark')
+      } else {
+        root.classList.remove('dark')
+      }
     }
+
+    // Always persist the preference so it survives page reloads
+    localStorage.setItem('workflow-theme', theme)
 
     if (theme === 'system') {
       const mq = window.matchMedia('(prefers-color-scheme: dark)')
@@ -22,7 +29,6 @@ export function useTheme() {
     }
 
     apply(theme === 'dark')
-    localStorage.setItem('workflow-theme', theme)
   }, [theme])
 
   return { theme, setTheme }

@@ -58,6 +58,12 @@ CREATE POLICY "Users: self update" ON users
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
+-- Directors can update (soft-delete) other users
+CREATE POLICY "Users: director manage" ON users
+  FOR UPDATE TO authenticated
+  USING (public.is_director_or_admin())
+  WITH CHECK (public.is_director_or_admin());
+
 -- ---------------------------------------------------------------------------
 -- Clients policies
 -- ---------------------------------------------------------------------------
