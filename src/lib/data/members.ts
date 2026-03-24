@@ -175,9 +175,9 @@ export async function changePassword(
     return changeMockPassword(userId, oldPassword, newPassword)
   }
 
-  // Called from API route (server-side). Use server client to access session.
-  const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-  const supabase = await createServerSupabaseClient()
+  // Called from client-side. Use browser client.
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
 
   // Verify the user is authenticated
   const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -186,9 +186,7 @@ export async function changePassword(
   }
 
   // Verify old password by re-authenticating
-  const { createClient } = await import('@/lib/supabase/client')
-  const verifyClient = createClient()
-  const { error: signInError } = await verifyClient.auth.signInWithPassword({
+  const { error: signInError } = await supabase.auth.signInWithPassword({
     email: authUser.email!,
     password: oldPassword,
   })
@@ -219,9 +217,9 @@ export async function forceChangePassword(
     return forceChangeMockPassword(userId, newPassword)
   }
 
-  // Use server client to update the current user's password via their session
-  const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-  const supabase = await createServerSupabaseClient()
+  // Use browser client to update the current user's password via their session
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
 
   const { error: authError } = await supabase.auth.updateUser({ password: newPassword })
   if (authError) {

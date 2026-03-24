@@ -65,7 +65,8 @@
       "Bash(NEXT_PUBLIC_USE_MOCK=true NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build)",
       "mcp__claude_ai_Vercel__web_fetch_vercel_url",
       "Bash(grep -r useAssignTask src/ --include=*.tsx --include=*.ts)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "mcp__claude_ai_Vercel__get_deployment_build_logs"
     ]
   }
 }
