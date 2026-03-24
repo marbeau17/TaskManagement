@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
+import { z } from 'zod'
 import type { TaskFormStep1, TaskFormStep2 } from '@/types/task'
 import { useMembers } from '@/hooks/useMembers'
 import { useWorkloadSummaries } from '@/hooks/useWorkload'

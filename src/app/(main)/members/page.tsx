@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Shell } from '@/components/layout'
 import { Topbar } from '@/components/layout'
 import { Avatar, RoleChip } from '@/components/shared'
 import { useMembers } from '@/hooks/useMembers'
@@ -201,7 +200,7 @@ export default function MembersPage() {
   const totalCount = members?.length ?? 0
 
   return (
-    <Shell activePage="members">
+    <>
       <Topbar title="メンバー管理">
         <button
           onClick={() => setInviteOpen(true)}
@@ -345,6 +344,6 @@ export default function MembersPage() {
         onOpenChange={handleDeleteDialogChange}
         onSuccess={() => showFeedback('success', 'メンバーを削除しました')}
       />
-    </Shell>
+    </>
   )
 }

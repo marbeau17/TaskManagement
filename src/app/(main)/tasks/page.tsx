@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo } from 'react'
+import { Topbar } from '@/components/layout'
 import { PeriodToggle } from '@/components/shared'
 import { TaskFilters } from '@/components/tasks/TaskFilters'
 import { TaskStatusTabs } from '@/components/tasks/TaskStatusTabs'
@@ -52,65 +53,60 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="flex flex-col gap-[20px] p-[24px]">
-      {/* Top bar */}
-      <div className="flex items-center justify-between flex-wrap gap-[12px]">
-        <div>
-          <h1 className="text-[20px] font-bold text-text">タスク一覧</h1>
-          <p className="text-[12px] text-text2 mt-[2px]">
-            全 {tasks.length} 件
-          </p>
-        </div>
+    <>
+      <Topbar
+        title="タスク一覧"
+        subtitle={`全 ${tasks.length} 件`}
+      >
+        <PeriodToggle
+          options={PERIOD_OPTIONS}
+          value={period ?? 'all'}
+          onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
+        />
 
-        <div className="flex items-center gap-[10px]">
-          <PeriodToggle
-            options={PERIOD_OPTIONS}
-            value={period ?? 'all'}
-            onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
-          />
+        <button
+          onClick={handleCsvExport}
+          disabled={filteredTasks.length === 0}
+          className="
+            h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
+            border border-wf-border text-text2
+            hover:bg-surf2 transition-colors
+            disabled:opacity-40 disabled:cursor-not-allowed
+          "
+        >
+          CSV出力
+        </button>
 
-          <button
-            onClick={handleCsvExport}
-            disabled={filteredTasks.length === 0}
-            className="
-              h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
-              border border-wf-border text-text2
-              hover:bg-surf2 transition-colors
-              disabled:opacity-40 disabled:cursor-not-allowed
-            "
-          >
-            CSV出力
-          </button>
+        <Link
+          href="/tasks/new"
+          className="
+            h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
+            bg-mint text-white hover:bg-mint-d transition-colors
+            inline-flex items-center
+          "
+        >
+          ＋ タスク依頼
+        </Link>
+      </Topbar>
 
-          <Link
-            href="/tasks/new"
-            className="
-              h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
-              bg-mint text-white hover:bg-mint-d transition-colors
-              inline-flex items-center
-            "
-          >
-            ＋ タスク依頼
-          </Link>
+      <div className="flex-1 overflow-y-auto p-[20px] flex flex-col gap-[16px]">
+        {/* Filters */}
+        <TaskFilters />
+
+        {/* Status tabs (pass all tasks so counts reflect all statuses) */}
+        <TaskStatusTabs tasks={tasks} />
+
+        {/* Task table card */}
+        <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-[48px]">
+              <div className="text-[13px] text-text3">読み込み中...</div>
+            </div>
+          ) : (
+            <TaskTable tasks={filteredTasks} />
+          )}
         </div>
       </div>
-
-      {/* Filters */}
-      <TaskFilters />
-
-      {/* Status tabs (pass all tasks so counts reflect all statuses) */}
-      <TaskStatusTabs tasks={tasks} />
-
-      {/* Task table card */}
-      <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-[48px]">
-            <div className="text-[13px] text-text3">読み込み中...</div>
-          </div>
-        ) : (
-          <TaskTable tasks={filteredTasks} />
-        )}
-      </div>
-    </div>
+    </>
   )
 }

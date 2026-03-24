@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useTask } from '@/hooks/useTasks'
+import { useAuth } from '@/hooks/useAuth'
 import { StatusChip } from '@/components/shared'
 import { TaskDetailInfo } from '@/components/tasks/TaskDetailInfo'
 import { ProgressInput } from '@/components/tasks/ProgressInput'
@@ -10,12 +11,10 @@ import { AssignInfo } from '@/components/tasks/AssignInfo'
 import { ActivityLog } from '@/components/tasks/ActivityLog'
 import { AttachmentList } from '@/components/tasks/AttachmentList'
 
-// TODO: Replace with actual current user from auth context
-const CURRENT_USER_ID = ''
-
 export default function TaskDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuth()
   const { data: task, isLoading } = useTask(params.id)
 
   if (isLoading) {
@@ -90,7 +89,7 @@ export default function TaskDetailPage() {
         <div className="flex flex-col gap-4">
           <TaskDetailInfo task={task} />
           <ProgressInput task={task} />
-          <CommentSection taskId={task.id} currentUserId={CURRENT_USER_ID} />
+          <CommentSection taskId={task.id} currentUserId={user.id} />
         </div>
 
         {/* Right column */}

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Shell } from '@/components/layout'
 import { Topbar } from '@/components/layout'
 import { PeriodToggle } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
@@ -16,7 +15,7 @@ export default function WorkloadPage() {
     useWorkloadSummaries()
 
   return (
-    <Shell activePage="workload">
+    <>
       <Topbar title="稼働管理">
         <PeriodToggle
           options={PERIOD_OPTIONS}
@@ -47,6 +46,6 @@ export default function WorkloadPage() {
           <MemberWorkloadTable summaries={summaries} />
         )}
       </div>
-    </Shell>
+    </>
   )
 }

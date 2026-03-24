@@ -62,7 +62,8 @@
       "Bash(vercel link:*)",
       "Bash(vercel --prod)",
       "Bash(grep -r NEXT_PUBLIC_USE_MOCK /Users/yasudaosamu/Desktop/codes/TaskManagement --include=*.ts --include=*.tsx --include=*.env*)",
-      "Bash(NEXT_PUBLIC_USE_MOCK=true NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build)"
+      "Bash(NEXT_PUBLIC_USE_MOCK=true NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build)",
+      "mcp__claude_ai_Vercel__web_fetch_vercel_url"
     ]
   }
 }

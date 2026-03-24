@@ -7,8 +7,8 @@ interface UiState {
   activePage: string
   setActivePage: (page: string) => void
 
-  period: 'week' | 'last_week' | 'month' | 'last_month'
-  setPeriod: (p: 'week' | 'last_week' | 'month' | 'last_month') => void
+  period: 'week' | 'last_week' | 'month' | 'last_month' | 'all'
+  setPeriod: (p: 'week' | 'last_week' | 'month' | 'last_month' | 'all') => void
 
   dashboardView: 'creator' | 'client'
   setDashboardView: (v: 'creator' | 'client') => void

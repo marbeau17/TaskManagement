@@ -1,4 +1,7 @@
+'use client'
+
 import { Providers } from '@/app/providers'
+import { Shell } from '@/components/layout/Shell'
 
 export default function MainLayout({
   children,
@@ -7,7 +10,7 @@ export default function MainLayout({
 }) {
   return (
     <Providers>
-      {children}
+      <Shell>{children}</Shell>
     </Providers>
   )
 }

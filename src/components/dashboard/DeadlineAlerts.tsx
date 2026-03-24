@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react'
 import { useTasks } from '@/hooks/useTasks'
-import { useMembers } from '@/hooks/useMembers'
 import { daysUntilDeadline, isOverdue } from '@/lib/date-utils'
 import { formatDate } from '@/lib/utils'
 import type { TaskWithRelations } from '@/types/database'

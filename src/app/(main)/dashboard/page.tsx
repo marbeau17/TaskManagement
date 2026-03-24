@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Shell, Topbar } from '@/components/layout'
+import { Topbar } from '@/components/layout'
 import { PeriodToggle } from '@/components/shared'
 import {
   KpiCards,
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const weekRange = getWeekRange()
 
   return (
-    <Shell activePage="dashboard">
+    <>
       {/* Topbar */}
       <Topbar
         title="ダッシュボード"
@@ -109,6 +109,6 @@ export default function DashboardPage() {
           <ClientView />
         )}
       </div>
-    </Shell>
+    </>
   )
 }

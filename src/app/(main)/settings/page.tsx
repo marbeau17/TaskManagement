@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Shell } from '@/components/layout'
 import { Topbar } from '@/components/layout'
 
 export default function SettingsPage() {
@@ -28,7 +27,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <Shell activePage="settings">
+    <>
       <Topbar title="設定" />
 
       <div className="flex-1 overflow-auto p-[20px] space-y-[16px] max-w-[640px]">
@@ -155,6 +154,6 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
-    </Shell>
+    </>
   )
 }

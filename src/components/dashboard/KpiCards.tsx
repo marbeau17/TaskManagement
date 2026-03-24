@@ -4,7 +4,17 @@ import { KpiCard } from '@/components/shared'
 import { useTaskStats } from '@/hooks/useTasks'
 
 export function KpiCards() {
-  const { data: stats } = useTaskStats()
+  const { data: stats, isLoading } = useTaskStats()
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-4 gap-[12px]">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-surface border border-border2 rounded-[10px] p-[13px] shadow h-[88px] animate-pulse" />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-4 gap-[12px]">

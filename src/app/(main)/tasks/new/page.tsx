@@ -84,9 +84,9 @@ export default function TaskNewPage() {
   const steps = getSteps(currentStep)
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="bg-surface border-b border-wf-border">
+      <div className="bg-surface border-b border-wf-border shrink-0">
         <div className="max-w-[780px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-[16px] font-bold text-text1">
@@ -117,6 +117,7 @@ export default function TaskNewPage() {
       </div>
 
       {/* Main content */}
+      <div className="flex-1 overflow-y-auto">
       <div className="max-w-[780px] mx-auto px-6 py-8">
         {/* Notice bar */}
         <div className="mb-6 px-4 py-3 rounded-lg bg-info-bg border border-info-b text-[12.5px] text-info">
@@ -156,6 +157,7 @@ export default function TaskNewPage() {
             タスクの作成に失敗しました。もう一度お試しください。
           </div>
         )}
+      </div>
       </div>
     </div>
   )
