@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkFlow — ワイヤーフレーム v1.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+:root{
+  --mint:#6FB5A3;--mint-l:#A8D5CA;--mint-ll:#E2F2EE;--mint-d:#4A9482;--mint-dd:#2E6B5A;
+  --bg:#F0F4F3;--surface:#FAFCFB;--surf2:#EEF3F1;--surf3:#E4EDEA;
+  --text:#2A3A36;--text2:#647870;--text3:#9DAFAA;
+  --border:#CCDDD8;--border2:#E0ECEB;
+  --warn-bg:#FBF5E6;--warn:#7A5E18;--warn-b:#D8C070;
+  --danger-bg:#FAE8E8;--danger:#7A3030;--danger-b:#D08888;
+  --ok-bg:#E4F4EC;--ok:#1E6040;--ok-b:#7ABEA0;
+  --info-bg:#E6EFF8;--info:#1E4A7A;--info-b:#7AAAD8;
+  --req-bg:#FDF0F6;--req:#8A2A5A;--req-b:#E898C0;
+  --gold-bg:#FDFAE0;--gold:#7A6010;--gold-b:#D8C040;
+  --font:'Yu Gothic','YuGothic','Noto Sans JP',sans-serif;
+  --r:10px;--rs:6px;--rxs:4px;
+  --sh:0 1px 8px rgba(60,120,100,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.6;}
+button,input,select,textarea{font-family:var(--font);}
+button{cursor:pointer;}
+
+.shell{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:192px;flex-shrink:0;background:var(--mint-dd);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-logo{padding:16px 14px 13px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,.12);}
+.sb-mark{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.sb-name{font-size:14px;font-weight:700;color:#fff;}
+.sb-sec{padding:14px 0 3px;font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.4);text-transform:uppercase;padding-left:14px;}
+.si{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:1px 6px;border-radius:var(--rs);font-size:12px;font-weight:500;color:rgba(255,255,255,.68);cursor:pointer;transition:all .13s;}
+.si:hover{background:rgba(255,255,255,.1);color:#fff;}
+.si.active{background:rgba(255,255,255,.17);color:#fff;font-weight:700;}
+.si .ico{width:17px;text-align:center;font-size:13px;flex-shrink:0;}
+.si-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;background:var(--warn);color:#fff;}
+.si-badge.red{background:#B03040;}
+.sb-user{margin-top:auto;padding:11px 12px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px;}
+.sb-ava{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.sb-uname{font-size:11px;color:rgba(255,255,255,.8);font-weight:600;}
+.sb-urole{font-size:10px;color:rgba(255,255,255,.4);}
+
+/* CONTENT */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* TOPBAR */
+.topbar{height:50px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;box-shadow:0 1px 5px rgba(60,120,100,.06);}
+.tb-title{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;}
+.tb-sub{font-size:11px;color:var(--text3);}
+.spacer{flex:1;}
+.period-toggle{display:flex;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rs);padding:3px;gap:1px;}
+.pt-btn{padding:4px 13px;border-radius:4px;border:none;background:none;font-size:11.5px;font-weight:500;color:var(--text2);cursor:pointer;}
+.pt-btn.active{background:var(--surface);color:var(--mint-d);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.btn{padding:7px 15px;border-radius:var(--rs);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .13s;white-space:nowrap;}
+.btn-mint{background:var(--mint);color:#fff;}
+.btn-mint:hover{background:var(--mint-d);}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--surf2);}
+.btn-sm{padding:5px 11px;font-size:11.5px;}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-b);}
+.notif-btn{width:32px;height:32px;border-radius:50%;background:var(--surf2);border:none;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;font-size:14px;}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#D05050;border:1.5px solid var(--surface);}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;}
+
+/* SCREEN */
+.screen{display:none;}
+.screen.active{display:block;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.ga{display:grid;grid-template-columns:1.7fr 1fr;gap:13px;}
+.gb{display:grid;grid-template-columns:1.6fr 1fr;gap:13px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:13px;}
+.ch{padding:10px 15px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;background:var(--surf2);}
+.ct{font-size:12.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;}
+.cb{padding:13px 15px;}
+.cb0{padding:0;}
+
+/* KPI */
+.kpi{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:13px;position:relative;overflow:hidden;box-shadow:var(--sh);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.km::before{background:var(--mint);}
+.kw::before{background:#C8A030;}
+.kd::before{background:#C05050;}
+.ki::before{background:var(--info);}
+.kp::before{background:#8060B0;}
+.kl{font-size:10.5px;color:var(--text2);margin-bottom:4px;}
+.kv{font-size:24px;font-weight:300;color:var(--text);line-height:1.1;}
+.ku{font-size:11px;color:var(--text2);}
+.ks{font-size:10px;color:var(--text3);margin-top:4px;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border2);margin-bottom:13px;}
+.tab{padding:7px 16px;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;border-top:none;border-left:none;border-right:none;background:none;white-space:nowrap;transition:all .13s;}
+.tab:hover{color:var(--mint-d);}
+.tab.active{color:var(--mint-d);border-bottom-color:var(--mint);font-weight:700;}
+.tc{font-size:10px;background:var(--surf2);color:var(--text2);padding:1px 6px;border-radius:20px;margin-left:3px;border:1px solid var(--border);}
+.tab.active .tc{background:var(--mint-ll);color:var(--mint-d);border-color:var(--mint-l);}
+
+/* STATUS CHIPS */
+.sc{font-size:10.5px;padding:2px 9px;border-radius:20px;font-weight:600;display:inline-block;border:1px solid;white-space:nowrap;}
+.s-wait{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-b);}
+.s-todo{background:var(--surf2);color:var(--text2);border-color:var(--border);}
+.s-wip{background:var(--info-bg);color:var(--info);border-color:var(--info-b);}
+.s-done{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-b);}
+.s-back{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-b);}
+
+/* ROLE CHIPS */
+.rc{font-size:9.5px;padding:1px 7px;border-radius:20px;font-weight:700;border:1px solid;display:inline-block;}
+.r-adm{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-b);}
+.r-dir{background:#EEE6F8;color:#5A2A8A;border-color:#C8A8E8;}
+.r-req{background:var(--req-bg);color:var(--req);border-color:var(--req-b);}
+.r-cre{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-b);}
+
+/* PROGRESS */
+.pbar{height:6px;background:var(--surf2);border-radius:10px;overflow:hidden;}
+.pf{height:100%;border-radius:10px;}
+.p-low{background:var(--text3);}
+.p-mid{background:var(--mint);}
+.p-high{background:#C8A030;}
+.p-full{background:var(--ok);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;color:var(--text3);font-weight:600;padding:7px 12px;border-bottom:2px solid var(--border2);text-align:left;white-space:nowrap;letter-spacing:.03em;background:var(--surf2);}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:12.5px;}
+.tbl tr:hover td{background:var(--mint-ll);cursor:pointer;}
+.tbl tr:last-child td{border-bottom:none;}
+.num{text-align:right;}
+.edited-c{background:var(--gold-bg) !important;}
+.edited-b{background:var(--gold-bg);color:var(--gold);padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600;border:1px solid var(--gold-b);display:inline-flex;align-items:center;gap:3px;}
+.edited-b::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;}
+
+/* AVATAR */
+.ava{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.av-sm{width:24px;height:24px;font-size:9px;}
+.av-md{width:30px;height:30px;font-size:11px;}
+.av-lg{width:38px;height:38px;font-size:13px;}
+.av-a{background:#D8ECEA;color:#2A6A60;}
+.av-b{background:#E8E0EE;color:#5A2A8A;}
+.av-c{background:#EEE4D8;color:#7A5028;}
+.av-d{background:#E0ECF4;color:#2A5A7A;}
+.av-e{background:#EEE0E4;color:#7A2A40;}
+
+/* WORKLOAD */
+.wl-row{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--border2);}
+.wl-row:last-child{border-bottom:none;}
+.wl-name{width:130px;flex-shrink:0;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;}
+.wl-bar{flex:1;height:7px;background:var(--surf2);border-radius:10px;overflow:hidden;}
+.wl-fill{height:100%;border-radius:10px;}
+.wf-ok{background:var(--mint);}
+.wf-warn{background:#C8A030;}
+.wf-danger{background:#C05050;}
+.wl-pct{width:44px;font-size:12.5px;font-weight:700;text-align:right;flex-shrink:0;}
+.wl-hrs{width:100px;font-size:11px;color:var(--text2);text-align:right;flex-shrink:0;}
+.wl-tag{width:56px;flex-shrink:0;text-align:center;}
+
+/* ALERT */
+.al-row{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--rs);margin-bottom:6px;font-size:12px;}
+.al-danger{background:var(--danger-bg);border:1px solid var(--danger-b);}
+.al-warn{background:var(--warn-bg);border:1px solid var(--warn-b);}
+.al-ok{background:var(--ok-bg);border:1px solid var(--ok-b);}
+.al-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.d-danger{background:var(--danger);}
+.d-warn{background:#C8A030;}
+.d-ok{background:var(--ok);}
+.al-name{font-weight:600;flex:1;}
+.al-meta{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.due-d{color:var(--danger);font-weight:600;}
+.due-w{color:#A07010;font-weight:500;}
+
+/* CLIENT CARDS */
+.cc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:13px;box-shadow:var(--sh);cursor:pointer;transition:all .15s;}
+.cc:hover{border-color:var(--mint-l);box-shadow:0 4px 18px rgba(60,120,100,.12);}
+.cc-name{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.cc-val{font-size:20px;font-weight:300;color:var(--text);}
+.cc-u{font-size:11px;color:var(--text2);}
+.cc-foot{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text2);margin-top:4px;}
+.cc-mbrs{display:flex;gap:3px;margin-top:8px;}
+
+/* FORM */
+.fg{margin-bottom:12px;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.req{color:var(--danger);}
+.fi{width:100%;padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:12.5px;color:var(--text);background:var(--surface);outline:none;}
+.fi.ok{border-color:var(--mint-l);background:#FAFEFF;}
+.fi.ro{background:var(--surf2);color:var(--text2);border-style:dashed;}
+.fta{width:100%;padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:12.5px;color:var(--text);background:var(--surface);min-height:70px;resize:none;outline:none;}
+.fta.ok{border-color:var(--mint-l);background:#FAFEFF;}
+.fhint{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.fsec{font-size:10px;font-weight:700;color:var(--mint-d);letter-spacing:.07em;text-transform:uppercase;padding:11px 0 7px;border-bottom:1px solid var(--border2);margin-bottom:11px;}
+.factions{display:flex;justify-content:flex-end;gap:8px;padding-top:11px;border-top:1px solid var(--border2);margin-top:11px;}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:18px;}
+.stp{display:flex;align-items:center;gap:7px;}
+.stp-c{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:2px solid;}
+.sc-done{background:var(--mint);border-color:var(--mint);color:#fff;}
+.sc-active{background:var(--surface);border-color:var(--mint);color:var(--mint-d);}
+.sc-pending{background:var(--surf2);border-color:var(--border);color:var(--text3);}
+.stp-l{font-size:11.5px;}
+.sl-done{color:var(--mint-d);font-weight:500;}
+.sl-active{color:var(--text);font-weight:700;}
+.sl-pending{color:var(--text3);}
+.stp-line{flex:1;height:2px;background:var(--border);margin:0 9px;}
+.stp-line.done{background:var(--mint);}
+
+/* NOTICE */
+.notice{border-radius:var(--rs);padding:10px 13px;margin-bottom:11px;display:flex;gap:10px;align-items:flex-start;font-size:12px;}
+.n-ok{background:var(--ok-bg);border:1px solid var(--ok-b);border-left:3px solid var(--mint);}
+.n-warn{background:var(--warn-bg);border:1px solid var(--warn-b);border-left:3px solid #C8A030;}
+.n-info{background:var(--info-bg);border:1px solid var(--info-b);border-left:3px solid var(--info);}
+.ni{font-size:15px;flex-shrink:0;}
+.nt{color:var(--text2);line-height:1.7;}
+
+/* PROGRESS INPUT */
+.prog-area{display:flex;align-items:center;gap:13px;padding:12px;background:var(--surf2);border-radius:var(--rs);margin-bottom:11px;}
+.prog-num{font-size:28px;font-weight:300;color:var(--mint-d);width:60px;text-align:center;}
+.prog-slider{flex:1;}
+.prog-bar-lg{height:10px;background:var(--border2);border-radius:10px;overflow:hidden;margin-bottom:5px;}
+.prog-fill-lg{height:100%;border-radius:10px;background:var(--mint);}
+.prog-ticks{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);}
+.prog-btns{display:flex;flex-direction:column;gap:3px;}
+.pb{padding:3px 11px;border-radius:3px;border:1px solid var(--border);background:var(--surface);font-size:11px;color:var(--text2);cursor:pointer;}
+.pb.full{background:var(--mint);color:#fff;border-color:var(--mint);}
+
+/* COMMENT */
+.cmt{display:flex;gap:9px;margin-bottom:11px;}
+.cmt-body{flex:1;background:var(--surf2);border-radius:0 var(--rs) var(--rs) var(--rs);padding:9px 12px;font-size:12px;color:var(--text2);}
+.cmt-me .cmt-body{background:var(--mint-ll);}
+.cmt-meta{font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+.cmt-author{font-weight:600;color:var(--text2);}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(--border2);margin:12px 0;}
+.tag-sm{font-size:9.5px;padding:1px 6px;border-radius:3px;font-weight:600;display:inline-block;background:var(--surf2);color:var(--text2);border:1px solid var(--border);}
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:13px;flex-wrap:wrap;}
+.fb-in{flex:1;min-width:180px;padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:12.5px;background:var(--surface);}
+.fb-sel{padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:12px;background:var(--surface);color:var(--text2);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-mark">✦</div>
+    <div class="sb-name">WorkFlow</div>
+  </div>
+  <div class="sb-sec">メイン</div>
+  <div class="si active" onclick="go('dashboard',this)"><span class="ico">◼</span>ダッシュボード</div>
+  <div class="si" onclick="go('tasknew1',this)"><span class="ico">＋</span>タスク依頼</div>
+  <div class="si" onclick="go('tasklist',this)"><span class="ico">☰</span>タスク一覧<span class="si-badge red">2</span></div>
+  <div class="si" onclick="go('workload',this)"><span class="ico">📊</span>稼働管理</div>
+  <div class="sb-sec">クリエイター</div>
+  <div class="si" onclick="go('taskdetail',this)"><div class="ava av-sm av-a">山</div>山田 花子<span class="si-badge">3</span></div>
+  <div class="si"><div class="ava av-sm av-b">鈴</div>鈴木 一郎<span class="si-badge">5</span></div>
+  <div class="si"><div class="ava av-sm av-c">佐</div>佐藤 美咲<span class="si-badge">2</span></div>
+  <div class="si"><div class="ava av-sm av-d">中</div>中村 健太<span class="si-badge">4</span></div>
+  <div class="sb-sec">システム</div>
+  <div class="si"><span class="ico">👥</span>メンバー</div>
+  <div class="si"><span class="ico">⚙</span>設定</div>
+  <div class="sb-user">
+    <div class="sb-ava">田</div>
+    <div><div class="sb-uname">田中 太郎</div><div class="sb-urole">ディレクター</div></div>
+  </div>
+</aside>
+
+<!-- ══ CONTENT ══ -->
+<div class="content">
+
+<!-- ════ DASHBOARD ════ -->
+<div id="s-dashboard" class="screen active">
+  <div class="topbar">
+    <div class="tb-title">ダッシュボード</div>
+    <span class="tb-sub">2025年4月 第2週 (4/7–4/13)</span>
+    <div class="spacer"></div>
+    <div class="period-toggle">
+      <button class="pt-btn active">今週</button>
+      <button class="pt-btn">先週</button>
+      <button class="pt-btn">今月</button>
+      <button class="pt-btn">先月</button>
+    </div>
+    <button class="notif-btn">🔔<div class="notif-dot"></div></button>
+    <button class="btn btn-mint" onclick="go('tasknew1',document.querySelectorAll('.si')[1])">＋ タスク依頼</button>
+  </div>
+  <div class="scroll">
+    <div class="g4" style="margin-bottom:13px">
+      <div class="kpi km"><div class="kl">今週のタスク数</div><div class="kv">14<span class="ku"> 件</span></div><div class="ks" style="color:var(--ok)">▲ 先週比 +3件</div></div>
+      <div class="kpi kw"><div class="kl">⏳ アサイン待ち</div><div class="kv">2<span class="ku"> 件</span></div><div class="ks" style="color:var(--warn)">⚠ 要対応</div></div>
+      <div class="kpi km"><div class="kl">今週の完了率</div><div class="kv">64<span class="ku"> %</span></div><div class="ks">9 / 14件 完了</div></div>
+      <div class="kpi kd"><div class="kl">🚨 納期超過</div><div class="kv">1<span class="ku"> 件</span></div><div class="ks" style="color:var(--danger)">即時対応が必要</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchView('creator',this)">👤 クリエイター別</button>
+      <button class="tab" onclick="switchView('client',this)">🏢 クライアント別</button>
+    </div>
+
+    <!-- CREATOR VIEW -->
+    <div id="v-creator" class="ga">
+      <div class="card">
+        <div class="ch"><div class="ct">👤 クリエイター稼働状況</div><span style="font-size:10px;color:var(--text3)">今週 4/7–4/13</span></div>
+        <div class="cb0">
+          <div style="display:grid;grid-template-columns:135px 1fr 46px 105px 60px;padding:7px 14px;background:var(--surf2);font-size:9.5px;color:var(--text3);font-weight:600;letter-spacing:.04em;border-bottom:1px solid var(--border2);">
+            <div>担当者</div><div>稼働バー</div><div style="text-align:right">%</div><div style="text-align:right">実績/見積</div><div style="text-align:center">状態</div>
+          </div>
+          <div class="wl-row">
+            <div class="wl-name"><div class="ava av-sm av-a">山</div>山田 花子</div>
+            <div class="wl-bar"><div class="wl-fill wf-warn" style="width:88%"></div></div>
+            <div class="wl-pct" style="color:#A07010">88%</div>
+            <div class="wl-hrs">14.0h / 16.0h</div>
+            <div class="wl-tag"><span class="sc s-wip" style="font-size:9px">警告</span></div>
+          </div>
+          <div class="wl-row" style="background:var(--danger-bg)">
+            <div class="wl-name"><div class="ava av-sm av-b">鈴</div>鈴木 一郎</div>
+            <div class="wl-bar"><div class="wl-fill wf-danger" style="width:100%"></div></div>
+            <div class="wl-pct" style="color:var(--danger)">110%</div>
+            <div class="wl-hrs" style="color:var(--danger)">17.5h / 16.0h</div>
+            <div class="wl-tag"><span class="sc s-back" style="font-size:9px">超過</span></div>
+          </div>
+          <div class="wl-row">
+            <div class="wl-name"><div class="ava av-sm av-c">佐</div>佐藤 美咲</div>
+            <div class="wl-bar"><div class="wl-fill wf-ok" style="width:62%"></div></div>
+            <div class="wl-pct" style="color:var(--mint-d)">62%</div>
+            <div class="wl-hrs">10.0h / 16.0h</div>
+            <div class="wl-tag"><span class="sc s-done" style="font-size:9px">余裕</span></div>
+          </div>
+          <div class="wl-row">
+            <div class="wl-name"><div class="ava av-sm av-d">中</div>中村 健太</div>
+            <div class="wl-bar"><div class="wl-fill wf-ok" style="width:75%"></div></div>
+            <div class="wl-pct" style="color:var(--mint-d)">75%</div>
+            <div class="wl-hrs">12.0h / 16.0h</div>
+            <div class="wl-tag"><span class="sc s-todo" style="font-size:9px">通常</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ch"><div class="ct">🚨 納期アラート</div></div>
+          <div class="cb">
+            <div class="al-row al-danger"><div class="al-dot d-danger"></div><div class="al-name">TOPページ コーディング</div><div class="al-meta"><span class="due-d">4/12超過</span><span class="tag-sm" style="background:var(--info-bg);color:var(--info);border-color:var(--info-b)">鈴木</span></div></div>
+            <div class="al-row al-warn"><div class="al-dot d-warn"></div><div class="al-name">会社案内 デザイン</div><div class="al-meta"><span class="due-w">本日</span><span class="tag-sm">山田</span></div></div>
+            <div class="al-row al-warn"><div class="al-dot d-warn"></div><div class="al-name">SNSバナー制作 5点</div><div class="al-meta"><span class="due-w">4/15</span><span class="tag-sm">佐藤</span></div></div>
+            <div class="al-row al-ok"><div class="al-dot d-ok"></div><div class="al-name">LP ファーストビュー</div><div class="al-meta"><span style="font-size:11px;color:var(--text2)">4/17</span><span class="tag-sm">中村</span></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">⏳ アサイン待ち</div><span class="sc s-wait">2件</span></div>
+          <div class="cb">
+            <div style="padding:8px 0;border-bottom:1px solid var(--border2)">
+              <div style="font-size:12.5px;font-weight:600;margin-bottom:3px">採用バナー制作</div>
+              <div style="font-size:11px;color:var(--text3)">🏢 テスト工業 ・ 希望納期: 4/18</div>
+            </div>
+            <div style="padding:8px 0">
+              <div style="font-size:12.5px;font-weight:600;margin-bottom:3px">ニュースレター原稿</div>
+              <div style="font-size:11px;color:var(--text3)">🏢 グローバル商事 ・ 希望納期: 4/20</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:7px" onclick="go('tasknew2',null)">アサインする →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENT VIEW -->
+    <div id="v-client" style="display:none">
+      <div class="g3" style="margin-bottom:13px">
+        <div class="cc"><div class="cc-name">🏢 株式会社サンプル</div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:7px"><div class="cc-val">5<span class="cc-u"> タスク</span></div><span class="sc s-wip" style="font-size:10px">進行中 3</span></div><div class="pbar"><div class="pf p-mid" style="width:60%"></div></div><div class="cc-foot"><span>完了 3件</span><span>見積 28.0h</span></div><div class="cc-mbrs"><div class="ava av-sm av-a">山</div><div class="ava av-sm av-b">鈴</div></div></div>
+        <div class="cc"><div class="cc-name">🏢 テスト工業株式会社</div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:7px"><div class="cc-val">3<span class="cc-u"> タスク</span></div><span class="sc s-wait" style="font-size:10px">アサイン待 1</span></div><div class="pbar"><div class="pf p-high" style="width:33%"></div></div><div class="cc-foot"><span>完了 1件</span><span>見積 12.0h</span></div><div class="cc-mbrs"><div class="ava av-sm av-c">佐</div></div></div>
+        <div class="cc"><div class="cc-name">🏢 グローバル商事</div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:7px"><div class="cc-val">7<span class="cc-u"> タスク</span></div><span class="sc s-done" style="font-size:10px">完了 5</span></div><div class="pbar"><div class="pf p-full" style="width:71%"></div></div><div class="cc-foot"><span>完了 5件</span><span>見積 44.0h</span></div><div class="cc-mbrs"><div class="ava av-sm av-a">山</div><div class="ava av-sm av-d">中</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">🏢 クライアント別 タスク一覧</div></div>
+        <div class="cb0">
+          <table class="tbl">
+            <thead><tr><th>クライアント</th><th>タスク名</th><th>担当</th><th style="width:100px">進捗</th><th>納期</th><th class="num">見積</th><th>ステータス</th></tr></thead>
+            <tbody>
+              <tr onclick="go('taskdetail',null)"><td style="font-weight:700;font-size:11.5px">株式会社サンプル</td><td>TOPページ コーディング</td><td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-b">鈴</div>鈴木 一郎</div></td><td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">75%</div><div class="pbar"><div class="pf p-mid" style="width:75%"></div></div></td><td class="due-d">4/12 🚨</td><td class="num">12.0h</td><td><span class="sc s-wip">▶ 進行中</span></td></tr>
+              <tr><td style="font-weight:700;font-size:11.5px">テスト工業</td><td>採用バナー制作</td><td style="color:var(--warn);font-style:italic;font-size:11.5px">未アサイン</td><td style="color:var(--text3);font-size:11px">―</td><td>4/18</td><td class="num" style="color:var(--text3)">―</td><td><span class="sc s-wait">⏳ アサイン待ち</span></td></tr>
+              <tr onclick="go('taskdetail',null)"><td style="font-weight:700;font-size:11.5px">グローバル商事</td><td>LP 原稿執筆</td><td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-c">佐</div>佐藤 美咲</div></td><td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">100%</div><div class="pbar"><div class="pf p-full" style="width:100%"></div></div></td><td>4/10</td><td class="num">8.0h</td><td><span class="sc s-done">✓ 完了</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TASK NEW STEP 1 ════ -->
+<div id="s-tasknew1" class="screen">
+  <div class="topbar">
+    <div class="tb-title">タスク依頼 — STEP 1</div>
+    <span class="sc s-wait">依頼情報の入力</span>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost">下書き保存</button>
+  </div>
+  <div class="scroll" style="max-width:680px">
+    <div class="notice n-info"><div class="ni">📝</div><div class="nt">依頼情報を入力して送信すると、管理者・ディレクターにアサイン依頼の通知が届きます。</div></div>
+    <div class="steps">
+      <div class="stp"><div class="stp-c sc-active">1</div><span class="stp-l sl-active">依頼情報の入力</span></div>
+      <div class="stp-line"></div>
+      <div class="stp"><div class="stp-c sc-pending">2</div><span class="stp-l sl-pending">クリエイターのアサイン</span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">📋 依頼基本情報</div><span class="rc r-req">依頼者・管理者・Dir</span></div>
+      <div class="cb">
+        <div class="fg">
+          <div class="fl">クライアント名 <span class="req">*</span></div>
+          <input class="fi ok" value="株式会社サンプル" readonly>
+          <div class="fhint">既存クライアントはオートコンプリートで候補表示</div>
+        </div>
+        <div class="fg">
+          <div class="fl">タスク名 <span class="req">*</span></div>
+          <input class="fi" placeholder="例：TOPページ ファーストビューデザイン" readonly>
+        </div>
+        <div class="fg">
+          <div class="fl">依頼内容・詳細</div>
+          <textarea class="fta" placeholder="具体的な作業内容・要件・参考情報を記入してください" readonly></textarea>
+        </div>
+        <div class="fr">
+          <div class="fg">
+            <div class="fl">希望納期</div>
+            <input class="fi" placeholder="2025/05/10" readonly>
+            <div class="fhint">任意。管理者が確定納期を別途設定します</div>
+          </div>
+          <div class="fg">
+            <div class="fl">参考URL / 備考</div>
+            <input class="fi" placeholder="FigmaリンクやGoogleドライブURL" readonly>
+          </div>
+        </div>
+        <div class="factions">
+          <button class="btn btn-ghost">キャンセル</button>
+          <button class="btn btn-mint" onclick="go('tasknew2',null)">依頼を登録してアサインを依頼 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TASK NEW STEP 2 ════ -->
+<div id="s-tasknew2" class="screen">
+  <div class="topbar">
+    <div class="tb-title">タスク依頼 — STEP 2</div>
+    <span class="sc s-wip">アサイン設定</span>
+    <div class="spacer"></div>
+    <div style="display:flex;gap:5px"><span class="rc r-adm">管理者</span><span class="rc r-dir">Dir</span></div>
+  </div>
+  <div class="scroll" style="max-width:680px">
+    <div class="steps">
+      <div class="stp"><div class="stp-c sc-done">✓</div><span class="stp-l sl-done">依頼情報の入力</span></div>
+      <div class="stp-line done"></div>
+      <div class="stp"><div class="stp-c sc-active">2</div><span class="stp-l sl-active">クリエイターのアサイン</span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">📋 依頼情報（依頼者入力済み — 編集可）</div><button class="btn btn-ghost btn-sm">✎ 編集する</button></div>
+      <div class="cb">
+        <div class="fr">
+          <div class="fg"><div class="fl">クライアント名</div><input class="fi ok" value="株式会社サンプル" readonly></div>
+          <div class="fg"><div class="fl">タスク名</div><input class="fi ok" value="TOPページ ファーストビューデザイン" readonly></div>
+        </div>
+        <div class="fg">
+          <div class="fl">依頼内容</div>
+          <textarea class="fta ok" readonly>Figmaのワイヤーに沿って、ブランドガイドライン準拠でデザイン。レスポンシブ対応必須（SP/TAB/PC）</textarea>
+        </div>
+        <div class="fr">
+          <div class="fg"><div class="fl">希望納期（依頼者入力）</div><input class="fi ro" value="2025/05/10（希望）" readonly></div>
+          <div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">⚙ アサイン設定</div></div>
+      <div class="cb">
+        <div class="fr">
+          <div class="fg">
+            <div class="fl">担当クリエイター <span class="req">*</span></div>
+            <select class="fi" disabled><option>山田 花子（今週稼働 88%）</option></select>
+            <div class="fhint">選択時に稼働率・空き工数をリアルタイム表示</div>
+          </div>
+          <div class="fg">
+            <div class="fl">依頼者（ディレクター）</div>
+            <input class="fi" value="田中 太郎（自分）" readonly>
+          </div>
+        </div>
+        <!-- 稼働プレビュー -->
+        <div style="background:var(--danger-bg);border:1px solid var(--danger-b);border-radius:var(--rs);padding:11px;margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:7px">⚠ 担当者の稼働プレビュー — 山田 花子</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1"><div style="height:9px;background:var(--border2);border-radius:10px;overflow:hidden"><div style="height:100%;width:100%;border-radius:10px;background:#C05050"></div></div></div>
+            <div style="font-size:13px;font-weight:700;color:var(--danger)">88% → 113%</div>
+          </div>
+          <div style="font-size:10.5px;color:var(--danger);margin-top:5px">この見積工数を追加すると稼働が超過します。納期調整を検討してください。</div>
+        </div>
+        <div class="fr">
+          <div class="fg">
+            <div class="fl">確定納期 <span class="req">*</span></div>
+            <input class="fi" placeholder="2025/05/08" readonly>
+            <div class="fhint">希望納期より前の場合は ⚠ マーク表示</div>
+          </div>
+          <div class="fg">
+            <div class="fl">見積工数（時間） <span class="req">*</span></div>
+            <input class="fi" placeholder="例：8.0（0.5h単位）" readonly>
+            <div class="fhint">入力後に担当者の稼働率を更新</div>
+          </div>
+        </div>
+        <div class="factions">
+          <button class="btn btn-ghost" onclick="go('tasknew1',null)">← 前へ</button>
+          <button class="btn btn-ghost">後で設定する</button>
+          <button class="btn btn-mint" onclick="go('tasklist',document.querySelectorAll('.si')[2])">アサインしてクリエイターに通知 ✦</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TASK LIST ════ -->
+<div id="s-tasklist" class="screen">
+  <div class="topbar">
+    <div class="tb-title">タスク一覧</div>
+    <span class="tb-sub">全 15 件</span>
+    <div class="spacer"></div>
+    <div class="period-toggle">
+      <button class="pt-btn active">今週</button>
+      <button class="pt-btn">今月</button>
+      <button class="pt-btn">全期間</button>
+    </div>
+    <button class="btn btn-ghost">CSV出力</button>
+    <button class="btn btn-mint" onclick="go('tasknew1',document.querySelectorAll('.si')[1])">＋ タスク依頼</button>
+  </div>
+  <div class="scroll">
+    <div class="filter-bar">
+      <input class="fb-in" placeholder="🔍 タスク名・クライアントで検索…" readonly>
+      <select class="fb-sel"><option>クライアント: すべて</option><option>株式会社サンプル</option><option>テスト工業</option><option>グローバル商事</option></select>
+      <select class="fb-sel"><option>担当: すべて</option><option>山田 花子</option><option>鈴木 一郎</option><option>佐藤 美咲</option><option>中村 健太</option></select>
+      <select class="fb-sel"><option>依頼者: すべて</option></select>
+    </div>
+    <div class="tabs">
+      <button class="tab active">すべて <span class="tc">15</span></button>
+      <button class="tab" style="color:var(--warn)">⏳ アサイン待ち <span class="tc">2</span></button>
+      <button class="tab">📋 未着手 <span class="tc">4</span></button>
+      <button class="tab">▶ 進行中 <span class="tc">6</span></button>
+      <button class="tab">✓ 完了 <span class="tc">3</span></button>
+    </div>
+    <div class="card">
+      <div class="cb0">
+        <table class="tbl">
+          <thead><tr><th>クライアント</th><th>タスク名</th><th>担当クリエイター</th><th style="width:105px">進捗</th><th>確定納期</th><th class="num">見積</th><th class="num">実績</th><th>ステータス</th></tr></thead>
+          <tbody>
+            <tr style="background:var(--warn-bg)" onclick="go('taskdetail',document.querySelectorAll('.si')[4])">
+              <td style="font-weight:700;font-size:11.5px">株式会社サンプル</td>
+              <td><div style="font-weight:600">TOPページ コーディング</div><div style="font-size:10.5px;color:var(--text3)">Figmaよりレスポンシブ対応</div></td>
+              <td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-b">鈴</div>鈴木 一郎</div></td>
+              <td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">75%</div><div class="pbar"><div class="pf p-mid" style="width:75%"></div></div></td>
+              <td class="due-d">4/12 🚨</td>
+              <td class="num">12.0h</td>
+              <td class="num edited-c"><span class="edited-b">9.5h</span></td>
+              <td><span class="sc s-wip">▶ 進行中</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;font-size:11.5px">テスト工業</td>
+              <td><div style="font-weight:600">採用バナー制作</div><div style="font-size:10.5px;color:var(--text3)">3パターン 1200×630px</div></td>
+              <td style="color:var(--warn);font-style:italic;font-size:11.5px">未アサイン</td>
+              <td style="color:var(--text3);font-size:11px">―</td>
+              <td>4/18</td>
+              <td class="num" style="color:var(--text3)">―</td>
+              <td class="num" style="color:var(--text3)">―</td>
+              <td><span class="sc s-wait">⏳ アサイン待ち</span></td>
+            </tr>
+            <tr onclick="go('taskdetail',null)">
+              <td style="font-weight:700;font-size:11.5px">グローバル商事</td>
+              <td><div style="font-weight:600">LP 原稿執筆</div><div style="font-size:10.5px;color:var(--text3)">社員インタビュー 3名分</div></td>
+              <td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-c">佐</div>佐藤 美咲</div></td>
+              <td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">100%</div><div class="pbar"><div class="pf p-full" style="width:100%"></div></div></td>
+              <td>4/10</td>
+              <td class="num">8.0h</td>
+              <td class="num">8.0h</td>
+              <td><span class="sc s-done">✓ 完了</span></td>
+            </tr>
+            <tr onclick="go('taskdetail',null)">
+              <td style="font-weight:700;font-size:11.5px">株式会社サンプル</td>
+              <td><div style="font-weight:600">会社案内 デザイン</div><div style="font-size:10.5px;color:var(--text3)">A4 8ページ</div></td>
+              <td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-a">山</div>山田 花子</div></td>
+              <td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">50%</div><div class="pbar"><div class="pf p-mid" style="width:50%"></div></div></td>
+              <td class="due-w">4/13 ⚠</td>
+              <td class="num">16.0h</td>
+              <td class="num">8.0h</td>
+              <td><span class="sc s-wip">▶ 進行中</span></td>
+            </tr>
+            <tr onclick="go('taskdetail',null)">
+              <td style="font-weight:700;font-size:11.5px">グローバル商事</td>
+              <td><div style="font-weight:600">SNSバナー制作 5点</div></td>
+              <td><div style="display:flex;align-items:center;gap:5px"><div class="ava av-sm av-c">佐</div>佐藤 美咲</div></td>
+              <td><div style="font-size:10px;text-align:right;color:var(--text2);margin-bottom:2px">25%</div><div class="pbar"><div class="pf p-low" style="width:25%"></div></div></td>
+              <td>4/15</td>
+              <td class="num">6.0h</td>
+              <td class="num">2.0h</td>
+              <td><span class="sc s-wip">▶ 進行中</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;font-size:11.5px">テスト工業</td>
+              <td><div style="font-weight:600">ニュースレター原稿</div></td>
+              <td style="color:var(--warn);font-style:italic;font-size:11.5px">未アサイン</td>
+              <td style="color:var(--text3);font-size:11px">―</td>
+              <td>4/20</td>
+              <td class="num" style="color:var(--text3)">―</td>
+              <td class="num" style="color:var(--text3)">―</td>
+              <td><span class="sc s-wait">⏳ アサイン待ち</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TASK DETAIL ════ -->
+<div id="s-taskdetail" class="screen">
+  <div class="topbar">
+    <button class="btn btn-ghost btn-sm" onclick="go('tasklist',document.querySelectorAll('.si')[2])">← 一覧に戻る</button>
+    <div class="tb-title" style="margin-left:6px">TOPページ コーディング</div>
+    <span class="sc s-wip" style="margin-left:6px">▶ 進行中</span>
+    <div class="spacer"></div>
+    <span class="rc r-cre" style="font-size:10.5px;padding:2px 10px">クリエイター表示中</span>
+    <button class="btn btn-danger btn-sm">差し戻し</button>
+    <button class="btn btn-mint">✓ 完了にする</button>
+  </div>
+  <div class="scroll">
+    <div class="gb">
+      <!-- LEFT -->
+      <div>
+        <div class="card">
+          <div class="ch"><div class="ct">📋 依頼情報</div><span style="font-size:10px;color:var(--text3)">依頼者：田中 太郎（Dir）</span></div>
+          <div class="cb">
+            <div class="fr">
+              <div class="fg"><div class="fl">クライアント名</div><div style="font-size:13px;font-weight:700;padding:5px 0">🏢 株式会社サンプル</div></div>
+              <div class="fg"><div class="fl">タスク名</div><div style="font-size:13px;font-weight:600;padding:5px 0">TOPページ コーディング</div></div>
+            </div>
+            <div class="fg">
+              <div class="fl">依頼内容・詳細</div>
+              <div style="font-size:12.5px;color:var(--text2);background:var(--surf2);border-radius:var(--rs);padding:10px 12px;line-height:1.8">Figmaのワイヤーに沿って、ブランドガイドライン準拠でコーディングしてください。レスポンシブ対応必須（SP/TAB/PC）。<br><span style="color:var(--mint-d)">figma.com/xxxxx</span></div>
+            </div>
+            <div class="fr">
+              <div><div class="fl">希望納期（依頼者）</div><div style="font-size:12px;color:var(--text2);padding:4px 0">2025/05/10</div></div>
+              <div><div class="fl">確定納期</div><div style="font-size:13px;font-weight:700;color:var(--danger);padding:4px 0">2025/04/12 🚨 超過</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">📈 進捗・工数入力</div><span class="rc r-cre">クリエイター編集可</span></div>
+          <div class="cb">
+            <div class="fl" style="margin-bottom:8px">進捗率</div>
+            <div class="prog-area">
+              <div style="text-align:center"><div class="prog-num">75</div><div style="font-size:11px;color:var(--text2)">%</div></div>
+              <div class="prog-slider">
+                <div class="prog-bar-lg"><div class="prog-fill-lg" style="width:75%"></div></div>
+                <div class="prog-ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+              </div>
+              <div class="prog-btns">
+                <button class="pb">25%</button>
+                <button class="pb">50%</button>
+                <button class="pb" style="font-weight:700;border-color:var(--mint-l);color:var(--mint-d)">75%</button>
+                <button class="pb full">100%</button>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="fg">
+              <div class="fl">ステータス</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="st"> <span class="sc s-todo">📋 未着手</span></label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="st" checked> <span class="sc s-wip">▶ 進行中</span></label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="st"> <span class="sc s-done">✓ 完了</span></label>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="fg">
+              <div class="fl">実績工数（時間）</div>
+              <div style="display:flex;align-items:center;gap:9px">
+                <input class="fi ok" value="9.5" style="width:80px" readonly>
+                <span style="color:var(--text2)">h</span>
+                <span class="edited-b">手入力済み</span>
+              </div>
+              <div style="margin-top:8px">
+                <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text2);margin-bottom:3px"><span>実績 9.5h</span><span>見積 12.0h</span></div>
+                <div class="pbar" style="height:8px"><div class="pf p-mid" style="width:79%"></div></div>
+              </div>
+            </div>
+            <div class="factions"><button class="btn btn-mint">更新する</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">💬 コメント</div></div>
+          <div class="cb">
+            <div class="cmt"><div class="ava av-sm av-b">鈴</div><div class="cmt-body"><div class="cmt-meta"><span class="cmt-author">鈴木 一郎</span><span>4/11 14:32</span></div>レスポンシブ対応のSPブレークポイントは 375px と 390px どちらを基準にしますか？</div></div>
+            <div class="cmt cmt-me"><div class="ava av-sm" style="background:#EEE4D8;color:#5A4028">田</div><div class="cmt-body"><div class="cmt-meta"><span class="cmt-author">田中 太郎（Dir）</span><span>4/11 15:10</span></div>375px で対応してください。クライアント指定です。</div></div>
+            <div style="margin-top:10px">
+              <textarea class="fta" placeholder="コメントを入力… (@メンション も使えます)" style="min-height:52px" readonly></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:5px"><button class="btn btn-mint btn-sm">送信</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="card">
+          <div class="ch"><div class="ct">⚙ アサイン情報</div><span class="rc r-adm">管理者/Dir</span></div>
+          <div class="cb">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div class="ava av-lg av-b">鈴</div>
+              <div><div style="font-size:13px;font-weight:700">鈴木 一郎</div><div style="font-size:11px;color:var(--text3)">クリエイター</div><div style="margin-top:4px"><span class="sc s-back" style="font-size:9.5px">今週 110% 超過</span></div></div>
+            </div>
+            <div class="divider"></div>
+            <div class="g2">
+              <div><div class="fl">見積工数</div><div style="font-size:16px;font-weight:300">12.0<span style="font-size:11px;color:var(--text2)"> h</span></div></div>
+              <div><div class="fl">実績工数</div><div style="font-size:16px;font-weight:300;color:var(--gold)">9.5<span style="font-size:11px"> h</span></div></div>
+            </div>
+            <div class="divider"></div>
+            <div style="margin-bottom:8px"><div class="fl">希望納期（依頼者）</div><div style="font-size:12px;color:var(--text2)">2025/05/10</div></div>
+            <div><div class="fl">確定納期</div><div style="font-size:13px;font-weight:700;color:var(--danger)">2025/04/12 🚨</div></div>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px">アサイン変更</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">📝 更新履歴</div></div>
+          <div class="cb">
+            <div style="font-size:11.5px;color:var(--text2)">
+              <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--text3);flex-shrink:0">4/11</span><span>鈴木さんが<b>実績工数</b>を 9.5h に更新</span></div>
+              <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--text3);flex-shrink:0">4/11</span><span>鈴木さんが<b>進捗率</b>を 75% に更新</span></div>
+              <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--text3);flex-shrink:0">4/09</span><span>田中さんが<b>アサイン</b>（鈴木 一郎）</span></div>
+              <div style="display:flex;gap:8px;padding:6px 0"><span style="color:var(--text3);flex-shrink:0">4/09</span><span>田中さんが<b>タスクを登録</b></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">📎 添付ファイル</div></div>
+          <div class="cb">
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="font-size:15px">📄</span><span style="flex:1;color:var(--info)">wireframe_v2.fig</span><span style="color:var(--text3);font-size:11px">2.4MB</span></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px"><span style="font-size:15px">🖼</span><span style="flex:1;color:var(--info)">brandguide_2024.pdf</span><span style="color:var(--text3);font-size:11px">1.1MB</span></div>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:7px">＋ ファイルを添付</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ WORKLOAD ════ -->
+<div id="s-workload" class="screen">
+  <div class="topbar">
+    <div class="tb-title">稼働管理</div>
+    <div class="spacer"></div>
+    <div class="period-toggle">
+      <button class="pt-btn active">今週</button>
+      <button class="pt-btn">先週</button>
+      <button class="pt-btn">今月</button>
+      <button class="pt-btn">先月</button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="g4" style="margin-bottom:13px">
+      <div class="kpi km"><div class="kl">チーム平均稼働率</div><div class="kv">84<span class="ku"> %</span></div><div class="ks" style="color:var(--ok)">▲ 先週比 +4pt</div></div>
+      <div class="kpi ki"><div class="kl">今週 実績工数合計</div><div class="kv">53.5<span class="ku"> h</span></div><div class="ks">見積 64.0h 対比</div></div>
+      <div class="kpi km"><div class="kl">タスク完了率</div><div class="kv">64<span class="ku"> %</span></div><div class="ks">9 / 14件</div></div>
+      <div class="kpi kd"><div class="kl">稼働超過メンバー</div><div class="kv">1<span class="ku"> 名</span></div><div class="ks" style="color:var(--danger)">鈴木 一郎 110%</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">👥 メンバー別 稼働サマリー</div><span style="font-size:10px;color:var(--text3)">週次 4/7–4/13</span></div>
+      <div class="cb0">
+        <div style="display:grid;grid-template-columns:150px 1fr 60px 120px 70px 70px 70px;padding:7px 14px;background:var(--surf2);font-size:9.5px;color:var(--text3);font-weight:600;letter-spacing:.04em;border-bottom:1px solid var(--border2);">
+          <div>担当者</div><div>稼働バー</div><div style="text-align:right">稼働率</div><div style="text-align:right">実績 / 見積</div><div style="text-align:right">タスク</div><div style="text-align:right">完了</div><div style="text-align:center">状態</div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr 60px 120px 70px 70px 70px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border2);">
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600"><div class="ava av-sm av-a">山</div>山田 花子</div>
+          <div><div class="wl-bar"><div class="wl-fill wf-warn" style="width:88%"></div></div></div>
+          <div style="text-align:right;font-weight:700;color:#A07010">88%</div>
+          <div style="text-align:right;font-size:12px;color:var(--text2)">14.0h / 16.0h</div>
+          <div style="text-align:right">3</div><div style="text-align:right">1</div>
+          <div style="text-align:center"><span class="sc s-wip" style="font-size:9px">警告</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr 60px 120px 70px 70px 70px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border2);background:var(--danger-bg);">
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600"><div class="ava av-sm av-b">鈴</div>鈴木 一郎</div>
+          <div><div class="wl-bar"><div class="wl-fill wf-danger" style="width:100%"></div></div></div>
+          <div style="text-align:right;font-weight:700;color:var(--danger)">110%</div>
+          <div style="text-align:right;font-size:12px;color:var(--danger)">17.5h / 16.0h</div>
+          <div style="text-align:right">5</div><div style="text-align:right">2</div>
+          <div style="text-align:center"><span class="sc s-back" style="font-size:9px">超過</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr 60px 120px 70px 70px 70px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border2);">
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600"><div class="ava av-sm av-c">佐</div>佐藤 美咲</div>
+          <div><div class="wl-bar"><div class="wl-fill wf-ok" style="width:62%"></div></div></div>
+          <div style="text-align:right;font-weight:700;color:var(--mint-d)">62%</div>
+          <div style="text-align:right;font-size:12px;color:var(--text2)">10.0h / 16.0h</div>
+          <div style="text-align:right">2</div><div style="text-align:right">4</div>
+          <div style="text-align:center"><span class="sc s-done" style="font-size:9px">余裕</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr 60px 120px 70px 70px 70px;align-items:center;padding:11px 14px;">
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600"><div class="ava av-sm av-d">中</div>中村 健太</div>
+          <div><div class="wl-bar"><div class="wl-fill wf-ok" style="width:75%"></div></div></div>
+          <div style="text-align:right;font-weight:700;color:var(--mint-d)">75%</div>
+          <div style="text-align:right;font-size:12px;color:var(--text2)">12.0h / 16.0h</div>
+          <div style="text-align:right">4</div><div style="text-align:right">2</div>
+          <div style="text-align:center"><span class="sc s-todo" style="font-size:9px">通常</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /shell -->
+
+<script>
+function go(id, sideEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById('s-' + id);
+  if (t) t.classList.add('active');
+  document.querySelectorAll('.si').forEach(s => s.classList.remove('active'));
+  if (sideEl) sideEl.classList.add('active');
+}
+function switchView(type, btn) {
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('v-creator').style.display = type === 'creator' ? '' : 'none';
+  document.getElementById('v-client').style.display  = type === 'client'  ? '' : 'none';
+}
+</script>
+</body>
+</html>
