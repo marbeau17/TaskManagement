@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { loginUser, changePassword } from '@/lib/data/members'
 import type { User } from '@/types/database'
 
-/** Default mock user: director (田中太郎) */
+/** Default mock user: director (安田 修) */
 const MOCK_DIRECTOR: User = {
   id: 'u2',
   email: 'o.yasuda@meetsc.co.jp',
@@ -15,6 +15,7 @@ const MOCK_DIRECTOR: User = {
   avatar_color: 'av-b',
   weekly_capacity_hours: 40,
   is_active: true,
+  must_change_password: false,
   created_at: '2020-01-01T00:00:00Z',
   updated_at: '2020-01-01T00:00:00Z',
 }

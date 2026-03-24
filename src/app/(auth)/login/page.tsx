@@ -49,7 +49,7 @@ export default function LoginPage() {
       try {
         const user = await login(data.email, data.password)
         if (user) {
-          router.push('/dashboard')
+          router.push(user.must_change_password ? '/change-password' : '/dashboard')
         } else {
           setError('メールアドレスまたはパスワードが正しくありません')
         }

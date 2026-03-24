@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         name_short: name.charAt(0),
         role,
         weekly_capacity_hours: 16,
+        must_change_password: true,
       })
       .select()
       .single()

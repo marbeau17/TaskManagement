@@ -182,7 +182,7 @@ export function InviteMemberModal({
 
           {/* Notice */}
           <div className="bg-info-bg border border-info-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-info leading-relaxed">
-            初期パスワード「workflow2026」が設定されます。ログイン後、各自でパスワードを変更してください。
+            初期パスワード「workflow2026」が設定されます。初回ログイン時にパスワード変更が必要です。
           </div>
 
           {/* Mutation error */}

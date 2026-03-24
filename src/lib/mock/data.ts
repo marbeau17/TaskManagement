@@ -24,6 +24,7 @@ export const DEFAULT_PASSWORD = 'workflow2026'
 
 export interface MockUserWithPassword extends User {
   password: string
+  must_change_password: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'y.ito@meetsc.co.jp',
     weekly_capacity_hours: 40,
     is_active: true,
+    must_change_password: false,
     created_at: '2020-01-01T00:00:00',
     updated_at: '2020-01-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -53,6 +55,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'o.yasuda@meetsc.co.jp',
     weekly_capacity_hours: 40,
     is_active: true,
+    must_change_password: false,
     created_at: '2020-01-01T00:00:00',
     updated_at: '2020-01-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -66,6 +69,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'y.akimoto@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2022-04-01T00:00:00',
     updated_at: '2022-04-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -79,6 +83,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'r.watanabe@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2023-01-01T00:00:00',
     updated_at: '2023-01-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -92,6 +97,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'm.takimiya@meetsc.co.jp',
     weekly_capacity_hours: 40,
     is_active: true,
+    must_change_password: false,
     created_at: '2021-04-01T00:00:00',
     updated_at: '2021-04-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -105,6 +111,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'h.ohta@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2023-04-01T00:00:00',
     updated_at: '2023-04-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -118,6 +125,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'l.trabuio@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2023-07-01T00:00:00',
     updated_at: '2023-07-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -131,6 +139,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'h.kadota@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2024-04-01T00:00:00',
     updated_at: '2024-04-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -144,6 +153,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'r.agcaoili@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2024-10-01T00:00:00',
     updated_at: '2024-10-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -157,6 +167,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'm.takeuchi@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
     password: DEFAULT_PASSWORD,
@@ -170,6 +181,7 @@ export const mockUsers: MockUserWithPassword[] = [
     email: 'y.putra@meetsc.co.jp',
     weekly_capacity_hours: 16,
     is_active: true,
+    must_change_password: false,
     created_at: '2025-04-01T00:00:00',
     updated_at: '2025-04-01T00:00:00',
     password: DEFAULT_PASSWORD,

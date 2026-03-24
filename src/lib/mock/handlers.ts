@@ -306,6 +306,7 @@ export function addMockMember(data: InviteMemberForm & { password?: string }): U
     created_at: now,
     updated_at: now,
     password: data.password ?? DEFAULT_PASSWORD,
+    must_change_password: true,
   }
   users.push(newUser)
   return newUser
@@ -339,6 +340,20 @@ export function changeMockPassword(
     return { success: false, error: 'Current password is incorrect' }
   }
   user.password = newPassword
+  user.updated_at = new Date().toISOString()
+  return { success: true }
+}
+
+export function forceChangeMockPassword(
+  userId: string,
+  newPassword: string
+): { success: boolean; error?: string } {
+  const user = users.find((u) => u.id === userId)
+  if (!user) {
+    return { success: false, error: 'User not found' }
+  }
+  user.password = newPassword
+  user.must_change_password = false
   user.updated_at = new Date().toISOString()
   return { success: true }
 }

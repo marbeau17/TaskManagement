@@ -31,6 +31,7 @@ export interface User {
   avatar_color: AvatarColor
   weekly_capacity_hours: number
   is_active: boolean
+  must_change_password: boolean
   created_at: string
   updated_at: string
 }

@@ -172,6 +172,39 @@ export async function changePassword(
 }
 
 // ---------------------------------------------------------------------------
+// forceChangePassword (initial password change, no old password required)
+// ---------------------------------------------------------------------------
+
+export async function forceChangePassword(
+  userId: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  if (useMock()) {
+    const { forceChangeMockPassword } = await import('@/lib/mock/handlers')
+    return forceChangeMockPassword(userId, newPassword)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { error: authError } = await supabase.auth.updateUser({ password: newPassword })
+  if (authError) {
+    return { success: false, error: authError.message }
+  }
+
+  const { error: dbError } = await supabase
+    .from('users')
+    .update({ must_change_password: false })
+    .eq('id', userId)
+
+  if (dbError) {
+    return { success: false, error: dbError.message }
+  }
+
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
 // loginUser
 // ---------------------------------------------------------------------------
 
