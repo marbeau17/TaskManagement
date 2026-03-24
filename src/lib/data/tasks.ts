@@ -37,7 +37,7 @@ export async function getTasks(
   let query = supabase
     .from('tasks')
     .select(
-      '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
     )
 
   if (filters?.status && filters.status !== 'all') {
@@ -97,7 +97,7 @@ export async function getTaskById(
   const { data, error } = await supabase
     .from('tasks')
     .select(
-      '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
     )
     .eq('id', id)
     .single()
@@ -262,7 +262,7 @@ export async function getComments(taskId: string): Promise<Comment[]> {
 
   const { data, error } = await supabase
     .from('comments')
-    .select('*, user:users(*)')
+    .select('*, user:users!comments_user_id_fkey(*)')
     .eq('task_id', taskId)
     .order('created_at', { ascending: true })
 
@@ -298,7 +298,7 @@ export async function addComment(
       user_id: authUser.id,
       body,
     })
-    .select('*, user:users(*)')
+    .select('*, user:users!comments_user_id_fkey(*)')
     .single()
 
   if (error) throw error
@@ -320,7 +320,7 @@ export async function getActivityLogs(taskId: string): Promise<ActivityLog[]> {
 
   const { data, error } = await supabase
     .from('activity_logs')
-    .select('*, user:users(*)')
+    .select('*, user:users!activity_logs_user_id_fkey(*)')
     .eq('task_id', taskId)
     .order('created_at', { ascending: false })
 
@@ -343,7 +343,7 @@ export async function getAttachments(taskId: string): Promise<Attachment[]> {
 
   const { data, error } = await supabase
     .from('attachments')
-    .select('*, uploader:users!uploaded_by(*)')
+    .select('*, uploader:users!attachments_uploaded_by_fkey(*)')
     .eq('task_id', taskId)
     .order('created_at', { ascending: false })
 

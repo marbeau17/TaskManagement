@@ -59,7 +59,7 @@ export default function LoginPage() {
         setLoading(false)
       }
     },
-    [isMockMode, login, router]
+    [login, router]
   )
 
   const handleDemoLogin = useCallback(() => {

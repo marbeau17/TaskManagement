@@ -118,7 +118,7 @@ export default function TaskDetailPage() {
         <div className="flex flex-col gap-4">
           <TaskDetailInfo task={task} />
           <ProgressInput task={task} />
-          <CommentSection taskId={task.id} currentUserId={user.id} />
+          <CommentSection taskId={task.id} currentUserId={user?.id ?? ''} />
         </div>
 
         {/* Right column */}

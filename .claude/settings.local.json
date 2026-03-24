@@ -66,7 +66,16 @@
       "mcp__claude_ai_Vercel__web_fetch_vercel_url",
       "Bash(grep -r useAssignTask src/ --include=*.tsx --include=*.ts)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
-      "mcp__claude_ai_Vercel__get_deployment_build_logs"
+      "mcp__claude_ai_Vercel__get_deployment_build_logs",
+      "Bash(vercel inspect:*)",
+      "Bash(npx supabase:*)",
+      "Bash(vercel env:*)",
+      "Bash(PGPASSWORD='Narashi23&&' psql \"postgresql://postgres:Narashi23%26%26@db.ewlxqiowzdebksykxvuv.supabase.co:5432/postgres\" -c \"SELECT version\\(\\);\")",
+      "Bash(python3 -c \"import psycopg2\")",
+      "Bash(node -e \":*)",
+      "Bash(npm init:*)",
+      "Bash(cat:*)",
+      "Bash(NEXT_PUBLIC_USE_MOCK=false NEXT_PUBLIC_SUPABASE_URL=https://ewlxqiowzdebksykxvuv.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAwMTUsImV4cCI6MjA4OTkxNjAxNX0.dAkBUdZ8VgOQIOiR5Ri3_f0LpoiHBgRpfqggDrPUcUc npm run build)"
     ]
   }
 }

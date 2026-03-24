@@ -43,8 +43,8 @@ export function Sidebar({ activePage }: SidebarProps) {
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
 
-  const handleLogout = useCallback(() => {
-    logout()
+  const handleLogout = useCallback(async () => {
+    await logout()
     router.push('/login')
   }, [logout, router])
 
@@ -162,13 +162,13 @@ export function Sidebar({ activePage }: SidebarProps) {
       {/* Current user info */}
       <div className="px-[10px] pb-[14px]">
         <div className="flex items-center gap-[8px] px-[10px] py-[8px] rounded-[6px] bg-white/[0.08]">
-          <Avatar name_short={user.name_short} color={user.avatar_color} size="sm" />
+          <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
           <div className="flex flex-col flex-1 min-w-0">
             <span className="text-[11.5px] text-white font-semibold leading-tight truncate">
-              {user.name}
+              {user?.name ?? '...'}
             </span>
             <span className="text-[9.5px] text-white/50 leading-tight">
-              {roleLabel[user.role] ?? user.role}
+              {user ? (roleLabel[user.role] ?? user.role) : ''}
             </span>
           </div>
           <DropdownMenu>

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Paths that should never require authentication
-const PUBLIC_PATHS = ['/login', '/api/auth']
+const PUBLIC_PATHS = ['/login', '/change-password', '/api/auth']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     // Redirect to login if no valid session
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -67,5 +67,16 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/(main)/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - login, change-password (auth pages)
+     * - api/auth (auth API routes)
+     * - public files (images, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon\\.ico|login|change-password|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

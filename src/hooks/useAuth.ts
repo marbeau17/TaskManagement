@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
-import { loginUser, changePassword } from '@/lib/data/members'
+import { changePassword } from '@/lib/data/members'
 import type { User } from '@/types/database'
 
-/** Default mock user: director (安田 修) */
+const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+
+/** Default mock user: director */
 const MOCK_DIRECTOR: User = {
   id: 'u2',
   email: 'o.yasuda@meetsc.co.jp',
@@ -21,34 +23,80 @@ const MOCK_DIRECTOR: User = {
 }
 
 /**
- * Auth hook that integrates with the data layer for login/password management.
+ * Auth hook that integrates with Supabase Auth in non-mock mode,
+ * and uses mock data in mock mode.
  */
 export function useAuth() {
   const { user, setUser, isAuthenticated } = useAuthStore()
 
-  // Auto-initialize with mock director if no user is set
-  const currentUser = user ?? MOCK_DIRECTOR
+  // On mount, check for existing Supabase session (non-mock only)
+  useEffect(() => {
+    if (useMock() || user) return
+
+    const checkSession = async () => {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        // Fetch full user profile from public.users
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single()
+        if (profile) setUser(profile as User)
+      }
+    }
+    checkSession()
+  }, [user, setUser])
 
   const login = useCallback(
     async (email: string, password: string): Promise<User | null> => {
-      const loggedInUser = await loginUser(email, password)
-      if (loggedInUser) {
-        setUser(loggedInUser)
-        return loggedInUser
+      if (useMock()) {
+        const { loginUser } = await import('@/lib/data/members')
+        const u = await loginUser(email, password)
+        if (u) setUser(u)
+        return u
+      }
+
+      // Real Supabase auth
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error || !data.user) return null
+
+      // Fetch full profile from public.users
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile) {
+        setUser(profile as User)
+        return profile as User
       }
       return null
     },
     [setUser]
   )
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    if (!useMock()) {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    }
     setUser(null)
   }, [setUser])
+
+  // For mock mode, auto-init with default director
+  const currentUser = useMock() && !user ? MOCK_DIRECTOR : user
 
   return {
     user: currentUser,
     isLoading: false,
-    isAuthenticated: isAuthenticated || user === null, // auto-authenticated in mock mode
+    isAuthenticated: useMock() ? true : isAuthenticated,
     login,
     logout,
   }
