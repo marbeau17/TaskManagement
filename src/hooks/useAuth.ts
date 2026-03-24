@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import { useAuthStore } from '@/stores/authStore'
+import { loginUser, changePassword } from '@/lib/data/members'
 import type { User } from '@/types/database'
 
 /** Default mock user: director (田中太郎) */
@@ -19,8 +20,7 @@ const MOCK_DIRECTOR: User = {
 }
 
 /**
- * Simple mock auth hook.
- * In production this would integrate with Supabase Auth.
+ * Auth hook that integrates with the data layer for login/password management.
  */
 export function useAuth() {
   const { user, setUser, isAuthenticated } = useAuthStore()
@@ -29,8 +29,13 @@ export function useAuth() {
   const currentUser = user ?? MOCK_DIRECTOR
 
   const login = useCallback(
-    (u?: User) => {
-      setUser(u ?? MOCK_DIRECTOR)
+    async (email: string, password: string): Promise<User | null> => {
+      const loggedInUser = await loginUser(email, password)
+      if (loggedInUser) {
+        setUser(loggedInUser)
+        return loggedInUser
+      }
+      return null
     },
     [setUser]
   )
@@ -46,4 +51,26 @@ export function useAuth() {
     login,
     logout,
   }
+}
+
+/**
+ * Hook for changing the current user's password.
+ */
+export function useChangePassword() {
+  const { user } = useAuthStore()
+
+  const change = useCallback(
+    async (
+      oldPassword: string,
+      newPassword: string
+    ): Promise<{ success: boolean; error?: string }> => {
+      if (!user) {
+        return { success: false, error: 'Not authenticated' }
+      }
+      return changePassword(user.id, oldPassword, newPassword)
+    },
+    [user]
+  )
+
+  return { changePassword: change }
 }

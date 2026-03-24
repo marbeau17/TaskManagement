@@ -1,7 +1,19 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Settings, KeyRound, LogOut } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
+import { useAuth } from '@/hooks/useAuth'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { PasswordChangeModal } from '@/components/members/PasswordChangeModal'
 
 interface SidebarProps {
   activePage: string
@@ -27,6 +39,22 @@ const SYSTEM_NAV = [
 ]
 
 export function Sidebar({ activePage }: SidebarProps) {
+  const { user, logout } = useAuth()
+  const router = useRouter()
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+
+  const handleLogout = useCallback(() => {
+    logout()
+    router.push('/login')
+  }, [logout, router])
+
+  const roleLabel: Record<string, string> = {
+    admin: '管理者',
+    director: 'ディレクター',
+    requester: '依頼者',
+    creator: 'クリエイター',
+  }
+
   return (
     <aside className="w-[192px] bg-mint-dd flex flex-col h-full shrink-0 select-none">
       {/* Logo */}
@@ -134,13 +162,47 @@ export function Sidebar({ activePage }: SidebarProps) {
       {/* Current user info */}
       <div className="px-[10px] pb-[14px]">
         <div className="flex items-center gap-[8px] px-[10px] py-[8px] rounded-[6px] bg-white/[0.08]">
-          <Avatar name_short="田" color="av-a" size="sm" />
-          <div className="flex flex-col">
-            <span className="text-[11.5px] text-white font-semibold leading-tight">田中 太郎</span>
-            <span className="text-[9.5px] text-white/50 leading-tight">ディレクター</span>
+          <Avatar name_short={user.name_short} color={user.avatar_color} size="sm" />
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-[11.5px] text-white font-semibold leading-tight truncate">
+              {user.name}
+            </span>
+            <span className="text-[9.5px] text-white/50 leading-tight">
+              {roleLabel[user.role] ?? user.role}
+            </span>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="p-[4px] rounded-[4px] text-white/50 hover:text-white hover:bg-white/[0.12] transition-colors cursor-pointer"
+            >
+              <Settings className="w-[14px] h-[14px]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end" sideOffset={8}>
+              <DropdownMenuItem
+                className="text-[12px] gap-[8px] cursor-pointer"
+                onSelect={() => setShowPasswordModal(true)}
+              >
+                <KeyRound className="w-[14px] h-[14px]" />
+                パスワード変更
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
+                onSelect={handleLogout}
+              >
+                <LogOut className="w-[14px] h-[14px]" />
+                ログアウト
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {/* Password change modal */}
+      <PasswordChangeModal
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
     </aside>
   )
 }

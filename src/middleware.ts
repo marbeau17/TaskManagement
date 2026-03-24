@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Paths that should never require authentication
+const PUBLIC_PATHS = ['/login', '/api/auth']
+
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Skip auth check for public paths
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next()
+  }
+
   // In mock mode, allow all routes without authentication
   if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
     return NextResponse.next()

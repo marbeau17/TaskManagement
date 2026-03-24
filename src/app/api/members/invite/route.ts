@@ -21,19 +21,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (useMock()) {
-      // In mock mode, return a fake new member
-      const mockMember = {
-        id: `user-${Date.now()}`,
+      // In mock mode, use addMockMember handler with default password
+      const { addMockMember } = await import('@/lib/mock/handlers')
+      const mockMember = addMockMember({
         email,
         name,
         name_short: name.charAt(0),
         role,
-        avatar_color: 'av-a' as const,
         weekly_capacity_hours: 16,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+        password: 'workflow2026',
+      })
       return NextResponse.json(mockMember, { status: 201 })
     }
 
@@ -45,6 +42,7 @@ export async function POST(request: NextRequest) {
     const { data: authData, error: authError } =
       await supabase.auth.admin.createUser({
         email,
+        password: 'workflow2026',
         email_confirm: true,
         user_metadata: { name, role },
       })

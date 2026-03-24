@@ -13,10 +13,24 @@ import type {
 } from '@/types/database'
 
 // ---------------------------------------------------------------------------
+// Default password for mock users
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_PASSWORD = 'workflow2026'
+
+// ---------------------------------------------------------------------------
+// Mock user with password (extended for mock auth)
+// ---------------------------------------------------------------------------
+
+export interface MockUserWithPassword extends User {
+  password: string
+}
+
+// ---------------------------------------------------------------------------
 // Users
 // ---------------------------------------------------------------------------
 
-export const mockUsers: User[] = [
+export const mockUsers: MockUserWithPassword[] = [
   {
     id: 'u1',
     name: '田中 太郎',
@@ -28,6 +42,7 @@ export const mockUsers: User[] = [
     is_active: true,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    password: DEFAULT_PASSWORD,
   },
   {
     id: 'u2',
@@ -40,6 +55,7 @@ export const mockUsers: User[] = [
     is_active: true,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    password: DEFAULT_PASSWORD,
   },
   {
     id: 'u3',
@@ -52,6 +68,7 @@ export const mockUsers: User[] = [
     is_active: true,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    password: DEFAULT_PASSWORD,
   },
   {
     id: 'u4',
@@ -64,6 +81,7 @@ export const mockUsers: User[] = [
     is_active: true,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    password: DEFAULT_PASSWORD,
   },
   {
     id: 'u5',
@@ -76,6 +94,7 @@ export const mockUsers: User[] = [
     is_active: true,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    password: DEFAULT_PASSWORD,
   },
 ]
 

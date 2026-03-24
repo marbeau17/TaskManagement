@@ -52,7 +52,17 @@
       "Bash(npx tsc:*)",
       "Bash(ls \"/Users/yasudaosamu/Desktop/codes/TaskManagement/src/app/\\(main\\)/\")",
       "Bash(ls \"/Users/yasudaosamu/Desktop/codes/TaskManagement/src/app/\\(main\\)/layout.tsx\")",
-      "Bash(export PATH=$HOME/.local/bin:$PATH)"
+      "Bash(export PATH=$HOME/.local/bin:$PATH)",
+      "Bash(git push:*)",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami:*)",
+      "Bash(yes)",
+      "Bash(vercel --prod -e NEXT_PUBLIC_USE_MOCK=true -e NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co -e NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder -e NEXT_PUBLIC_APP_NAME=WorkFlow)",
+      "Bash(vercel link:*)",
+      "Bash(vercel --prod)",
+      "Bash(grep -r NEXT_PUBLIC_USE_MOCK /Users/yasudaosamu/Desktop/codes/TaskManagement --include=*.ts --include=*.tsx --include=*.env*)",
+      "Bash(NEXT_PUBLIC_USE_MOCK=true NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build)"
     ]
   }
 }

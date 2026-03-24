@@ -9,6 +9,45 @@ import { updateMember } from '@/lib/data/members'
 import { ROLE_LABELS } from '@/lib/constants'
 import type { User, UserRole } from '@/types/database'
 import { useQueryClient } from '@tanstack/react-query'
+import { InviteMemberModal } from '@/components/members/InviteMemberModal'
+import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
+
+// ---------------------------------------------------------------------------
+// Feedback message component
+// ---------------------------------------------------------------------------
+
+function FeedbackMessage({
+  type,
+  message,
+  onDismiss,
+}: {
+  type: 'success' | 'error'
+  message: string
+  onDismiss: () => void
+}) {
+  const styles =
+    type === 'success'
+      ? 'bg-ok-bg border-ok-b text-ok'
+      : 'bg-danger-bg border-danger-b text-danger'
+
+  return (
+    <div
+      className={`flex items-center justify-between px-[12px] py-[8px] rounded-[6px] border text-[12px] ${styles}`}
+    >
+      <span>{message}</span>
+      <button
+        onClick={onDismiss}
+        className="ml-[8px] text-[14px] opacity-60 hover:opacity-100 transition-opacity"
+      >
+        &times;
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Edit member modal (inline)
+// ---------------------------------------------------------------------------
 
 function EditMemberModal({
   member,
@@ -125,22 +164,78 @@ function EditMemberModal({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 export default function MembersPage() {
   const { data: members, isLoading } = useMembers()
   const [editingMember, setEditingMember] = useState<User | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [deletingMember, setDeletingMember] = useState<User | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message })
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => setFeedback(null), 4000)
+  }
+
+  const handleDeleteClick = (member: User) => {
+    setDeletingMember(member)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setDeleteDialogOpen(open)
+    if (!open) {
+      setDeletingMember(null)
+    }
+  }
+
+  const activeCount = members?.filter((m) => m.is_active).length ?? 0
+  const totalCount = members?.length ?? 0
 
   return (
     <Shell activePage="members">
       <Topbar title="メンバー管理">
-        <button className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium">
+        <button
+          onClick={() => setInviteOpen(true)}
+          className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
+        >
           + メンバー招待
         </button>
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[20px]">
+        {/* Subtitle with count */}
+        <div className="flex items-center justify-between mb-[12px]">
+          <p className="text-[12px] text-text2">
+            メンバー数: {activeCount}名{' '}
+            {totalCount !== activeCount && (
+              <span className="text-text3">（全{totalCount}名）</span>
+            )}
+          </p>
+        </div>
+
+        {/* Feedback message */}
+        {feedback && (
+          <div className="mb-[12px]">
+            <FeedbackMessage
+              type={feedback.type}
+              message={feedback.message}
+              onDismiss={() => setFeedback(null)}
+            />
+          </div>
+        )}
+
         <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_1fr_100px_80px_80px_70px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+          <div className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
             <div>名前</div>
             <div>メール</div>
             <div className="text-center">ロール</div>
@@ -158,7 +253,7 @@ export default function MembersPage() {
             members?.map((member) => (
               <div
                 key={member.id}
-                className="grid grid-cols-[1fr_1fr_100px_80px_80px_70px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
               >
                 {/* Name */}
                 <div className="flex items-center gap-[8px]">
@@ -202,12 +297,18 @@ export default function MembersPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="text-center">
+                <div className="flex items-center justify-center gap-[8px]">
                   <button
                     onClick={() => setEditingMember(member)}
                     className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
                   >
                     編集
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(member)}
+                    className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
+                  >
+                    削除
                   </button>
                 </div>
               </div>
@@ -222,12 +323,28 @@ export default function MembersPage() {
         </div>
       </div>
 
+      {/* Edit modal */}
       {editingMember && (
         <EditMemberModal
           member={editingMember}
           onClose={() => setEditingMember(null)}
         />
       )}
+
+      {/* Invite modal */}
+      <InviteMemberModal
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        onSuccess={() => showFeedback('success', 'メンバーを招待しました')}
+      />
+
+      {/* Delete confirmation dialog */}
+      <DeleteMemberDialog
+        member={deletingMember}
+        open={deleteDialogOpen}
+        onOpenChange={handleDeleteDialogChange}
+        onSuccess={() => showFeedback('success', 'メンバーを削除しました')}
+      />
     </Shell>
   )
 }

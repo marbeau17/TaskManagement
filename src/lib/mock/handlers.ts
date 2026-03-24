@@ -13,6 +13,7 @@ import type {
 } from '@/types/database'
 import type { TaskFilters, TaskFormStep1, TaskFormStep2, TaskProgressUpdate } from '@/types/task'
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
+import type { InviteMemberForm } from '@/types/member'
 
 import {
   mockUsers,
@@ -21,7 +22,9 @@ import {
   mockComments,
   mockActivityLogs,
   mockAttachments,
+  DEFAULT_PASSWORD,
 } from './data'
+import type { MockUserWithPassword } from './data'
 
 // ---------------------------------------------------------------------------
 // Mutable copies so CRUD operations persist during session
@@ -31,7 +34,7 @@ let tasks: TaskWithRelations[] = [...mockTasks]
 let comments: Comment[] = [...mockComments]
 let activityLogs: ActivityLog[] = [...mockActivityLogs]
 let attachments: Attachment[] = [...mockAttachments]
-const users: User[] = [...mockUsers]
+const users: MockUserWithPassword[] = [...mockUsers]
 const clients: Client[] = [...mockClients]
 
 // ---------------------------------------------------------------------------
@@ -251,8 +254,11 @@ export function assignMockTask(
 // Members
 // ---------------------------------------------------------------------------
 
-export function getMockMembers(): User[] {
-  return [...users]
+export function getMockMembers(includeInactive?: boolean): User[] {
+  if (includeInactive) {
+    return [...users]
+  }
+  return users.filter((u) => u.is_active)
 }
 
 export function getMockMemberById(id: string): User | null {
@@ -266,7 +272,7 @@ export function updateMockMember(
   const index = users.findIndex((u) => u.id === id)
   if (index === -1) throw new Error(`User not found: ${id}`)
 
-  const updated: User = {
+  const updated: MockUserWithPassword = {
     ...users[index],
     ...updates,
     id, // ensure id is never overwritten
@@ -275,6 +281,75 @@ export function updateMockMember(
 
   users[index] = updated
   return updated
+}
+
+// ---------------------------------------------------------------------------
+// Add / Delete / Password management
+// ---------------------------------------------------------------------------
+
+const avatarColors: Array<'av-a' | 'av-b' | 'av-c' | 'av-d' | 'av-e'> = [
+  'av-a', 'av-b', 'av-c', 'av-d', 'av-e',
+]
+
+export function addMockMember(data: InviteMemberForm & { password?: string }): User {
+  const id = genId('u')
+  const now = new Date().toISOString()
+  const newUser: MockUserWithPassword = {
+    id,
+    email: data.email,
+    name: data.name,
+    name_short: data.name_short,
+    role: data.role,
+    avatar_color: avatarColors[users.length % avatarColors.length],
+    weekly_capacity_hours: data.weekly_capacity_hours,
+    is_active: true,
+    created_at: now,
+    updated_at: now,
+    password: data.password ?? DEFAULT_PASSWORD,
+  }
+  users.push(newUser)
+  return newUser
+}
+
+export function deleteMockMember(id: string): boolean {
+  const user = users.find((u) => u.id === id)
+  if (!user) return false
+  user.is_active = false
+  user.updated_at = new Date().toISOString()
+  return true
+}
+
+export function hardDeleteMockMember(id: string): boolean {
+  const index = users.findIndex((u) => u.id === id)
+  if (index === -1) return false
+  users.splice(index, 1)
+  return true
+}
+
+export function changeMockPassword(
+  userId: string,
+  oldPassword: string,
+  newPassword: string
+): { success: boolean; error?: string } {
+  const user = users.find((u) => u.id === userId)
+  if (!user) {
+    return { success: false, error: 'User not found' }
+  }
+  if (user.password !== oldPassword) {
+    return { success: false, error: 'Current password is incorrect' }
+  }
+  user.password = newPassword
+  user.updated_at = new Date().toISOString()
+  return { success: true }
+}
+
+export function verifyMockPassword(email: string, password: string): User | null {
+  const user = users.find((u) => u.email === email && u.is_active)
+  if (!user) return null
+  if (user.password !== password) return null
+  // Return user without password field
+  const { password: _pw, ...userWithoutPassword } = user
+  return userWithoutPassword as User
 }
 
 // ---------------------------------------------------------------------------

@@ -19,3 +19,10 @@ export interface InviteMemberForm {
   role: UserRole
   weekly_capacity_hours: number
 }
+
+/** Form data for changing a password */
+export interface ChangePasswordForm {
+  current_password: string
+  new_password: string
+  confirm_password: string
+}
