@@ -3,9 +3,8 @@
 import { useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { changePassword } from '@/lib/data/members'
+import { useMock } from '@/lib/utils'
 import type { User } from '@/types/database'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
 
 /** Default mock user: director */
 const MOCK_DIRECTOR: User = {

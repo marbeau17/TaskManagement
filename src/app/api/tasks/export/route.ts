@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { TaskWithRelations } from '@/types/database'
 import { STATUS_LABELS } from '@/lib/constants'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 function escapeCsvValue(value: string): string {
   if (

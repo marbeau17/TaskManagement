@@ -3,8 +3,7 @@
 // =============================================================================
 
 import type { Client } from '@/types/database'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getClients

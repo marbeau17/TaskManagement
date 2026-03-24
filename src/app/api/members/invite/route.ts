@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { UserRole } from '@/types/database'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {

@@ -8,6 +8,23 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // ---------------------------------------------------------------------------
+// Mock mode detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Determine whether the app should run in mock mode.
+ *
+ * Instead of relying on NEXT_PUBLIC_USE_MOCK (which can be incorrectly
+ * inlined at build time on Vercel), we check whether a real Supabase URL
+ * has been configured.  If NEXT_PUBLIC_SUPABASE_URL is missing, empty, or
+ * contains the word "placeholder", we fall back to mock data.
+ */
+export function useMock(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  return !url || url === '' || url.includes('placeholder')
+}
+
+// ---------------------------------------------------------------------------
 // Formatting helpers
 // ---------------------------------------------------------------------------
 

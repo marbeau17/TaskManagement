@@ -4,8 +4,7 @@
 
 import type { User } from '@/types/database'
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getWorkloadSummaries

@@ -14,7 +14,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // In mock mode, allow all routes without authentication
-  if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl || supabaseUrl === '' || supabaseUrl.includes('placeholder')) {
     return NextResponse.next()
   }
 

@@ -1,6 +1,6 @@
 // =============================================================================
 // Data abstraction layer – Tasks
-// Switches between mock handlers and Supabase depending on NEXT_PUBLIC_USE_MOCK
+// Switches between mock handlers and Supabase depending on Supabase URL config
 // =============================================================================
 
 import type {
@@ -16,8 +16,7 @@ import type {
   TaskFormStep2,
   TaskProgressUpdate,
 } from '@/types/task'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getTasks

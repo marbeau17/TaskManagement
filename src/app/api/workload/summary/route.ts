@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 export async function GET() {
   try {

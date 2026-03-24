@@ -5,8 +5,7 @@
 import type { User } from '@/types/database'
 import type { InviteMemberForm } from '@/types/member'
 import type { Database } from '@/lib/supabase/types'
-
-const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getMembers

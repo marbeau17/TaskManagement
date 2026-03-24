@@ -19,7 +19,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   // Listen for Supabase auth state changes (non-mock only)
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') return
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl === '' || supabaseUrl.includes('placeholder')) return
 
     let subscription: { unsubscribe: () => void } | null = null
 

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Settings, KeyRound, LogOut, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
+import { useMembers } from '@/hooks/useMembers'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,13 +28,6 @@ const MAIN_NAV = [
   { id: 'workload', label: '稼働管理', icon: '⏱', href: '/workload' },
 ]
 
-const CREATORS = [
-  { id: 'yamada', name: '山田', short: '山', color: 'av-a' as const, badge: 2 },
-  { id: 'suzuki', name: '鈴木', short: '鈴', color: 'av-b' as const, badge: 1 },
-  { id: 'sato', name: '佐藤', short: '佐', color: 'av-c' as const, badge: 0 },
-  { id: 'takahashi', name: '高橋', short: '高', color: 'av-d' as const, badge: 0 },
-]
-
 const SYSTEM_NAV = [
   { id: 'members', label: 'メンバー', icon: '👥', href: '/members' },
   { id: 'settings', label: '設定', icon: '⚙', href: '/settings' },
@@ -41,9 +35,23 @@ const SYSTEM_NAV = [
 
 export function Sidebar({ activePage }: SidebarProps) {
   const { user, logout } = useAuth()
+  const { data: members } = useMembers()
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const { theme, setTheme } = useTheme()
+
+  // Derive creator list dynamically from members data
+  const creators = useMemo(() => {
+    if (!members) return []
+    return members
+      .filter((m) => m.role === 'creator' && m.is_active)
+      .map((m) => ({
+        id: m.id,
+        name: m.name_short ? m.name.split(' ').pop() ?? m.name : m.name,
+        short: m.name_short || m.name.charAt(0),
+        color: m.avatar_color,
+      }))
+  }, [members])
 
   const nextTheme = () => {
     const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
@@ -116,7 +124,7 @@ export function Sidebar({ activePage }: SidebarProps) {
           クリエイター
         </div>
         <nav className="flex flex-col gap-[2px]">
-          {CREATORS.map((creator) => (
+          {creators.map((creator) => (
             <Link
               key={creator.id}
               href={`/workload?creator=${creator.id}`}
@@ -128,11 +136,6 @@ export function Sidebar({ activePage }: SidebarProps) {
             >
               <Avatar name_short={creator.short} color={creator.color} size="sm" />
               <span className="flex-1">{creator.name}</span>
-              {creator.badge > 0 && (
-                <span className="bg-white/25 text-white text-[9px] font-bold px-[5px] py-[1px] rounded-full min-w-[18px] text-center">
-                  {creator.badge}
-                </span>
-              )}
             </Link>
           ))}
         </nav>
