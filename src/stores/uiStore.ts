@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+type Theme = 'light' | 'dark' | 'system'
+
 interface UiState {
   sidebarOpen: boolean
   toggleSidebar: () => void
@@ -12,6 +14,9 @@ interface UiState {
 
   dashboardView: 'creator' | 'client'
   setDashboardView: (v: 'creator' | 'client') => void
+
+  theme: Theme
+  setTheme: (theme: Theme) => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -26,4 +31,14 @@ export const useUiStore = create<UiState>((set) => ({
 
   dashboardView: 'creator',
   setDashboardView: (v) => set({ dashboardView: v }),
+
+  theme: (typeof window !== 'undefined'
+    ? (localStorage.getItem('workflow-theme') as Theme) || 'system'
+    : 'system') as Theme,
+  setTheme: (theme) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('workflow-theme', theme)
+    }
+    set({ theme })
+  },
 }))

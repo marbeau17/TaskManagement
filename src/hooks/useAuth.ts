@@ -62,11 +62,17 @@ export function useAuth() {
       // Real Supabase auth
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error || !data.user) return null
 
-      // Fetch full profile from public.users
-      const { data: profile } = await supabase
+      // Step 1: Authenticate
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        console.error('Auth error:', error.message)
+        throw new Error(error.message)
+      }
+      if (!data.user) return null
+
+      // Step 2: Fetch profile (may fail due to RLS timing)
+      const { data: profile, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
@@ -76,7 +82,36 @@ export function useAuth() {
         setUser(profile as User)
         return profile as User
       }
-      return null
+
+      // Step 3: Try server-side API route (bypasses RLS)
+      try {
+        const res = await fetch(`/api/auth/profile?userId=${data.user.id}`)
+        if (res.ok) {
+          const apiProfile = await res.json()
+          setUser(apiProfile as User)
+          return apiProfile as User
+        }
+      } catch (fetchErr) {
+        console.warn('API profile fetch failed:', fetchErr)
+      }
+
+      // Fallback: construct basic user from auth data
+      console.warn('Profile fetch failed, using auth data fallback:', profileError?.message)
+      const fallbackUser: User = {
+        id: data.user.id,
+        email: data.user.email || email,
+        name: data.user.user_metadata?.name || email.split('@')[0],
+        name_short: (data.user.user_metadata?.name || email.split('@')[0]).charAt(0),
+        role: 'creator',
+        avatar_color: 'av-a',
+        weekly_capacity_hours: 16,
+        is_active: true,
+        must_change_password: false,
+        created_at: data.user.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      setUser(fallbackUser)
+      return fallbackUser
     },
     [setUser]
   )

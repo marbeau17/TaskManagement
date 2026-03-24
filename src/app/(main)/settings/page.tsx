@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Topbar } from '@/components/layout'
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
 
 export default function SettingsPage() {
   // Organization settings
@@ -31,6 +32,17 @@ export default function SettingsPage() {
       <Topbar title="設定" />
 
       <div className="flex-1 overflow-auto p-[20px] space-y-[16px] max-w-[640px]">
+        {/* Theme Settings */}
+        <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
+          <h2 className="text-[14px] font-bold text-text mb-[12px]">
+            テーマ設定
+          </h2>
+          <p className="text-[11px] text-text2 mb-[10px]">
+            アプリの表示テーマを選択します。システムを選ぶとOSの設定に従います。
+          </p>
+          <ThemeToggle />
+        </div>
+
         {/* Organization Settings */}
         <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
           <h2 className="text-[14px] font-bold text-text mb-[12px]">

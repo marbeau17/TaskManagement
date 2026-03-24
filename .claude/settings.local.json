@@ -75,7 +75,9 @@
       "Bash(node -e \":*)",
       "Bash(npm init:*)",
       "Bash(cat:*)",
-      "Bash(NEXT_PUBLIC_USE_MOCK=false NEXT_PUBLIC_SUPABASE_URL=https://ewlxqiowzdebksykxvuv.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAwMTUsImV4cCI6MjA4OTkxNjAxNX0.dAkBUdZ8VgOQIOiR5Ri3_f0LpoiHBgRpfqggDrPUcUc npm run build)"
+      "Bash(NEXT_PUBLIC_USE_MOCK=false NEXT_PUBLIC_SUPABASE_URL=https://ewlxqiowzdebksykxvuv.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAwMTUsImV4cCI6MjA4OTkxNjAxNX0.dAkBUdZ8VgOQIOiR5Ri3_f0LpoiHBgRpfqggDrPUcUc npm run build)",
+      "Bash(vercel ls:*)",
+      "Bash(python3 -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); d=data[0]; print\\(d.get\\(''''state'''',''''?''''\\), d.get\\(''''url'''',''''?''''\\)\\)\")"
     ]
   }
 }

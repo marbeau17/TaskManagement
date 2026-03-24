@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Settings, KeyRound, LogOut } from 'lucide-react'
+import { Settings, KeyRound, LogOut, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { PasswordChangeModal } from '@/components/members/PasswordChangeModal'
+import { useTheme } from '@/hooks/useTheme'
 
 interface SidebarProps {
   activePage: string
@@ -42,6 +43,16 @@ export function Sidebar({ activePage }: SidebarProps) {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const { theme, setTheme } = useTheme()
+
+  const nextTheme = () => {
+    const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
+    const idx = order.indexOf(theme)
+    setTheme(order[(idx + 1) % order.length])
+  }
+
+  const themeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
+  const ThemeIcon = themeIcon
 
   const handleLogout = useCallback(async () => {
     await logout()
@@ -184,6 +195,13 @@ export function Sidebar({ activePage }: SidebarProps) {
               >
                 <KeyRound className="w-[14px] h-[14px]" />
                 パスワード変更
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-[12px] gap-[8px] cursor-pointer"
+                onSelect={nextTheme}
+              >
+                <ThemeIcon className="w-[14px] h-[14px]" />
+                テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

@@ -29,8 +29,6 @@ export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
 
-  const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK === 'true'
-
   const {
     register,
     handleSubmit,
@@ -51,10 +49,11 @@ export default function LoginPage() {
         if (user) {
           router.push(user.must_change_password ? '/change-password' : '/dashboard')
         } else {
-          setError('メールアドレスまたはパスワードが正しくありません')
+          setError('ログインに失敗しました。再度お試しください。')
         }
-      } catch {
-        setError('ログインに失敗しました')
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'ログインに失敗しました'
+        setError(message)
       } finally {
         setLoading(false)
       }
@@ -135,21 +134,19 @@ export default function LoginPage() {
           初期パスワード: workflow2026
         </p>
 
-        {/* Demo mode button */}
-        {isMockMode && (
-          <div className="mt-[16px] pt-[16px] border-t border-border2">
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full py-[10px] text-[13px] text-mint bg-surf2 rounded-[6px] hover:bg-border2 transition-colors font-medium border border-border2"
-            >
-              デモモードでログイン
-            </button>
-            <p className="text-[10px] text-text3 text-center mt-[8px]">
-              o.yasuda@meetsc.co.jp / workflow2026 を自動入力します
-            </p>
-          </div>
-        )}
+        {/* Quick login button */}
+        <div className="mt-[16px] pt-[16px] border-t border-border2">
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            className="w-full py-[10px] text-[13px] text-mint bg-surf2 rounded-[6px] hover:bg-border2 transition-colors font-medium border border-border2"
+          >
+            ログイン情報を自動入力
+          </button>
+          <p className="text-[10px] text-text3 text-center mt-[8px]">
+            o.yasuda@meetsc.co.jp / workflow2026 を自動入力します
+          </p>
+        </div>
       </div>
     </div>
   )
