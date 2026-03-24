@@ -47,7 +47,12 @@
       "Bash(cp /tmp/taskmanagement-scaffold/next-env.d.ts .)",
       "Bash(cp /tmp/taskmanagement-scaffold/postcss.config.mjs .)",
       "Bash(npm install:*)",
-      "Bash(npx --yes shadcn@latest init -d --defaults)"
+      "Bash(npx --yes shadcn@latest init -d --defaults)",
+      "Bash(npx shadcn@latest add card input label select textarea tabs badge dialog dropdown-menu avatar separator tooltip table sheet command popover calendar form radio-group progress scroll-area -y)",
+      "Bash(npx tsc:*)",
+      "Bash(ls \"/Users/yasudaosamu/Desktop/codes/TaskManagement/src/app/\\(main\\)/\")",
+      "Bash(ls \"/Users/yasudaosamu/Desktop/codes/TaskManagement/src/app/\\(main\\)/layout.tsx\")",
+      "Bash(export PATH=$HOME/.local/bin:$PATH)"
     ]
   }
 }

@@ -1,0 +1,355 @@
+// =============================================================================
+// Data abstraction layer – Tasks
+// Switches between mock handlers and Supabase depending on NEXT_PUBLIC_USE_MOCK
+// =============================================================================
+
+import type {
+  Task,
+  TaskWithRelations,
+  Comment,
+  ActivityLog,
+  Attachment,
+} from '@/types/database'
+import type {
+  TaskFilters,
+  TaskFormStep1,
+  TaskFormStep2,
+  TaskProgressUpdate,
+} from '@/types/task'
+
+const useMock = () => process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+
+// ---------------------------------------------------------------------------
+// getTasks
+// ---------------------------------------------------------------------------
+
+export async function getTasks(
+  filters?: TaskFilters
+): Promise<TaskWithRelations[]> {
+  if (useMock()) {
+    const { getMockTasks } = await import('@/lib/mock/handlers')
+    return getMockTasks(filters)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  let query = supabase
+    .from('tasks')
+    .select(
+      '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+    )
+
+  if (filters?.status && filters.status !== 'all') {
+    query = query.eq('status', filters.status)
+  }
+
+  if (filters?.client_id) {
+    query = query.eq('client_id', filters.client_id)
+  }
+
+  if (filters?.assigned_to) {
+    query = query.eq('assigned_to', filters.assigned_to)
+  }
+
+  if (filters?.requested_by) {
+    query = query.eq('requested_by', filters.requested_by)
+  }
+
+  if (filters?.search) {
+    query = query.ilike('title', `%${filters.search}%`)
+  }
+
+  if (filters?.period === 'week') {
+    const now = new Date()
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    startOfWeek.setHours(0, 0, 0, 0)
+    query = query.gte('created_at', startOfWeek.toISOString())
+  } else if (filters?.period === 'month') {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    query = query.gte('created_at', startOfMonth.toISOString())
+  }
+
+  query = query.order('created_at', { ascending: false })
+
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as TaskWithRelations[]
+}
+
+// ---------------------------------------------------------------------------
+// getTaskById
+// ---------------------------------------------------------------------------
+
+export async function getTaskById(
+  id: string
+): Promise<TaskWithRelations | null> {
+  if (useMock()) {
+    const { getMockTaskById } = await import('@/lib/mock/handlers')
+    return getMockTaskById(id)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(
+      '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+    )
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null // not found
+    throw error
+  }
+  return data as TaskWithRelations
+}
+
+// ---------------------------------------------------------------------------
+// createTask
+// ---------------------------------------------------------------------------
+
+export async function createTask(
+  step1: TaskFormStep1,
+  step2?: TaskFormStep2
+): Promise<Task> {
+  if (useMock()) {
+    const { createMockTask } = await import('@/lib/mock/handlers')
+    return createMockTask(step1, step2)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // Resolve or create client by name
+  let clientId: string
+  const { data: existingClient } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('name', step1.client_name)
+    .single()
+
+  if (existingClient) {
+    clientId = existingClient.id
+  } else {
+    const { data: newClient, error: clientError } = await supabase
+      .from('clients')
+      .insert({ name: step1.client_name })
+      .select('id')
+      .single()
+    if (clientError) throw clientError
+    clientId = newClient!.id
+  }
+
+  // Get current user
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+
+  const insertPayload: Record<string, unknown> = {
+    client_id: clientId,
+    title: step1.title,
+    description: step1.description ?? null,
+    desired_deadline: step1.desired_deadline ?? null,
+    reference_url: step1.reference_url ?? null,
+    requested_by: authUser.id,
+    status: step2 ? 'todo' : 'waiting',
+    is_draft: !step2,
+    progress: 0,
+    actual_hours: 0,
+  }
+
+  if (step2) {
+    insertPayload.assigned_to = step2.assigned_to
+    insertPayload.confirmed_deadline = step2.confirmed_deadline
+    insertPayload.estimated_hours = step2.estimated_hours
+  }
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert(insertPayload)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Task
+}
+
+// ---------------------------------------------------------------------------
+// updateTaskProgress
+// ---------------------------------------------------------------------------
+
+export async function updateTaskProgress(
+  id: string,
+  update: TaskProgressUpdate
+): Promise<Task> {
+  if (useMock()) {
+    const { updateMockTaskProgress } = await import('@/lib/mock/handlers')
+    return updateMockTaskProgress(id, update)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      progress: update.progress,
+      status: update.status,
+      actual_hours: update.actual_hours,
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Task
+}
+
+// ---------------------------------------------------------------------------
+// assignTask
+// ---------------------------------------------------------------------------
+
+export async function assignTask(
+  id: string,
+  data: TaskFormStep2
+): Promise<Task> {
+  if (useMock()) {
+    const { assignMockTask } = await import('@/lib/mock/handlers')
+    return assignMockTask(id, data)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // Get current user as director
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+
+  const { data: updated, error } = await supabase
+    .from('tasks')
+    .update({
+      assigned_to: data.assigned_to,
+      confirmed_deadline: data.confirmed_deadline,
+      estimated_hours: data.estimated_hours,
+      director_id: authUser?.id ?? null,
+      status: 'todo',
+      is_draft: false,
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return updated as Task
+}
+
+// ---------------------------------------------------------------------------
+// getComments
+// ---------------------------------------------------------------------------
+
+export async function getComments(taskId: string): Promise<Comment[]> {
+  if (useMock()) {
+    const { getMockComments } = await import('@/lib/mock/handlers')
+    return getMockComments(taskId)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*, user:users(*)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as Comment[]
+}
+
+// ---------------------------------------------------------------------------
+// addComment
+// ---------------------------------------------------------------------------
+
+export async function addComment(
+  taskId: string,
+  body: string
+): Promise<Comment> {
+  if (useMock()) {
+    const { addMockComment } = await import('@/lib/mock/handlers')
+    return addMockComment(taskId, body)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({
+      task_id: taskId,
+      user_id: authUser.id,
+      body,
+    })
+    .select('*, user:users(*)')
+    .single()
+
+  if (error) throw error
+  return data as Comment
+}
+
+// ---------------------------------------------------------------------------
+// getActivityLogs
+// ---------------------------------------------------------------------------
+
+export async function getActivityLogs(taskId: string): Promise<ActivityLog[]> {
+  if (useMock()) {
+    const { getMockActivityLogs } = await import('@/lib/mock/handlers')
+    return getMockActivityLogs(taskId)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('activity_logs')
+    .select('*, user:users(*)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []) as ActivityLog[]
+}
+
+// ---------------------------------------------------------------------------
+// getAttachments
+// ---------------------------------------------------------------------------
+
+export async function getAttachments(taskId: string): Promise<Attachment[]> {
+  if (useMock()) {
+    const { getMockAttachments } = await import('@/lib/mock/handlers')
+    return getMockAttachments(taskId)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('attachments')
+    .select('*, uploader:users!uploaded_by(*)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []) as Attachment[]
+}
