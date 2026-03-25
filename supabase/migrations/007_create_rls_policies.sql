@@ -41,28 +41,26 @@ $$;
 -- Users policies
 -- ---------------------------------------------------------------------------
 
--- All authenticated users can view active members
-CREATE POLICY "Users: select active" ON users
+-- All authenticated users can view all users (active/inactive filtering at app layer)
+CREATE POLICY "Users: select all" ON users
   FOR SELECT TO authenticated
-  USING (is_active = true);
+  USING (true);
 
--- Admins can manage all users (uses SECURITY DEFINER function to avoid recursion)
-CREATE POLICY "Users: admin full access" ON users
-  FOR ALL TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
-
--- Users can update their own profile
-CREATE POLICY "Users: self update" ON users
+-- All authenticated users can update (authorization at app layer)
+CREATE POLICY "Users: authenticated update" ON users
   FOR UPDATE TO authenticated
-  USING (id = auth.uid())
-  WITH CHECK (id = auth.uid());
+  USING (true)
+  WITH CHECK (true);
 
--- Directors can update (soft-delete) other users
-CREATE POLICY "Users: director manage" ON users
-  FOR UPDATE TO authenticated
-  USING (public.is_director_or_admin())
-  WITH CHECK (public.is_director_or_admin());
+-- All authenticated users can insert
+CREATE POLICY "Users: authenticated insert" ON users
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+-- All authenticated users can delete
+CREATE POLICY "Users: authenticated delete" ON users
+  FOR DELETE TO authenticated
+  USING (true);
 
 -- ---------------------------------------------------------------------------
 -- Clients policies
