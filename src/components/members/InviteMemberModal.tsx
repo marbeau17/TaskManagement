@@ -13,7 +13,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useAddMember } from '@/hooks/useMembers'
-import { ROLE_LABELS } from '@/lib/constants'
+import { ROLE_LABELS, getRoleLabel } from '@/lib/constants'
+import { useAllRoles, useAddCustomRole } from '@/hooks/useRoles'
 
 // ---------------------------------------------------------------------------
 // Zod schema
@@ -48,7 +49,9 @@ export function InviteMemberModal({
   onSuccess,
 }: InviteMemberModalProps) {
   const addMember = useAddMember()
-  const [useCustomRole, setUseCustomRole] = useState(false)
+  const [newCustomRole, setNewCustomRole] = useState('')
+  const { allRoles } = useAllRoles()
+  const addCustomRoleMutation = useAddCustomRole()
 
   const {
     register,
@@ -85,9 +88,21 @@ export function InviteMemberModal({
     if (!nextOpen) {
       reset()
       addMember.reset()
-      setUseCustomRole(false)
+      setNewCustomRole('')
     }
     onOpenChange(nextOpen)
+  }
+
+  const handleAddCustomRole = async () => {
+    const trimmed = newCustomRole.trim()
+    if (!trimmed) return
+    try {
+      await addCustomRoleMutation.mutateAsync(trimmed)
+      setValue('role', trimmed)
+      setNewCustomRole('')
+    } catch {
+      // Error handled by mutation state
+    }
   }
 
   const labelClass = 'text-[11px] text-text2 font-medium block mb-[4px]'
@@ -154,52 +169,41 @@ export function InviteMemberModal({
           {/* ロール */}
           <div>
             <label className={labelClass}>ロール</label>
-            {useCustomRole ? (
-              <div className="flex gap-[6px]">
-                <input
-                  type="text"
-                  placeholder="カスタムロール名"
-                  className={inputClass}
-                  {...register('role')}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseCustomRole(false)
-                    setValue('role', 'creator')
-                  }}
-                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-text2 bg-surf2 border border-border2 rounded-[6px] hover:bg-border2 transition-colors"
-                >
-                  一覧
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-[6px]">
-                <select
-                  className={inputClass}
-                  value={currentRole}
-                  onChange={(e) => setValue('role', e.target.value)}
-                >
-                  {Object.entries(ROLE_LABELS).map(
-                    ([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    )
-                  )}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseCustomRole(true)
-                    setValue('role', '')
-                  }}
-                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap"
-                >
-                  + カスタム
-                </button>
-              </div>
-            )}
+            <select
+              className={inputClass}
+              value={currentRole}
+              onChange={(e) => setValue('role', e.target.value)}
+            >
+              {allRoles.map((r) => (
+                <option key={r} value={r}>
+                  {getRoleLabel(r)}
+                </option>
+              ))}
+            </select>
+            {/* Add new custom role inline */}
+            <div className="flex gap-[6px] mt-[6px]">
+              <input
+                type="text"
+                value={newCustomRole}
+                onChange={(e) => setNewCustomRole(e.target.value)}
+                placeholder="新しいカスタムロール名"
+                className={inputClass}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddCustomRole()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomRole}
+                disabled={!newCustomRole.trim() || addCustomRoleMutation.isPending}
+                className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap disabled:opacity-50"
+              >
+                {addCustomRoleMutation.isPending ? '...' : '+ 追加'}
+              </button>
+            </div>
             {errors.role && (
               <p className={errorClass}>{errors.role.message}</p>
             )}

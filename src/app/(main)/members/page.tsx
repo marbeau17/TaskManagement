@@ -11,12 +11,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { InviteMemberModal } from '@/components/members/InviteMemberModal'
 import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
 import { OrgChart } from '@/components/members/OrgChart'
+import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
 
 // ---------------------------------------------------------------------------
 // Tab type
 // ---------------------------------------------------------------------------
 
-type TabId = 'list' | 'orgchart'
+type TabId = 'list' | 'orgchart' | 'roles'
 
 // ---------------------------------------------------------------------------
 // Feedback message component
@@ -67,8 +68,6 @@ function EditMemberModal({
   const [name, setName] = useState(member.name)
   const [nameShort, setNameShort] = useState(member.name_short ?? '')
   const [role, setRole] = useState<UserRole>(member.role)
-  const isBuiltinRole = role in ROLE_LABELS
-  const [useCustomRole, setUseCustomRole] = useState(!isBuiltinRole)
   const [capacity, setCapacity] = useState(
     String(member.weekly_capacity_hours)
   )
@@ -77,7 +76,10 @@ function EditMemberModal({
   const [title, setTitle] = useState(member.title ?? '')
   const [level, setLevel] = useState(member.level ?? '')
   const [saving, setSaving] = useState(false)
+  const [newCustomRole, setNewCustomRole] = useState('')
   const queryClient = useQueryClient()
+  const { allRoles } = useAllRoles()
+  const addCustomRoleMutation = useAddCustomRole()
 
   const handleSave = useCallback(async () => {
     setSaving(true)
@@ -100,6 +102,18 @@ function EditMemberModal({
       setSaving(false)
     }
   }, [member.id, member.name, name, nameShort, role, capacity, managerId, department, title, level, queryClient, onClose])
+
+  const handleAddCustomRole = useCallback(async () => {
+    const trimmed = newCustomRole.trim()
+    if (!trimmed) return
+    try {
+      await addCustomRoleMutation.mutateAsync(trimmed)
+      setRole(trimmed)
+      setNewCustomRole('')
+    } catch {
+      // Error handled by mutation state
+    }
+  }, [newCustomRole, addCustomRoleMutation])
 
   // Potential managers: all active members except the member being edited
   const managerOptions = allMembers.filter(
@@ -158,51 +172,41 @@ function EditMemberModal({
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
               ロール
             </label>
-            {useCustomRole ? (
-              <div className="flex gap-[6px]">
-                <input
-                  type="text"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  placeholder="カスタムロール名"
-                  className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseCustomRole(false)
-                    setRole('creator')
-                  }}
-                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-text2 bg-surf2 border border-border2 rounded-[6px] hover:bg-border2 transition-colors"
-                >
-                  一覧
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-[6px]">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-                >
-                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseCustomRole(true)
-                    setRole('')
-                  }}
-                  className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap"
-                >
-                  + カスタム
-                </button>
-              </div>
-            )}
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            >
+              {allRoles.map((r) => (
+                <option key={r} value={r}>
+                  {getRoleLabel(r)}
+                </option>
+              ))}
+            </select>
+            {/* Add new custom role inline */}
+            <div className="flex gap-[6px] mt-[6px]">
+              <input
+                type="text"
+                value={newCustomRole}
+                onChange={(e) => setNewCustomRole(e.target.value)}
+                placeholder="新しいカスタムロール名"
+                className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddCustomRole()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomRole}
+                disabled={!newCustomRole.trim() || addCustomRoleMutation.isPending}
+                className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap disabled:opacity-50"
+              >
+                {addCustomRoleMutation.isPending ? '...' : '+ 追加'}
+              </button>
+            </div>
           </div>
 
           {/* Weekly capacity */}
@@ -311,6 +315,121 @@ function EditMemberModal({
 }
 
 // ---------------------------------------------------------------------------
+// Role management panel (tab content)
+// ---------------------------------------------------------------------------
+
+function RoleManagementPanel() {
+  const { allRoles, customRoles } = useAllRoles()
+  const addCustomRoleMutation = useAddCustomRole()
+  const deleteCustomRoleMutation = useDeleteCustomRole()
+  const [newRoleName, setNewRoleName] = useState('')
+
+  const builtinRoleSet = new Set(Object.keys(ROLE_LABELS))
+
+  const handleAdd = async () => {
+    const trimmed = newRoleName.trim()
+    if (!trimmed) return
+    try {
+      await addCustomRoleMutation.mutateAsync(trimmed)
+      setNewRoleName('')
+    } catch {
+      // Error handled by mutation state
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    await deleteCustomRoleMutation.mutateAsync(id)
+  }
+
+  return (
+    <div className="max-w-[520px]">
+      <p className="text-[12px] text-text2 mb-[12px]">
+        カスタムロールを追加・削除できます。ビルトインロール（管理者・Dir・依頼者・クリエイター）は削除できません。
+      </p>
+
+      {/* Add new role */}
+      <div className="flex gap-[6px] mb-[16px]">
+        <input
+          type="text"
+          value={newRoleName}
+          onChange={(e) => setNewRoleName(e.target.value)}
+          placeholder="新しいロール名"
+          className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              handleAdd()
+            }
+          }}
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!newRoleName.trim() || addCustomRoleMutation.isPending}
+          className="px-[14px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50"
+        >
+          {addCustomRoleMutation.isPending ? '追加中...' : '+ 追加'}
+        </button>
+      </div>
+
+      {/* Role list */}
+      <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+        <div className="grid grid-cols-[1fr_80px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+          <div>ロール名</div>
+          <div className="text-center">種別</div>
+          <div className="text-center">操作</div>
+        </div>
+
+        {/* Built-in roles */}
+        {Object.entries(ROLE_LABELS).map(([value, label]) => (
+          <div
+            key={value}
+            className="grid grid-cols-[1fr_80px_80px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text"
+          >
+            <div className="font-medium">{label}<span className="text-text3 ml-[6px] text-[10px]">({value})</span></div>
+            <div className="text-center">
+              <span className="text-[10px] px-[8px] py-[2px] rounded-full font-semibold border bg-info-bg text-info border-info-b inline-block">
+                ビルトイン
+              </span>
+            </div>
+            <div className="text-center text-[11px] text-text3">-</div>
+          </div>
+        ))}
+
+        {/* Custom roles */}
+        {customRoles.map((cr) => (
+          <div
+            key={cr.id}
+            className="grid grid-cols-[1fr_80px_80px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text"
+          >
+            <div className="font-medium">{cr.name}</div>
+            <div className="text-center">
+              <span className="text-[10px] px-[8px] py-[2px] rounded-full font-semibold border bg-slate-50 text-slate-600 border-slate-200 inline-block">
+                カスタム
+              </span>
+            </div>
+            <div className="text-center">
+              <button
+                onClick={() => handleDelete(cr.id)}
+                disabled={deleteCustomRoleMutation.isPending}
+                className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors disabled:opacity-50"
+              >
+                削除
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {customRoles.length === 0 && (
+          <div className="px-[16px] py-[20px] text-center text-[12px] text-text3 border-t border-border2">
+            カスタムロールはまだありません
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
@@ -350,6 +469,7 @@ export default function MembersPage() {
   const tabs: { id: TabId; label: string }[] = [
     { id: 'list', label: 'メンバー一覧' },
     { id: 'orgchart', label: '組織図' },
+    { id: 'roles', label: 'ロール管理' },
   ]
 
   return (
@@ -511,6 +631,8 @@ export default function MembersPage() {
             ) : null}
           </>
         )}
+
+        {activeTab === 'roles' && <RoleManagementPanel />}
       </div>
 
       {/* Edit modal */}

@@ -247,6 +247,24 @@ export interface Database {
           },
         ]
       }
+      custom_roles: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           id: string

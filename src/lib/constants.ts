@@ -54,6 +54,8 @@ export const STATUS_STYLES: Record<
 // User roles
 // ---------------------------------------------------------------------------
 
+export const BUILTIN_ROLES = ['admin', 'director', 'requester', 'creator'] as const
+
 export const ROLE_LABELS: Record<BuiltinRole, string> = {
   admin: '\u7BA1\u7406\u8005',
   director: 'Dir',
