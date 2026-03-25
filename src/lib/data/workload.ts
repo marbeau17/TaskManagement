@@ -24,7 +24,6 @@ export async function getWorkloadSummaries(): Promise<WorkloadSummary[]> {
     .from('users')
     .select('*')
     .eq('is_active', true)
-    .in('role', ['creator', 'director'])
 
   if (usersError) throw usersError
   const typedUsers = (users ?? []) as User[]

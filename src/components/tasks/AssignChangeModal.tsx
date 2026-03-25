@@ -15,16 +15,20 @@ import { Avatar, ProgressBar } from '@/components/shared'
 import { useMembers } from '@/hooks/useMembers'
 import { useWorkloadSummaries } from '@/hooks/useWorkload'
 import { useAssignTask } from '@/hooks/useTasks'
+import {
+  useTaskAssignees,
+  useAddTaskAssignee,
+  useRemoveTaskAssignee,
+} from '@/hooks/useTaskAssignees'
 import { WORKLOAD_THRESHOLDS } from '@/lib/constants'
 import type { TaskWithRelations } from '@/types/database'
 import type { TaskFormStep2 } from '@/types/task'
 
 // ---------------------------------------------------------------------------
-// Validation schema
+// Validation schema (for deadline / hours – assignee managed separately)
 // ---------------------------------------------------------------------------
 
 const schema = z.object({
-  assigned_to: z.string().min(1, 'クリエイターを選択してください'),
   confirmed_deadline: z.string().min(1, '確定納期は必須です'),
   estimated_hours: z
     .number({ error: '見積時間を入力してください' })
@@ -70,14 +74,29 @@ export function AssignChangeModal({
 }: AssignChangeModalProps) {
   const { data: members } = useMembers()
   const { data: workloads } = useWorkloadSummaries()
+  const { data: assignees } = useTaskAssignees(task.id)
+  const addAssignee = useAddTaskAssignee()
+  const removeAssignee = useRemoveTaskAssignee()
   const assignTask = useAssignTask()
   const [successMessage, setSuccessMessage] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState('')
 
   // Filter to creator-role members only
   const creators = useMemo(() => {
     if (!members) return []
     return members.filter((m) => m.role === 'creator' && m.is_active)
   }, [members])
+
+  // IDs of currently assigned users
+  const assignedUserIds = useMemo(() => {
+    if (!assignees) return new Set<string>()
+    return new Set(assignees.map((a) => a.user_id))
+  }, [assignees])
+
+  // Creators not yet assigned
+  const availableCreators = useMemo(() => {
+    return creators.filter((c) => !assignedUserIds.has(c.id))
+  }, [creators, assignedUserIds])
 
   // Workload lookup by user id
   const workloadMap = useMemo(() => {
@@ -100,47 +119,51 @@ export function AssignChangeModal({
   const {
     register,
     handleSubmit,
-    watch,
     control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      assigned_to: task.assigned_to ?? '',
       confirmed_deadline: task.confirmed_deadline ?? task.desired_deadline ?? '',
       estimated_hours: task.estimated_hours ?? (undefined as unknown as number),
     },
     mode: 'onTouched',
   })
 
-  const watchedAssignee = watch('assigned_to')
-  const watchedHours = watch('estimated_hours')
-
-  // Compute projected workload for selected creator
-  const workloadPreview = useMemo(() => {
-    if (!watchedAssignee) return null
-    const current = workloadMap.get(watchedAssignee)
+  // Preview workload for selected user in the dropdown
+  const selectedWorkloadPreview = useMemo(() => {
+    if (!selectedUserId) return null
+    const current = workloadMap.get(selectedUserId)
     if (!current) return null
-
-    const addedHours = watchedHours && !isNaN(watchedHours) ? watchedHours : 0
-    const projectedHours = current.estimated_hours + addedHours
-    const projectedRate =
-      current.capacity_hours > 0
-        ? Math.round((projectedHours / current.capacity_hours) * 100)
-        : 0
-
     return {
       currentRate: current.utilization_rate,
-      projectedRate,
       currentHours: current.estimated_hours,
-      projectedHours,
       capacityHours: current.capacity_hours,
     }
-  }, [watchedAssignee, watchedHours, workloadMap])
+  }, [selectedUserId, workloadMap])
+
+  const handleAddAssignee = () => {
+    if (!selectedUserId) return
+    addAssignee.mutate(
+      { taskId: task.id, userId: selectedUserId },
+      {
+        onSuccess: () => {
+          setSelectedUserId('')
+        },
+      }
+    )
+  }
+
+  const handleRemoveAssignee = (userId: string) => {
+    removeAssignee.mutate({ taskId: task.id, userId })
+  }
 
   const onSubmit = (values: FormValues) => {
+    // Use the first assignee as assigned_to for backward compat
+    const primaryAssignee = assignees && assignees.length > 0 ? assignees[0].user_id : task.assigned_to ?? ''
+
     const step2: TaskFormStep2 = {
-      assigned_to: values.assigned_to,
+      assigned_to: primaryAssignee,
       confirmed_deadline: values.confirmed_deadline,
       estimated_hours: values.estimated_hours,
     }
@@ -178,43 +201,56 @@ export function AssignChangeModal({
           </div>
         )}
 
-        {/* Current assignment info */}
-        {task.assigned_user && (
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surf2 border border-wf-border">
-            <Avatar
-              name_short={task.assigned_user.name_short}
-              color={task.assigned_user.avatar_color}
-              size="sm"
-            />
-            <div>
-              <span className="text-[12px] font-semibold text-text">
-                現在: {task.assigned_user.name}
-              </span>
-            </div>
+        {/* Current assignees list */}
+        {assignees && assignees.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[12px] font-semibold text-text2">
+              現在のアサイン ({assignees.length}名)
+            </p>
+            {assignees.map((assignee) => {
+              const user = assignee.user
+              if (!user) return null
+              return (
+                <div
+                  key={assignee.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surf2 border border-wf-border"
+                >
+                  <Avatar
+                    name_short={user.name_short}
+                    color={user.avatar_color}
+                    size="sm"
+                  />
+                  <span className="text-[12px] font-semibold text-text flex-1">
+                    {user.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAssignee(user.id)}
+                    disabled={removeAssignee.isPending}
+                    className="text-[14px] text-text3 hover:text-danger transition-colors leading-none px-1 disabled:opacity-50"
+                    title="アサイン解除"
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Creator select */}
-          <div>
-            <label
-              htmlFor="modal_assigned_to"
-              className="block text-[12.5px] font-semibold text-text2 mb-1.5"
-            >
-              担当クリエイター <span className="text-danger">*</span>
-            </label>
+        {/* Add assignee section */}
+        <div className="space-y-2">
+          <p className="text-[12px] font-semibold text-text2">
+            メンバーを追加
+          </p>
+          <div className="flex items-center gap-2">
             <select
-              id="modal_assigned_to"
-              className={`
-                w-full rounded-lg border px-3 py-2 text-[13px] text-text1
-                bg-surface
-                focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
-                ${errors.assigned_to ? 'border-danger' : 'border-wf-border'}
-              `}
-              {...register('assigned_to')}
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="flex-1 rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
             >
               <option value="">選択してください</option>
-              {creators.map((c) => {
+              {availableCreators.map((c) => {
                 const wl = workloadMap.get(c.id)
                 const rate = wl ? wl.utilization_rate : 0
                 return (
@@ -224,54 +260,52 @@ export function AssignChangeModal({
                 )
               })}
             </select>
-            {errors.assigned_to && (
-              <p className="mt-1 text-[11px] text-danger">
-                {errors.assigned_to.message}
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={handleAddAssignee}
+              disabled={!selectedUserId || addAssignee.isPending}
+              className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {addAssignee.isPending ? '追加中...' : '追加'}
+            </button>
           </div>
 
-          {/* Workload preview */}
-          {workloadPreview && (
+          {/* Workload preview for selected user */}
+          {selectedWorkloadPreview && (
             <div
-              className={`rounded-lg p-3 border ${getUtilBg(workloadPreview.projectedRate)} border-wf-border`}
+              className={`rounded-lg p-3 border ${getUtilBg(selectedWorkloadPreview.currentRate)} border-wf-border`}
             >
               <p className="text-[11px] font-semibold text-text2 mb-2">
                 稼働率プレビュー
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-text3">現在</span>
-                  <span className={`font-bold ${getUtilColor(workloadPreview.currentRate)}`}>
-                    {workloadPreview.currentRate}%
+                  <span className="text-text3">現在の稼働率</span>
+                  <span className={`font-bold ${getUtilColor(selectedWorkloadPreview.currentRate)}`}>
+                    {selectedWorkloadPreview.currentRate}%
                   </span>
                 </div>
-                <ProgressBar value={workloadPreview.currentRate} height="sm" />
-                <div className="flex items-center justify-center text-text3 text-[11px]">
-                  → +{watchedHours && !isNaN(watchedHours) ? watchedHours : 0}h
+                <ProgressBar value={selectedWorkloadPreview.currentRate} height="sm" />
+                <div className="text-[10px] text-text3">
+                  {selectedWorkloadPreview.currentHours}h / {selectedWorkloadPreview.capacityHours}h
                 </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-text3">見込み</span>
-                  <span className={`font-bold ${getUtilColor(workloadPreview.projectedRate)}`}>
-                    {workloadPreview.projectedRate}%
-                  </span>
-                </div>
-                <ProgressBar value={Math.min(workloadPreview.projectedRate, 100)} height="sm" />
-                {workloadPreview.projectedRate >= WORKLOAD_THRESHOLDS.danger && (
+                {selectedWorkloadPreview.currentRate >= WORKLOAD_THRESHOLDS.danger && (
                   <p className="text-[10px] text-danger font-semibold mt-1">
-                    キャパシティを超過します（{workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h）
+                    キャパシティを超過しています
                   </p>
                 )}
-                {workloadPreview.projectedRate >= WORKLOAD_THRESHOLDS.warning &&
-                  workloadPreview.projectedRate < WORKLOAD_THRESHOLDS.danger && (
+                {selectedWorkloadPreview.currentRate >= WORKLOAD_THRESHOLDS.warning &&
+                  selectedWorkloadPreview.currentRate < WORKLOAD_THRESHOLDS.danger && (
                     <p className="text-[10px] text-warn font-semibold mt-1">
-                      稼働率が高くなっています（{workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h）
+                      稼働率が高くなっています
                     </p>
                   )}
               </div>
             </div>
           )}
+        </div>
 
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Confirmed deadline */}
           <div>
             <label
@@ -352,7 +386,7 @@ export function AssignChangeModal({
               disabled={assignTask.isPending}
               className="flex-1 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {assignTask.isPending ? '変更中...' : 'アサインを変更する'}
+              {assignTask.isPending ? '変更中...' : '保存する'}
             </button>
           </div>
         </form>

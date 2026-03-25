@@ -78,11 +78,20 @@ export interface Task {
 // Relations (joined queries)
 // ---------------------------------------------------------------------------
 
+export interface TaskAssignee {
+  id: string
+  task_id: string
+  user_id: string
+  created_at: string
+  user?: User
+}
+
 export interface TaskWithRelations extends Task {
   client: Client
   assigned_user: User | null
   requester: User
   director: User | null
+  assignees?: TaskAssignee[]
 }
 
 // ---------------------------------------------------------------------------

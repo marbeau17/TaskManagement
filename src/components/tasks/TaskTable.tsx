@@ -89,9 +89,36 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   )}
                 </td>
 
-                {/* Assignee */}
+                {/* Assignee(s) */}
                 <td className="px-[12px] py-[10px]">
-                  {task.assigned_user ? (
+                  {task.assignees && task.assignees.length > 0 ? (
+                    <div className="flex items-center gap-[6px]">
+                      <div className="flex items-center -space-x-2">
+                        {task.assignees.slice(0, 3).map((a) =>
+                          a.user ? (
+                            <Avatar
+                              key={a.id}
+                              name_short={a.user.name_short}
+                              color={a.user.avatar_color}
+                              size="sm"
+                            />
+                          ) : null
+                        )}
+                      </div>
+                      {task.assignees.length <= 2 ? (
+                        <span className="text-[11.5px] text-text whitespace-nowrap">
+                          {task.assignees
+                            .map((a) => a.user?.name)
+                            .filter(Boolean)
+                            .join(', ')}
+                        </span>
+                      ) : (
+                        <span className="text-[11.5px] text-text whitespace-nowrap">
+                          {task.assignees[0]?.user?.name} 他{task.assignees.length - 1}名
+                        </span>
+                      )}
+                    </div>
+                  ) : task.assigned_user ? (
                     <div className="flex items-center gap-[6px]">
                       <Avatar
                         name_short={task.assigned_user.name_short}

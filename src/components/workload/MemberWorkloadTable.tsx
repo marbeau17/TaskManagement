@@ -1,14 +1,29 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Avatar } from '@/components/shared'
 import {
   WORKLOAD_STATUS_LABELS,
   WORKLOAD_STATUS_STYLES,
+  getRoleLabel,
+  getRoleStyle,
 } from '@/lib/constants'
 import type { WorkloadSummary } from '@/types/workload'
 
 interface MemberWorkloadTableProps {
   summaries: WorkloadSummary[]
+}
+
+/** Role sort priority — lower = earlier */
+const ROLE_SORT_ORDER: Record<string, number> = {
+  admin: 0,
+  director: 1,
+  requester: 2,
+  creator: 3,
+}
+
+function roleSortKey(role: string): number {
+  return ROLE_SORT_ORDER[role] ?? 99
 }
 
 function WorkloadBar({ rate }: { rate: number }) {
@@ -44,12 +59,39 @@ function StatusChipWorkload({ status }: { status: WorkloadSummary['status'] }) {
   )
 }
 
+function RoleChip({ role }: { role: string }) {
+  const style = getRoleStyle(role)
+  const label = getRoleLabel(role)
+
+  return (
+    <span
+      className={`
+        ${style.bg} ${style.text} ${style.border}
+        text-[10px] px-[8px] py-[2px] rounded-full font-semibold border
+        inline-block whitespace-nowrap
+      `}
+    >
+      {label}
+    </span>
+  )
+}
+
 export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
+  const sorted = useMemo(() => {
+    return [...summaries].sort((a, b) => {
+      const roleA = roleSortKey(a.user.role)
+      const roleB = roleSortKey(b.user.role)
+      if (roleA !== roleB) return roleA - roleB
+      return a.user.name.localeCompare(b.user.name, 'ja')
+    })
+  }, [summaries])
+
   return (
     <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+      <div className="grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
         <div>担当者</div>
+        <div className="text-center">ロール</div>
         <div>稼働バー</div>
         <div className="text-right">稼働率</div>
         <div className="text-right">実績/見積</div>
@@ -59,13 +101,13 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
       </div>
 
       {/* Rows */}
-      {summaries.map((s) => {
+      {sorted.map((s) => {
         const isOverloaded = s.status === 'overloaded'
         return (
           <div
             key={s.user.id}
             className={`
-              grid grid-cols-[1fr_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
+              grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
               border-b border-border2 last:border-b-0 items-center text-[12px] text-text
               ${isOverloaded ? 'bg-red-50' : 'hover:bg-surf2/50'}
               transition-colors
@@ -81,6 +123,11 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
               <span className="text-[12px] font-medium truncate">
                 {s.user.name}
               </span>
+            </div>
+
+            {/* Role */}
+            <div className="text-center">
+              <RoleChip role={s.user.role} />
             </div>
 
             {/* Workload bar */}
@@ -120,7 +167,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
         )
       })}
 
-      {summaries.length === 0 && (
+      {sorted.length === 0 && (
         <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
           メンバーデータがありません
         </div>

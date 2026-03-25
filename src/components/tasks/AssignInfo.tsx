@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, RoleChip } from '@/components/shared'
 import { AssignChangeModal } from '@/components/tasks/AssignChangeModal'
+import { useTaskAssignees, useRemoveTaskAssignee } from '@/hooks/useTaskAssignees'
 
 interface AssignInfoProps {
   task: TaskWithRelations
@@ -17,7 +18,12 @@ function formatDate(dateStr: string | null): string {
 
 export function AssignInfo({ task }: AssignInfoProps) {
   const [assignModalOpen, setAssignModalOpen] = useState(false)
-  const user = task.assigned_user
+  const { data: assignees } = useTaskAssignees(task.id)
+  const removeAssignee = useRemoveTaskAssignee()
+
+  // Fallback: if no assignees from task_assignees yet, show legacy assigned_user
+  const legacyUser = task.assigned_user
+  const hasAssignees = assignees && assignees.length > 0
   const estimatedHours = task.estimated_hours ?? 0
   const maxHours = Math.max(estimatedHours, task.actual_hours, 1)
 
@@ -33,23 +39,92 @@ export function AssignInfo({ task }: AssignInfoProps) {
         </span>
       </div>
 
-      {user ? (
+      {hasAssignees ? (
         <>
-          {/* Assignee profile */}
+          {/* Assignee list */}
+          <div className="space-y-3 mb-4">
+            {assignees.map((assignee) => {
+              const user = assignee.user
+              if (!user) return null
+              return (
+                <div key={assignee.id} className="flex items-center gap-3">
+                  <Avatar
+                    name_short={user.name_short}
+                    color={user.avatar_color}
+                    size="lg"
+                  />
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[14px] font-bold text-text">
+                      {user.name}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <RoleChip role={user.role} />
+                      <span className="text-[10px] px-[6px] py-[1px] rounded-full bg-info-bg text-info border border-info-b font-semibold">
+                        週{user.weekly_capacity_hours}h
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      removeAssignee.mutate({
+                        taskId: task.id,
+                        userId: user.id,
+                      })
+                    }
+                    className="text-[16px] text-text3 hover:text-danger transition-colors leading-none px-1"
+                    title="アサイン解除"
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Hours comparison */}
+          <div className="mb-4">
+            <div className="flex justify-between text-[11px] text-text2 mb-1.5">
+              <span>見積: {estimatedHours}h</span>
+              <span>実績: {task.actual_hours}h</span>
+            </div>
+            <div className="relative w-full bg-surf2 rounded-full" style={{ height: 8 }}>
+              <div
+                className="absolute h-full rounded-full bg-mint-l opacity-50"
+                style={{
+                  width: `${(estimatedHours / maxHours) * 100}%`,
+                }}
+              />
+              <div
+                className="absolute h-full rounded-full"
+                style={{
+                  width: `${(task.actual_hours / maxHours) * 100}%`,
+                  backgroundColor:
+                    task.actual_hours > estimatedHours
+                      ? 'var(--color-danger)'
+                      : 'var(--color-mint)',
+                }}
+              />
+            </div>
+          </div>
+        </>
+      ) : legacyUser ? (
+        <>
+          {/* Legacy single assignee (backward compat) */}
           <div className="flex items-center gap-3 mb-4">
             <Avatar
-              name_short={user.name_short}
-              color={user.avatar_color}
+              name_short={legacyUser.name_short}
+              color={legacyUser.avatar_color}
               size="lg"
             />
             <div className="flex flex-col">
               <span className="text-[14px] font-bold text-text">
-                {user.name}
+                {legacyUser.name}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
-                <RoleChip role={user.role} />
+                <RoleChip role={legacyUser.role} />
                 <span className="text-[10px] px-[6px] py-[1px] rounded-full bg-info-bg text-info border border-info-b font-semibold">
-                  週{user.weekly_capacity_hours}h
+                  週{legacyUser.weekly_capacity_hours}h
                 </span>
               </div>
             </div>

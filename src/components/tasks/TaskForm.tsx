@@ -1,9 +1,12 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { TaskFormStep1 } from '@/types/task'
+import { useClients } from '@/hooks/useClients'
+import { useTasks } from '@/hooks/useTasks'
 
 // ---------------------------------------------------------------------------
 // Zod schema for Step 1
@@ -50,6 +53,19 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
     mode: 'onTouched',
   })
 
+  // Fetch existing clients for autocomplete suggestions
+  const { data: clients } = useClients()
+
+  // Fetch existing tasks for task title suggestions
+  const { data: tasks } = useTasks()
+
+  // Deduplicate task titles for suggestions
+  const uniqueTaskTitles = useMemo(() => {
+    if (!tasks) return []
+    const titles = new Set(tasks.map((t) => t.title))
+    return Array.from(titles).sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [tasks])
+
   const submit = (values: Step1FormValues) => {
     const data: TaskFormStep1 = {
       client_name: values.client_name,
@@ -85,7 +101,8 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             <input
               id="client_name"
               type="text"
-              autoComplete="organization"
+              list="client-list"
+              autoComplete="off"
               placeholder="例: 株式会社サンプル"
               className={`
                 w-full rounded-lg border px-3 py-2 text-[13px] text-text1
@@ -95,6 +112,11 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               `}
               {...register('client_name')}
             />
+            <datalist id="client-list">
+              {(clients ?? []).map((c) => (
+                <option key={c.id} value={c.name} />
+              ))}
+            </datalist>
             {errors.client_name && (
               <p className="mt-1 text-[11px] text-danger">
                 {errors.client_name.message}
@@ -113,6 +135,8 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             <input
               id="title"
               type="text"
+              list="task-title-list"
+              autoComplete="off"
               placeholder="例: LP制作・バナーデザイン"
               className={`
                 w-full rounded-lg border px-3 py-2 text-[13px] text-text1
@@ -122,6 +146,11 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               `}
               {...register('title')}
             />
+            <datalist id="task-title-list">
+              {uniqueTaskTitles.map((title) => (
+                <option key={title} value={title} />
+              ))}
+            </datalist>
             {errors.title && (
               <p className="mt-1 text-[11px] text-danger">
                 {errors.title.message}
