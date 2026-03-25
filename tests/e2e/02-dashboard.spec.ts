@@ -68,7 +68,7 @@ test.describe('TC-02: Dashboard', () => {
   })
 
   test('sidebar navigation items exist', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await expect(sidebar).toBeVisible({ timeout: 10000 })
 
     // Check for known sidebar items — use flexible matching so adding new items doesn't break the test

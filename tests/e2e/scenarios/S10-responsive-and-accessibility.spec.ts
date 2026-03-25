@@ -32,7 +32,7 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
     await page.waitForTimeout(2000)
 
     // Sidebar should have meaningful navigation links
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await expect(sidebar).toBeVisible({ timeout: 10000 })
 
     const navTexts = ['ダッシュボード', 'タスク', 'クライアント', '稼働管理', 'メンバー', '設定', 'プロジェクト']

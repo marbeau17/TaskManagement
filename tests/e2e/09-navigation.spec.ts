@@ -12,7 +12,7 @@ test.describe('TC-09: Navigation', () => {
   })
 
   test('navigate to dashboard via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     // Use text-based selector to avoid matching both logo and nav item
     await sidebar.locator('a[href="/dashboard"]').first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 15000 })
@@ -20,42 +20,42 @@ test.describe('TC-09: Navigation', () => {
   })
 
   test('navigate to task request via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/tasks/new"]').click()
     await page.waitForURL(/\/tasks\/new/, { timeout: 15000 })
     expect(page.url()).toContain('/tasks/new')
   })
 
   test('navigate to task list via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/tasks"]').click()
     await page.waitForURL(/\/tasks/, { timeout: 15000 })
     expect(page.url()).toContain('/tasks')
   })
 
   test('navigate to clients via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/clients"]').click()
     await page.waitForURL(/\/clients/, { timeout: 15000 })
     expect(page.url()).toContain('/clients')
   })
 
   test('navigate to workload via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/workload"]').click()
     await page.waitForURL(/\/workload/, { timeout: 15000 })
     expect(page.url()).toContain('/workload')
   })
 
   test('navigate to members via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/members"]').click()
     await page.waitForURL(/\/members/, { timeout: 15000 })
     expect(page.url()).toContain('/members')
   })
 
   test('navigate to settings via sidebar', async ({ page }) => {
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
     await sidebar.locator('a[href="/settings"]').click()
     await page.waitForURL(/\/settings/, { timeout: 15000 })
     expect(page.url()).toContain('/settings')
@@ -76,7 +76,7 @@ test.describe('TC-09: Navigation', () => {
   test('logout flow', async ({ page }) => {
     // The logout option is in a DropdownMenu triggered by the Settings (gear) icon
     // in the user info section at the bottom of the sidebar
-    const sidebar = page.locator('aside')
+    const sidebar = page.locator('aside').first()
 
     // Find the DropdownMenuTrigger using the data-slot attribute set by Radix
     const dropdownTrigger = sidebar.locator('[data-slot="dropdown-menu-trigger"]')
