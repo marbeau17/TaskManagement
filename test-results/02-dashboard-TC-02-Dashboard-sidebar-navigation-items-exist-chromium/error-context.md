@@ -1,0 +1,242 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - complementary [ref=e5]:
+        - link "✦ WorkFlow" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e8]: ✦
+          - generic [ref=e9]: WorkFlow
+        - generic [ref=e10]:
+          - generic [ref=e11]: メイン
+          - navigation [ref=e12]:
+            - link "📊 ダッシュボード" [ref=e13] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=e14]: 📊
+              - generic [ref=e15]: ダッシュボード
+            - link "📝 タスク依頼" [ref=e16] [cursor=pointer]:
+              - /url: /tasks/new
+              - generic [ref=e17]: 📝
+              - generic [ref=e18]: タスク依頼
+            - link "📋 タスク一覧 2" [ref=e19] [cursor=pointer]:
+              - /url: /tasks
+              - generic [ref=e20]: 📋
+              - generic [ref=e21]: タスク一覧
+              - generic [ref=e22]: "2"
+            - link "🏢 クライアント" [ref=e23] [cursor=pointer]:
+              - /url: /clients
+              - generic [ref=e24]: 🏢
+              - generic [ref=e25]: クライアント
+            - link "📁 プロジェクト" [ref=e26] [cursor=pointer]:
+              - /url: /projects
+              - generic [ref=e27]: 📁
+              - generic [ref=e28]: プロジェクト
+            - link "⏱ 稼働管理" [ref=e29] [cursor=pointer]:
+              - /url: /workload
+              - generic [ref=e30]: ⏱
+              - generic [ref=e31]: 稼働管理
+        - generic [ref=e32]:
+          - generic [ref=e33]: クリエイター
+          - navigation [ref=e34]:
+            - link "R Agcaoili" [ref=e35] [cursor=pointer]:
+              - /url: /workload?creator=88cfba11-06eb-4591-82ca-2bf4e674855c
+              - generic [ref=e36]: R
+              - generic [ref=e37]: Agcaoili
+            - link "太 晴瑠" [ref=e38] [cursor=pointer]:
+              - /url: /workload?creator=45f4e25c-68fc-48a4-a44b-6d7706637093
+              - generic [ref=e39]: 太
+              - generic [ref=e40]: 晴瑠
+            - link "渡 梨紗" [ref=e41] [cursor=pointer]:
+              - /url: /workload?creator=65224f96-4594-4546-bc76-9db663d13942
+              - generic [ref=e42]: 渡
+              - generic [ref=e43]: 梨紗
+            - link "秋 由美子" [ref=e44] [cursor=pointer]:
+              - /url: /workload?creator=e4a16f10-6756-4862-977e-edddfa96954f
+              - generic [ref=e45]: 秋
+              - generic [ref=e46]: 由美子
+            - link "竹 美鈴" [ref=e47] [cursor=pointer]:
+              - /url: /workload?creator=28379378-8462-45ff-a7e1-61aabe6e6452
+              - generic [ref=e48]: 竹
+              - generic [ref=e49]: 美鈴
+        - generic [ref=e50]:
+          - generic [ref=e51]: システム
+          - navigation [ref=e52]:
+            - link "👥 メンバー" [ref=e53] [cursor=pointer]:
+              - /url: /members
+              - generic [ref=e54]: 👥
+              - generic [ref=e55]: メンバー
+            - link "⚙ 設定" [ref=e56] [cursor=pointer]:
+              - /url: /settings
+              - generic [ref=e57]: ⚙
+              - generic [ref=e58]: 設定
+        - generic [ref=e61]:
+          - generic [ref=e62]: 安
+          - generic [ref=e63]:
+            - generic [ref=e64]: 安田 修
+            - generic [ref=e65]: ディレクター
+          - button [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+    - generic [ref=e70]:
+      - banner [ref=e71]:
+        - generic [ref=e72]:
+          - heading "ダッシュボード" [level=1] [ref=e73]
+          - paragraph [ref=e74]: "今週: 3/23～3/29"
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - button "今週" [ref=e77]
+            - button "今月" [ref=e78]
+            - button "全期間" [ref=e79]
+          - button "通知" [ref=e81]:
+            - img [ref=e82]
+          - link "+ タスク依頼" [ref=e86] [cursor=pointer]:
+            - /url: /tasks/new
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e91]: 今週のタスク数
+            - generic [ref=e92]:
+              - generic [ref=e93]: "17"
+              - generic [ref=e94]: 件
+            - generic [ref=e95]: ▲ 先週比 +17タスク
+          - generic [ref=e96]:
+            - generic [ref=e98]: アサイン待ち
+            - generic [ref=e99]:
+              - generic [ref=e100]: "2"
+              - generic [ref=e101]: 件
+            - generic [ref=e102]: ⚠ 要対応
+          - generic [ref=e103]:
+            - generic [ref=e105]: 今週の完了率
+            - generic [ref=e106]:
+              - generic [ref=e107]: "24"
+              - generic [ref=e108]: "%"
+            - generic [ref=e109]: 4 / 17件 完了
+          - generic [ref=e110]:
+            - generic [ref=e112]: 納期超過
+            - generic [ref=e113]:
+              - generic [ref=e114]: "11"
+              - generic [ref=e115]: 件
+            - generic [ref=e116]: 即時対応が必要
+        - generic [ref=e117]:
+          - button "👤 クリエイター別" [ref=e118]
+          - button "🏢 クライアント別" [ref=e119]
+        - generic [ref=e120]:
+          - generic [ref=e122]: 読み込み中...
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - generic [ref=e125]:
+                - heading "🔔 納期アラート" [level=3] [ref=e126]
+                - generic [ref=e127]: "11"
+              - generic [ref=e128]:
+                - generic [ref=e129]:
+                  - generic [ref=e131]: TOPページ コーディング
+                  - generic [ref=e132]: 4/12超過
+                  - generic [ref=e133]: Luca Trabuio
+                - generic [ref=e134]:
+                  - generic [ref=e136]: 会社案内 デザイン
+                  - generic [ref=e137]: 4/13超過
+                  - generic [ref=e138]: 秋元 由美子
+                - generic [ref=e139]:
+                  - generic [ref=e141]: SNSバナー制作 5点
+                  - generic [ref=e142]: 4/15超過
+                  - generic [ref=e143]: 角田 春華
+                - generic [ref=e144]:
+                  - generic [ref=e146]: LP ファーストビュー
+                  - generic [ref=e147]: 4/17超過
+                  - generic [ref=e148]: Rafael Agcaoili
+                - generic [ref=e149]:
+                  - generic [ref=e151]: 採用バナー制作
+                  - generic [ref=e152]: 4/18超過
+                  - generic [ref=e153]: 未アサイン
+                - generic [ref=e154]:
+                  - generic [ref=e156]: 製品カタログ DTP
+                  - generic [ref=e157]: 4/18超過
+                  - generic [ref=e158]: Yudi Dharma Putra
+                - generic [ref=e159]:
+                  - generic [ref=e161]: ニュースレター原稿
+                  - generic [ref=e162]: 4/20超過
+                  - generic [ref=e163]: 未アサイン
+                - generic [ref=e164]:
+                  - generic [ref=e166]: ECサイト 商品ページ更新
+                  - generic [ref=e167]: 4/20超過
+                  - generic [ref=e168]: 太田 晴瑠
+                - generic [ref=e169]:
+                  - generic [ref=e171]: メルマガテンプレートデザイン
+                  - generic [ref=e172]: 4/22超過
+                  - generic [ref=e173]: 竹内 美鈴
+                - generic [ref=e174]:
+                  - generic [ref=e176]: プレスリリース用画像
+                  - generic [ref=e177]: 4/24超過
+                  - generic [ref=e178]: 角田 春華
+                - generic [ref=e179]:
+                  - generic [ref=e181]: ウェブ広告バナーセット
+                  - generic [ref=e182]: 4/25超過
+                  - generic [ref=e183]: Luca Trabuio
+                - generic [ref=e184]:
+                  - generic [ref=e186]: "E2Eテスト: シナリオ1_1774401766569"
+                  - generic [ref=e187]: 04/01
+                  - generic [ref=e188]: Rafael Agcaoili
+                - generic [ref=e189]:
+                  - generic [ref=e191]: "E2Eテスト: シナリオ1_1774401229702"
+                  - generic [ref=e192]: 04/01
+                  - generic [ref=e193]: Rafael Agcaoili
+            - generic [ref=e194]:
+              - generic [ref=e195]:
+                - heading "⏳ アサイン待ち" [level=3] [ref=e196]
+                - generic [ref=e197]: "2"
+              - generic [ref=e198]:
+                - 'link "ニュースレター原稿 E2Eテスト更新_1774360373593 希望: 2025/04/20" [ref=e199] [cursor=pointer]':
+                  - /url: /tasks/00000000-0000-0000-0000-000000000206
+                  - generic [ref=e200]: ニュースレター原稿
+                  - generic [ref=e201]:
+                    - generic [ref=e202]: E2Eテスト更新_1774360373593
+                    - generic [ref=e203]: "希望: 2025/04/20"
+                - 'link "採用バナー制作 E2Eテスト更新_1774360373593 希望: 2025/04/18" [ref=e204] [cursor=pointer]':
+                  - /url: /tasks/00000000-0000-0000-0000-000000000202
+                  - generic [ref=e205]: 採用バナー制作
+                  - generic [ref=e206]:
+                    - generic [ref=e207]: E2Eテスト更新_1774360373593
+                    - generic [ref=e208]: "希望: 2025/04/18"
+              - link "アサインする →" [ref=e210] [cursor=pointer]:
+                - /url: /tasks?status=waiting
+        - generic [ref=e211]:
+          - heading "最近のアクティビティ" [level=3] [ref=e212]
+          - generic [ref=e213]:
+            - generic [ref=e214]:
+              - generic [ref=e215]: 太
+              - generic [ref=e216]:
+                - paragraph [ref=e217]: 太田 晴瑠 進捗を更新
+                - link "TEST" [ref=e218] [cursor=pointer]:
+                  - /url: /tasks/b3d4da7a-6373-4b81-96d1-6d7b756d072e
+              - generic [ref=e219]: 13時間前
+            - generic [ref=e220]:
+              - generic [ref=e221]: 太
+              - generic [ref=e222]:
+                - paragraph [ref=e223]: 太田 晴瑠 進捗を更新
+                - link "TEST" [ref=e224] [cursor=pointer]:
+                  - /url: /tasks/b3d4da7a-6373-4b81-96d1-6d7b756d072e
+              - generic [ref=e225]: 13時間前
+            - generic [ref=e226]:
+              - generic [ref=e227]: 太
+              - generic [ref=e228]:
+                - paragraph [ref=e229]: 太田 晴瑠 ステータスを変更
+                - link "TEST" [ref=e230] [cursor=pointer]:
+                  - /url: /tasks/b3d4da7a-6373-4b81-96d1-6d7b756d072e
+              - generic [ref=e231]: 13時間前
+            - generic [ref=e232]:
+              - generic [ref=e233]: L
+              - generic [ref=e234]:
+                - paragraph [ref=e235]: Luca Trabuio 工数を更新
+                - link "TOPページ コーディング" [ref=e236] [cursor=pointer]:
+                  - /url: /tasks/00000000-0000-0000-0000-000000000201
+              - generic [ref=e237]: 2025/04/11
+            - generic [ref=e238]:
+              - generic [ref=e239]: L
+              - generic [ref=e240]:
+                - paragraph [ref=e241]: Luca Trabuio 進捗を更新
+                - link "TOPページ コーディング" [ref=e242] [cursor=pointer]:
+                  - /url: /tasks/00000000-0000-0000-0000-000000000201
+              - generic [ref=e243]: 2025/04/11
+```

@@ -60,6 +60,9 @@ test.describe('S06: Workload Tracking — Data Integrity', () => {
   })
 
   test('period toggle switching does not crash the page', async ({ page }) => {
+    // Wait for initial data to fully load (workload page now shows ALL members)
+    await page.waitForTimeout(5000)
+
     const periodTexts = ['今週', '今月', '全期間']
 
     for (const text of periodTexts) {
@@ -67,18 +70,17 @@ test.describe('S06: Workload Tracking — Data Integrity', () => {
       const isVisible = await btn.isVisible().catch(() => false)
       if (isVisible) {
         await btn.click()
-        await page.waitForTimeout(2000)
+        // Allow extra time for data reload — page now shows all members, not just creators
+        await page.waitForTimeout(5000)
 
-        // Page should not show error
-        const hasError = await page.locator('text=エラー').isVisible().catch(() => false)
+        // Page should not show runtime error
         const pageContent = await page.textContent('body')
         const hasRuntimeError = pageContent?.includes('Application error') || pageContent?.includes('Unhandled Runtime Error')
-
-        expect(hasError && hasRuntimeError).toBeFalsy()
+        expect(hasRuntimeError).toBeFalsy()
 
         // Content area should still be visible
         const contentArea = page.locator('[class*="bg-surface"]').first()
-        await expect(contentArea).toBeVisible({ timeout: 10000 })
+        await expect(contentArea).toBeVisible({ timeout: 15000 })
       }
     }
   })

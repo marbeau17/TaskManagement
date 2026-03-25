@@ -35,7 +35,7 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
     const sidebar = page.locator('aside')
     await expect(sidebar).toBeVisible({ timeout: 10000 })
 
-    const navTexts = ['ダッシュボード', 'タスク', 'クライアント', '稼働管理', 'メンバー', '設定']
+    const navTexts = ['ダッシュボード', 'タスク', 'クライアント', '稼働管理', 'メンバー', '設定', 'プロジェクト']
     let foundNavItems = 0
 
     for (const text of navTexts) {
@@ -46,8 +46,8 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
       }
     }
 
-    // Most navigation items should be present
-    expect(foundNavItems).toBeGreaterThanOrEqual(4)
+    // Most navigation items should be present (flexible to accommodate new sidebar items)
+    expect(foundNavItems).toBeGreaterThanOrEqual(5)
   })
 
   test('form inputs have labels or placeholders', async ({ page }) => {
