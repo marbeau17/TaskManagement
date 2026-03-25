@@ -1,12 +1,15 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { TaskFormStep1 } from '@/types/task'
+import type { TaskTemplate } from '@/types/template'
 import { useClients } from '@/hooks/useClients'
 import { useTasks } from '@/hooks/useTasks'
+import { useTemplates } from '@/hooks/useTemplates'
+import { TemplateFieldRenderer } from '@/components/tasks/TemplateFieldRenderer'
 
 // ---------------------------------------------------------------------------
 // Zod schema for Step 1
@@ -53,6 +56,36 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
     mode: 'onTouched',
   })
 
+  // Template state
+  const { data: templates } = useTemplates()
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
+    defaultValues?.template_id ?? ''
+  )
+  const [templateData, setTemplateData] = useState<Record<string, any>>(
+    defaultValues?.template_data ?? {}
+  )
+
+  const selectedTemplate = useMemo(() => {
+    if (!selectedTemplateId || !templates) return null
+    return templates.find((t) => t.id === selectedTemplateId) ?? null
+  }, [selectedTemplateId, templates])
+
+  const handleTemplateChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const id = e.target.value
+      setSelectedTemplateId(id)
+      setTemplateData({}) // reset template data when switching templates
+    },
+    []
+  )
+
+  const handleTemplateFieldChange = useCallback(
+    (key: string, value: string | number | string[]) => {
+      setTemplateData((prev) => ({ ...prev, [key]: value }))
+    },
+    []
+  )
+
   // Fetch existing clients for autocomplete suggestions
   const { data: clients } = useClients()
 
@@ -73,12 +106,56 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       description: values.description || undefined,
       desired_deadline: values.desired_deadline || undefined,
       reference_url: values.reference_url || undefined,
+      template_id: selectedTemplateId || undefined,
+      template_data:
+        selectedTemplateId && Object.keys(templateData).length > 0
+          ? templateData
+          : undefined,
     }
     onSubmit(data)
   }
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
+      {/* Template selector */}
+      <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
+        <div className="px-6 py-4 border-b border-wf-border">
+          <h2 className="text-[15px] font-bold text-text1">
+            📑 テンプレート
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          <label
+            htmlFor="template_select"
+            className="block text-[12.5px] font-semibold text-text2 mb-1.5"
+          >
+            テンプレート
+          </label>
+          <select
+            id="template_select"
+            value={selectedTemplateId}
+            onChange={handleTemplateChange}
+            className="
+              w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
+              bg-surface
+              focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
+            "
+          >
+            <option value="">テンプレートなし（汎用）</option>
+            {(templates ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.category})
+              </option>
+            ))}
+          </select>
+          {selectedTemplate && (
+            <p className="mt-1.5 text-[11px] text-text3">
+              {selectedTemplate.fields.length} 個の追加フィールドがあります
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* Card */}
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         {/* Card header */}
@@ -221,6 +298,27 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Template fields */}
+      {selectedTemplate && selectedTemplate.fields.length > 0 && (
+        <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
+          <div className="px-6 py-4 border-b border-wf-border">
+            <h2 className="text-[15px] font-bold text-text1">
+              📑 {selectedTemplate.name} — 追加情報
+            </h2>
+          </div>
+          <div className="px-6 py-5 space-y-5">
+            {selectedTemplate.fields.map((field) => (
+              <TemplateFieldRenderer
+                key={field.key}
+                field={field}
+                value={templateData[field.key] ?? (field.type === 'multiselect' ? [] : '')}
+                onChange={(v) => handleTemplateFieldChange(field.key, v)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3">

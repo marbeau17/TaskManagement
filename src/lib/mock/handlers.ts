@@ -16,6 +16,7 @@ import type {
 import type { TaskFilters, TaskFormStep1, TaskFormStep2, TaskProgressUpdate } from '@/types/task'
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
 import type { InviteMemberForm } from '@/types/member'
+import type { TaskTemplate, TemplateField } from '@/types/template'
 
 import {
   mockUsers,
@@ -24,6 +25,7 @@ import {
   mockComments,
   mockActivityLogs,
   mockAttachments,
+  mockTemplates,
   DEFAULT_PASSWORD,
 } from './data'
 import type { MockUserWithPassword } from './data'
@@ -170,6 +172,8 @@ export function createMockTask(
     actual_hours: 0,
     reference_url: step1.reference_url ?? null,
     is_draft: !step2,
+    template_id: null,
+    template_data: null,
     created_at: now,
     updated_at: now,
   }
@@ -679,4 +683,65 @@ export function updateMockProjectMemberHours(id: string, hours: number): Project
   if (!member) throw new Error(`ProjectMember not found: ${id}`)
   member.allocated_hours = hours
   return { ...member }
+}
+
+// ---------------------------------------------------------------------------
+// Templates
+// ---------------------------------------------------------------------------
+
+let templates: TaskTemplate[] = [...mockTemplates]
+
+export function getMockTemplates(): TaskTemplate[] {
+  return [...templates].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export function getMockTemplateById(id: string): TaskTemplate | null {
+  return templates.find((t) => t.id === id) ?? null
+}
+
+export function createMockTemplate(data: {
+  name: string
+  category: string
+  fields: TemplateField[]
+}): TaskTemplate {
+  const now = new Date().toISOString()
+  const newTemplate: TaskTemplate = {
+    id: genId('tmpl-'),
+    name: data.name,
+    category: data.category,
+    fields: data.fields,
+    is_default: false,
+    created_by: 'u1', // default mock current user
+    created_at: now,
+    updated_at: now,
+  }
+  templates = [newTemplate, ...templates]
+  return newTemplate
+}
+
+export function updateMockTemplate(
+  id: string,
+  data: Partial<TaskTemplate>
+): TaskTemplate {
+  const index = templates.findIndex((t) => t.id === id)
+  if (index === -1) throw new Error(`Template not found: ${id}`)
+
+  const now = new Date().toISOString()
+  const updated: TaskTemplate = {
+    ...templates[index],
+    ...data,
+    id, // ensure id is never overwritten
+    updated_at: now,
+  }
+
+  templates = [...templates]
+  templates[index] = updated
+  return updated
+}
+
+export function deleteMockTemplate(id: string): boolean {
+  const index = templates.findIndex((t) => t.id === id)
+  if (index === -1) return false
+  templates = templates.filter((t) => t.id !== id)
+  return true
 }

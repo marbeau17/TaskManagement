@@ -34,6 +34,7 @@ const MAIN_NAV = [
 ]
 
 const SYSTEM_NAV = [
+  { id: 'templates', label: 'テンプレート', icon: '📝', href: '/templates' },
   { id: 'members', label: 'メンバー', icon: '👥', href: '/members' },
   { id: 'settings', label: '設定', icon: '⚙', href: '/settings' },
 ]

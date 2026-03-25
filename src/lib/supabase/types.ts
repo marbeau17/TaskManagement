@@ -94,6 +94,8 @@ export interface Database {
           actual_hours: number
           reference_url: string | null
           is_draft: boolean
+          template_id: string | null
+          template_data: Json | null
           created_at: string
           updated_at: string
         }
@@ -113,6 +115,8 @@ export interface Database {
           actual_hours?: number
           reference_url?: string | null
           is_draft?: boolean
+          template_id?: string | null
+          template_data?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -132,6 +136,8 @@ export interface Database {
           actual_hours?: number
           reference_url?: string | null
           is_draft?: boolean
+          template_id?: string | null
+          template_data?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -160,6 +166,54 @@ export interface Database {
           {
             foreignKeyName: 'tasks_director_id_fkey'
             columns: ['director_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'tasks_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'task_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      task_templates: {
+        Row: {
+          id: string
+          name: string
+          category: string
+          fields: Json
+          is_default: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category: string
+          fields: Json
+          is_default?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: string
+          fields?: Json
+          is_default?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'task_templates_created_by_fkey'
+            columns: ['created_by']
             isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']

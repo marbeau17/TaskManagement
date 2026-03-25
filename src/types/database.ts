@@ -70,6 +70,8 @@ export interface Task {
   actual_hours: number
   reference_url: string | null
   is_draft: boolean
+  template_id: string | null
+  template_data: Record<string, any> | null
   created_at: string
   updated_at: string
 }

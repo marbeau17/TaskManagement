@@ -21,6 +21,8 @@ export interface TaskFormStep1 {
   description?: string
   desired_deadline?: string
   reference_url?: string
+  template_id?: string
+  template_data?: Record<string, any>
 }
 
 /** Step 2 of task creation: director assigns and confirms */

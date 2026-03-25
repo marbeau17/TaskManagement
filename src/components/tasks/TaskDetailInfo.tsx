@@ -1,9 +1,13 @@
 'use client'
 
 import type { TaskWithRelations } from '@/types/database'
+import { useTemplates } from '@/hooks/useTemplates'
 
 interface TaskDetailInfoProps {
-  task: TaskWithRelations
+  task: TaskWithRelations & {
+    template_id?: string | null
+    template_data?: Record<string, any> | null
+  }
 }
 
 function formatDate(dateStr: string | null): string {
@@ -18,8 +22,14 @@ function isOverdue(dateStr: string | null): boolean {
 }
 
 export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
+  const { data: templates } = useTemplates()
   const deadline = task.confirmed_deadline ?? task.desired_deadline
   const overdue = task.status !== 'done' && isOverdue(deadline)
+
+  // Resolve template for display
+  const template = task.template_id && templates
+    ? templates.find((t) => t.id === task.template_id) ?? null
+    : null
 
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
@@ -72,6 +82,46 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
           </span>
         </div>
       </div>
+
+      {/* Template data */}
+      {template && task.template_data && Object.keys(task.template_data).length > 0 && (
+        <div className="mt-4 pt-4 border-t border-wf-border">
+          <h4 className="text-[12px] font-bold text-text2 mb-3">
+            📑 {template.name} — 追加情報
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {template.fields.map((field) => {
+              const val = task.template_data?.[field.key]
+              if (val === undefined || val === '' || (Array.isArray(val) && val.length === 0)) return null
+              return (
+                <div key={field.key} className={field.type === 'textarea' ? 'col-span-2' : ''}>
+                  <span className="text-[11px] text-text3 block mb-0.5">{field.label}</span>
+                  {field.type === 'textarea' ? (
+                    <div className="bg-surf2 rounded-md p-2 text-[12px] text-text whitespace-pre-wrap">
+                      {String(val)}
+                    </div>
+                  ) : field.type === 'multiselect' && Array.isArray(val) ? (
+                    <div className="flex flex-wrap gap-1">
+                      {val.map((v: string) => (
+                        <span
+                          key={v}
+                          className="inline-block px-2 py-0.5 rounded bg-mint/10 text-mint text-[11px] font-medium"
+                        >
+                          {v}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[12.5px] text-text font-medium">
+                      {String(val)}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
