@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useComments, useAddComment } from '@/hooks/useTasks'
 import { Avatar } from '@/components/shared'
+import { useMock } from '@/lib/utils'
 
 interface CommentSectionProps {
   taskId: string
@@ -17,9 +19,48 @@ function formatDateTime(dateStr: string): string {
 }
 
 export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
+  const queryClient = useQueryClient()
   const { data: comments, isLoading } = useComments(taskId)
   const addComment = useAddComment()
   const [body, setBody] = useState('')
+
+  // Supabase Realtime: auto-refresh comments when a new comment is inserted
+  useEffect(() => {
+    if (useMock()) return
+
+    let cleanup: (() => void) | undefined
+
+    const setup = async () => {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const channel = supabase
+        .channel(`comments-${taskId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'comments',
+            filter: `task_id=eq.${taskId}`,
+          },
+          () => {
+            // Invalidate the comments query to refresh
+            queryClient.invalidateQueries({ queryKey: ['comments', taskId] })
+          }
+        )
+        .subscribe()
+
+      cleanup = () => {
+        supabase.removeChannel(channel)
+      }
+    }
+
+    setup()
+
+    return () => {
+      cleanup?.()
+    }
+  }, [taskId, queryClient])
 
   const handleSend = () => {
     const trimmed = body.trim()

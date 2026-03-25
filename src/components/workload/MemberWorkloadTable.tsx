@@ -109,7 +109,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
             className={`
               grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
               border-b border-border2 last:border-b-0 items-center text-[12px] text-text
-              ${isOverloaded ? 'bg-red-50' : 'hover:bg-surf2/50'}
+              ${isOverloaded ? 'bg-red-50 dark:bg-red-950/30' : 'hover:bg-surf2/50'}
               transition-colors
             `}
           >
@@ -139,10 +139,10 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
             <div
               className={`text-right font-bold text-[12px] ${
                 s.utilization_rate >= 100
-                  ? 'text-red-600'
+                  ? 'text-red-600 dark:text-red-400'
                   : s.utilization_rate >= 80
-                    ? 'text-amber-600'
-                    : 'text-emerald-600'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-emerald-600 dark:text-emerald-400'
               }`}
             >
               {s.utilization_rate}%

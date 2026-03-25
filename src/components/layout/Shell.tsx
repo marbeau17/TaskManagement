@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 
@@ -25,11 +26,45 @@ function deriveActivePage(pathname: string): string {
 export function Shell({ children }: ShellProps) {
   const pathname = usePathname()
   const activePage = deriveActivePage(pathname)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const closeMobile = useCallback(() => setMobileOpen(false), [])
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-wf-bg">
-      <Sidebar activePage={activePage} />
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-[192px] shrink-0">
+        <Sidebar activePage={activePage} />
+      </aside>
+
+      {/* Mobile overlay sidebar */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-40">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeMobile}
+          />
+          {/* Sidebar panel */}
+          <div className="relative w-[192px] h-full z-50 animate-slide-in-left">
+            <Sidebar activePage={activePage} onNavigate={closeMobile} />
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile hamburger button */}
+        <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-[6px] rounded-[6px] text-text2 hover:bg-surf2 transition-colors"
+            aria-label="メニューを開く"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
         {children}
       </div>
     </div>

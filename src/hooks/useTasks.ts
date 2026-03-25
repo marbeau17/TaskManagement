@@ -8,11 +8,14 @@ import {
   createTask,
   updateTaskProgress,
   assignTask,
+  bulkUpdateTaskStatus,
   getComments,
   addComment,
   getActivityLogs,
+  getRecentActivityLogs,
   getAttachments,
 } from '@/lib/data/tasks'
+import type { TaskStatus } from '@/types/database'
 import type {
   TaskFilters,
   TaskFormStep1,
@@ -100,6 +103,26 @@ export function useAssignTask() {
 }
 
 // ---------------------------------------------------------------------------
+// Bulk status update
+// ---------------------------------------------------------------------------
+
+export function useBulkUpdateTaskStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      taskIds,
+      status,
+    }: {
+      taskIds: string[]
+      status: TaskStatus
+    }) => bulkUpdateTaskStatus(taskIds, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
 // Comments
 // ---------------------------------------------------------------------------
 
@@ -139,6 +162,13 @@ export function useActivityLogs(taskId: string) {
     queryKey: ['activityLogs', taskId],
     queryFn: () => getActivityLogs(taskId),
     enabled: !!taskId,
+  })
+}
+
+export function useRecentActivityLogs(limit = 5) {
+  return useQuery({
+    queryKey: ['recentActivityLogs', limit],
+    queryFn: () => getRecentActivityLogs(limit),
   })
 }
 

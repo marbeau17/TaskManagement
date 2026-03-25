@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Providers } from '@/app/providers'
 import { Shell } from '@/components/layout/Shell'
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { useMock } from '@/lib/utils'
 
 export default function MainLayout({
@@ -26,9 +27,22 @@ export default function MainLayout({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.replace('/login')
-      } else {
-        setAuthChecked(true)
+        return
       }
+
+      // Check if user must change password
+      const { data: profile } = await supabase
+        .from('users')
+        .select('must_change_password')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.must_change_password) {
+        router.replace('/change-password')
+        return
+      }
+
+      setAuthChecked(true)
     }
     checkAuth()
   }, [router])
@@ -43,7 +57,9 @@ export default function MainLayout({
 
   return (
     <Providers>
-      <Shell>{children}</Shell>
+      <ErrorBoundary>
+        <Shell>{children}</Shell>
+      </ErrorBoundary>
     </Providers>
   )
 }

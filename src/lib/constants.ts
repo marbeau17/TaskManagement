@@ -73,9 +73,9 @@ export const ROLE_STYLES: Record<
     border: 'border-warn-b',
   },
   director: {
-    bg: 'bg-[#EEE6F8]',
-    text: 'text-[#5A2A8A]',
-    border: 'border-[#C8A8E8]',
+    bg: 'bg-[#EEE6F8] dark:bg-[#2D1F3D]',
+    text: 'text-[#5A2A8A] dark:text-[#C8A8E8]',
+    border: 'border-[#C8A8E8] dark:border-[#5A2A8A]',
   },
   requester: {
     bg: 'bg-req-bg',
@@ -91,9 +91,9 @@ export const ROLE_STYLES: Record<
 
 /** Default style for custom (non-builtin) roles */
 export const DEFAULT_ROLE_STYLE = {
-  bg: 'bg-slate-100',
-  text: 'text-slate-600',
-  border: 'border-slate-300',
+  bg: 'bg-slate-100 dark:bg-slate-800',
+  text: 'text-slate-600 dark:text-slate-300',
+  border: 'border-slate-300 dark:border-slate-600',
 }
 
 /** Get label for any role, falling back to the raw role string for custom roles */
@@ -146,24 +146,24 @@ export const WORKLOAD_STATUS_STYLES: Record<
   { bg: string; text: string; border: string }
 > = {
   available: {
-    bg: 'bg-slate-50',
-    text: 'text-slate-600',
-    border: 'border-slate-200',
+    bg: 'bg-slate-50 dark:bg-slate-800',
+    text: 'text-slate-600 dark:text-slate-300',
+    border: 'border-slate-200 dark:border-slate-600',
   },
   normal: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    border: 'border-emerald-200 dark:border-emerald-800',
   },
   warning: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    text: 'text-amber-700 dark:text-amber-400',
+    border: 'border-amber-200 dark:border-amber-800',
   },
   overloaded: {
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    border: 'border-red-200',
+    bg: 'bg-red-50 dark:bg-red-950/40',
+    text: 'text-red-700 dark:text-red-400',
+    border: 'border-red-200 dark:border-red-800',
   },
 }
 

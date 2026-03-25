@@ -34,22 +34,22 @@ function getDeadlineLabel(deadline: string, level: AlertLevel): string {
 
 const LEVEL_STYLES: Record<AlertLevel, { dot: string; tag: string; tagText: string }> = {
   overdue: {
-    dot: 'bg-[#C05050]',
+    dot: 'bg-[#C05050] dark:bg-[#E07070]',
     tag: 'bg-danger-bg text-danger border-danger-b',
     tagText: 'text-danger',
   },
   today: {
-    dot: 'bg-[#C8A030]',
+    dot: 'bg-[#C8A030] dark:bg-[#E0C050]',
     tag: 'bg-warn-bg text-warn border-warn-b',
     tagText: 'text-warn',
   },
   soon: {
-    dot: 'bg-[#C8A030]',
+    dot: 'bg-[#C8A030] dark:bg-[#E0C050]',
     tag: 'bg-warn-bg text-warn border-warn-b',
     tagText: 'text-warn',
   },
   ok: {
-    dot: 'bg-[#4A9482]',
+    dot: 'bg-[#4A9482] dark:bg-[#6FB5A3]',
     tag: 'bg-ok-bg text-ok border-ok-b',
     tagText: 'text-ok',
   },

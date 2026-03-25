@@ -6,6 +6,7 @@ import type {
   User,
   Client,
   Task,
+  TaskStatus,
   TaskWithRelations,
   Comment,
   ActivityLog,
@@ -100,25 +101,36 @@ export function getMockTasks(filters?: TaskFilters): TaskWithRelations[] {
     )
   }
 
-  // Period filter
+  // Period filter — based on confirmed_deadline range
   if (filters.period && filters.period !== 'all') {
     const now = new Date()
-    let cutoff: Date
 
     if (filters.period === 'week') {
-      cutoff = new Date(now)
-      cutoff.setDate(cutoff.getDate() - 7)
-    } else {
-      // month
-      cutoff = new Date(now)
-      cutoff.setMonth(cutoff.getMonth() - 1)
-    }
+      // Monday to Sunday of the current week
+      const day = now.getDay()
+      const diffToMonday = day === 0 ? 6 : day - 1
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() - diffToMonday)
+      startOfWeek.setHours(0, 0, 0, 0)
+      const endOfWeek = new Date(startOfWeek)
+      endOfWeek.setDate(startOfWeek.getDate() + 7)
 
-    result = result.filter((t) => {
-      const deadline = t.confirmed_deadline || t.desired_deadline
-      if (!deadline) return true
-      return new Date(deadline) >= cutoff
-    })
+      result = result.filter((t) => {
+        if (!t.confirmed_deadline) return false
+        const d = new Date(t.confirmed_deadline)
+        return d >= startOfWeek && d < endOfWeek
+      })
+    } else {
+      // month — current calendar month
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+
+      result = result.filter((t) => {
+        if (!t.confirmed_deadline) return false
+        const d = new Date(t.confirmed_deadline)
+        return d >= startOfMonth && d < endOfMonth
+      })
+    }
   }
 
   return result
@@ -249,6 +261,23 @@ export function assignMockTask(
     status: 'todo',
     is_draft: false,
   })
+}
+
+// ---------------------------------------------------------------------------
+// Bulk status update
+// ---------------------------------------------------------------------------
+
+export function bulkUpdateMockTaskStatus(
+  taskIds: string[],
+  status: TaskStatus
+): void {
+  for (const id of taskIds) {
+    const task = tasks.find((t) => t.id === id)
+    if (task) {
+      task.status = status
+      task.updated_at = new Date().toISOString()
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -455,12 +484,61 @@ export function getMockActivityLogs(taskId: string): ActivityLog[] {
   return activityLogs.filter((l) => l.task_id === taskId)
 }
 
+export function getMockRecentActivityLogs(limit = 5) {
+  // Sort by created_at descending and return the latest N with task info
+  const sorted = [...activityLogs].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
+  return sorted.slice(0, limit).map((log) => {
+    const task = tasks.find((t) => t.id === log.task_id)
+    return {
+      ...log,
+      task: task ? { id: task.id, title: task.title } : undefined,
+    }
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Attachments
 // ---------------------------------------------------------------------------
 
 export function getMockAttachments(taskId: string): Attachment[] {
   return attachments.filter((a) => a.task_id === taskId)
+}
+
+export function addMockAttachment(
+  taskId: string,
+  file: { file_name: string; file_size: number; mime_type: string; storage_path: string }
+): Attachment {
+  const userId = 'u1' // default mock current user
+  const user = findUser(userId)
+  const newAttachment: Attachment = {
+    id: genId('at'),
+    task_id: taskId,
+    uploaded_by: userId,
+    file_name: file.file_name,
+    file_size: file.file_size,
+    mime_type: file.mime_type,
+    storage_path: file.storage_path,
+    created_at: new Date().toISOString(),
+    uploader: user,
+  }
+
+  attachments = [newAttachment, ...attachments]
+  return newAttachment
+}
+
+// ---------------------------------------------------------------------------
+// Recent notifications (global activity logs, limit 10)
+// ---------------------------------------------------------------------------
+
+export function getMockRecentNotifications(): ActivityLog[] {
+  return [...activityLogs]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+    .slice(0, 10)
 }
 
 // ---------------------------------------------------------------------------

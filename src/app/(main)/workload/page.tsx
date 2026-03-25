@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Topbar } from '@/components/layout'
-import { PeriodToggle } from '@/components/shared'
+import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
 import { MemberWorkloadTable } from '@/components/workload/MemberWorkloadTable'
 import { useWorkloadKpi, useWorkloadSummaries } from '@/hooks/useWorkload'
@@ -41,7 +41,9 @@ export default function WorkloadPage() {
 
         {/* Member Workload Table */}
         {summariesLoading || !summaries ? (
-          <div className="bg-surface border border-border2 rounded-[10px] h-[300px] animate-pulse" />
+          <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden">
+            <TableSkeleton rows={6} columns={8} />
+          </div>
         ) : (
           <MemberWorkloadTable summaries={summaries} />
         )}

@@ -5,6 +5,7 @@
 
 import type {
   Task,
+  TaskStatus,
   TaskWithRelations,
   Comment,
   ActivityLog,
@@ -61,14 +62,24 @@ export async function getTasks(
 
   if (filters?.period === 'week') {
     const now = new Date()
+    // Monday-based week start
+    const day = now.getDay()
+    const diffToMonday = day === 0 ? 6 : day - 1
     const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
+    startOfWeek.setDate(now.getDate() - diffToMonday)
     startOfWeek.setHours(0, 0, 0, 0)
-    query = query.gte('created_at', startOfWeek.toISOString())
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 7)
+    query = query
+      .gte('confirmed_deadline', startOfWeek.toISOString())
+      .lt('confirmed_deadline', endOfWeek.toISOString())
   } else if (filters?.period === 'month') {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    query = query.gte('created_at', startOfMonth.toISOString())
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    query = query
+      .gte('confirmed_deadline', startOfMonth.toISOString())
+      .lt('confirmed_deadline', endOfMonth.toISOString())
   }
 
   query = query.order('created_at', { ascending: false })
@@ -247,6 +258,30 @@ export async function assignTask(
 }
 
 // ---------------------------------------------------------------------------
+// bulkUpdateTaskStatus
+// ---------------------------------------------------------------------------
+
+export async function bulkUpdateTaskStatus(
+  taskIds: string[],
+  status: TaskStatus
+): Promise<void> {
+  if (useMock()) {
+    const { bulkUpdateMockTaskStatus } = await import('@/lib/mock/handlers')
+    return bulkUpdateMockTaskStatus(taskIds, status)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({ status })
+    .in('id', taskIds)
+
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
 // getComments
 // ---------------------------------------------------------------------------
 
@@ -328,6 +363,44 @@ export async function getActivityLogs(taskId: string): Promise<ActivityLog[]> {
 }
 
 // ---------------------------------------------------------------------------
+// addAttachmentRecord
+// ---------------------------------------------------------------------------
+
+export async function addAttachmentRecord(
+  taskId: string,
+  file: { file_name: string; file_size: number; mime_type: string; storage_path: string }
+): Promise<Attachment> {
+  if (useMock()) {
+    const { addMockAttachment } = await import('@/lib/mock/handlers')
+    return addMockAttachment(taskId, file)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('attachments')
+    .insert({
+      task_id: taskId,
+      uploaded_by: authUser.id,
+      file_name: file.file_name,
+      file_size: file.file_size,
+      mime_type: file.mime_type,
+      storage_path: file.storage_path,
+    })
+    .select('*, uploader:users!attachments_uploaded_by_fkey(*)')
+    .single()
+
+  if (error) throw error
+  return data as Attachment
+}
+
+// ---------------------------------------------------------------------------
 // getAttachments
 // ---------------------------------------------------------------------------
 
@@ -348,4 +421,33 @@ export async function getAttachments(taskId: string): Promise<Attachment[]> {
 
   if (error) throw error
   return (data ?? []) as Attachment[]
+}
+
+// ---------------------------------------------------------------------------
+// getRecentActivityLogs (across all tasks)
+// ---------------------------------------------------------------------------
+
+export interface ActivityLogWithTask extends ActivityLog {
+  task?: { id: string; title: string }
+}
+
+export async function getRecentActivityLogs(
+  limit = 5
+): Promise<ActivityLogWithTask[]> {
+  if (useMock()) {
+    const { getMockRecentActivityLogs } = await import('@/lib/mock/handlers')
+    return getMockRecentActivityLogs(limit)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('activity_logs')
+    .select('*, user:users!activity_logs_user_id_fkey(*), task:tasks!activity_logs_task_id_fkey(id, title)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return (data ?? []) as ActivityLogWithTask[]
 }

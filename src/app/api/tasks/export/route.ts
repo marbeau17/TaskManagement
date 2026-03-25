@@ -33,6 +33,7 @@ function buildCsv(tasks: TaskWithRelations[]): string {
     '進捗(%)',
     '依頼者',
     '担当者',
+    'ディレクター',
     '希望納期',
     '確定納期',
     '見積工数',
@@ -45,16 +46,17 @@ function buildCsv(tasks: TaskWithRelations[]): string {
   const rows = tasks.map((t) =>
     [
       t.id,
-      t.client.name,
+      t.client?.name ?? '',
       t.title,
-      STATUS_LABELS[t.status],
-      String(t.progress),
-      t.requester.name,
+      STATUS_LABELS[t.status] ?? t.status,
+      String(t.progress ?? 0),
+      t.requester?.name ?? '',
       t.assigned_user?.name ?? '',
+      t.director?.name ?? '',
       t.desired_deadline ? formatDate(t.desired_deadline) : '',
       t.confirmed_deadline ? formatDate(t.confirmed_deadline) : '',
       t.estimated_hours != null ? `${t.estimated_hours.toFixed(1)}h` : '',
-      `${t.actual_hours.toFixed(1)}h`,
+      `${(t.actual_hours ?? 0).toFixed(1)}h`,
       formatDate(t.created_at),
     ]
       .map(escapeCsvValue)

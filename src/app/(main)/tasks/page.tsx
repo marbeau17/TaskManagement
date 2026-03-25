@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Topbar } from '@/components/layout'
-import { PeriodToggle } from '@/components/shared'
+import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { TaskFilters } from '@/components/tasks/TaskFilters'
 import { TaskStatusTabs } from '@/components/tasks/TaskStatusTabs'
 import { TaskTable } from '@/components/tasks/TaskTable'
+import { BulkActionBar } from '@/components/tasks/BulkActionBar'
 import { useTasks } from '@/hooks/useTasks'
 import { useFilterStore } from '@/stores/filterStore'
 import { exportTasksCsv } from '@/lib/csv-export'
@@ -23,6 +24,8 @@ export default function TasksPage() {
     period,
     setPeriod,
   } = useFilterStore()
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Build filters for the query (excluding status, which we filter client-side
   // so the status tabs can show counts for all statuses)
@@ -96,14 +99,22 @@ export default function TasksPage() {
         {/* Status tabs (pass all tasks so counts reflect all statuses) */}
         <TaskStatusTabs tasks={tasks} />
 
+        {/* Bulk action bar */}
+        <BulkActionBar
+          selectedIds={selectedIds}
+          onClearSelection={() => setSelectedIds(new Set())}
+        />
+
         {/* Task table card */}
         <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center py-[48px]">
-              <div className="text-[13px] text-text3">読み込み中...</div>
-            </div>
+            <TableSkeleton rows={8} columns={8} />
           ) : (
-            <TaskTable tasks={filteredTasks} />
+            <TaskTable
+              tasks={filteredTasks}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+            />
           )}
         </div>
       </div>

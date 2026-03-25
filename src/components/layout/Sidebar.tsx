@@ -7,6 +7,7 @@ import { Settings, KeyRound, LogOut, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useMembers } from '@/hooks/useMembers'
+import { useTasks } from '@/hooks/useTasks'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -19,13 +20,16 @@ import { useTheme } from '@/hooks/useTheme'
 
 interface SidebarProps {
   activePage: string
+  /** Called when a nav link is clicked (used to close mobile sidebar) */
+  onNavigate?: () => void
 }
 
 const MAIN_NAV = [
   { id: 'dashboard', label: 'ダッシュボード', icon: '📊', href: '/dashboard' },
   { id: 'request', label: 'タスク依頼', icon: '📝', href: '/tasks/new' },
-  { id: 'tasks', label: 'タスク一覧', icon: '📋', href: '/tasks', badge: 3 },
+  { id: 'tasks', label: 'タスク一覧', icon: '📋', href: '/tasks', badgeDynamic: true },
   { id: 'clients', label: 'クライアント', icon: '🏢', href: '/clients' },
+  { id: 'projects', label: 'プロジェクト', icon: '📁', href: '/projects' },
   { id: 'workload', label: '稼働管理', icon: '⏱', href: '/workload' },
 ]
 
@@ -34,12 +38,19 @@ const SYSTEM_NAV = [
   { id: 'settings', label: '設定', icon: '⚙', href: '/settings' },
 ]
 
-export function Sidebar({ activePage }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   const { user, logout } = useAuth()
   const { data: members } = useMembers()
+  const { data: allTasks } = useTasks()
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const { theme, setTheme } = useTheme()
+
+  // Dynamic badge: count tasks with status 'waiting'
+  const waitingCount = useMemo(() => {
+    if (!allTasks) return 0
+    return allTasks.filter((t) => t.status === 'waiting').length
+  }, [allTasks])
 
   // Derive creator list dynamically from members data
   const creators = useMemo(() => {
@@ -80,7 +91,7 @@ export function Sidebar({ activePage }: SidebarProps) {
     <aside className="w-[192px] bg-mint-dd flex flex-col h-full shrink-0 select-none">
       {/* Logo */}
       <div className="px-[16px] pt-[16px] pb-[12px]">
-        <Link href="/dashboard" className="flex items-center gap-[7px] text-white no-underline">
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline">
           <span className="text-[18px]">✦</span>
           <span className="text-[15px] font-bold tracking-wide">WorkFlow</span>
         </Link>
@@ -98,6 +109,7 @@ export function Sidebar({ activePage }: SidebarProps) {
               <Link
                 key={item.id}
                 href={item.href}
+                onClick={onNavigate}
                 className={`
                   flex items-center gap-[8px] px-[10px] py-[7px] rounded-[6px]
                   text-[12.5px] no-underline transition-colors
@@ -109,9 +121,9 @@ export function Sidebar({ activePage }: SidebarProps) {
               >
                 <span className="text-[14px] w-[18px] text-center">{item.icon}</span>
                 <span className="flex-1">{item.label}</span>
-                {item.badge !== undefined && item.badge > 0 && (
+                {item.badgeDynamic && waitingCount > 0 && (
                   <span className="bg-white/25 text-white text-[9px] font-bold px-[5px] py-[1px] rounded-full min-w-[18px] text-center">
-                    {item.badge}
+                    {waitingCount}
                   </span>
                 )}
               </Link>
@@ -130,6 +142,7 @@ export function Sidebar({ activePage }: SidebarProps) {
             <Link
               key={creator.id}
               href={`/workload?creator=${creator.id}`}
+              onClick={onNavigate}
               className="
                 flex items-center gap-[8px] px-[10px] py-[5px] rounded-[6px]
                 text-[12px] text-white/[0.68] no-underline transition-colors
@@ -155,6 +168,7 @@ export function Sidebar({ activePage }: SidebarProps) {
               <Link
                 key={item.id}
                 href={item.href}
+                onClick={onNavigate}
                 className={`
                   flex items-center gap-[8px] px-[10px] py-[7px] rounded-[6px]
                   text-[12.5px] no-underline transition-colors

@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { Topbar } from '@/components/layout'
-import { PeriodToggle } from '@/components/shared'
+import { PeriodToggle, NotificationBell } from '@/components/shared'
 import {
   KpiCards,
   CreatorWorkload,
   DeadlineAlerts,
   UnassignedTasks,
   ClientView,
+  RecentActivity,
 } from '@/components/dashboard'
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
@@ -38,16 +39,7 @@ export default function DashboardPage() {
         />
 
         {/* Notification bell */}
-        <button
-          className="relative w-[32px] h-[32px] flex items-center justify-center rounded-[8px] hover:bg-surf2 transition-colors text-text2"
-          aria-label="通知"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <span className="absolute top-[4px] right-[4px] w-[6px] h-[6px] bg-[#C05050] rounded-full" />
-        </button>
+        <NotificationBell />
 
         {/* + タスク依頼 button */}
         <Link
@@ -108,6 +100,9 @@ export default function DashboardPage() {
         ) : (
           <ClientView />
         )}
+
+        {/* Recent activity feed */}
+        <RecentActivity />
       </div>
     </>
   )

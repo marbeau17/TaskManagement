@@ -244,19 +244,48 @@ export async function forceChangePassword(
 
   // Update the must_change_password flag in users table.
   // Use admin client to ensure RLS doesn't block the update.
+  // Retry up to 3 times if the DB update fails, since the auth password
+  // has already been changed and the flag must stay in sync.
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const adminSupabase = createAdminClient()
 
-  const { error: dbError } = await adminSupabase
-    .from('users')
-    .update({ must_change_password: false })
-    .eq('id', userId)
+  const MAX_RETRIES = 3
+  let lastDbError: unknown = null
 
-  if (dbError) {
-    return { success: false, error: dbError.message }
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const { error: dbError } = await adminSupabase
+      .from('users')
+      .update({ must_change_password: false })
+      .eq('id', userId)
+
+    if (!dbError) {
+      return { success: true }
+    }
+
+    lastDbError = dbError
+    console.error(
+      `[forceChangePassword] DB update failed (attempt ${attempt}/${MAX_RETRIES}) for user ${userId}:`,
+      dbError.message,
+      dbError.code
+    )
+
+    // Wait briefly before retrying (exponential backoff)
+    if (attempt < MAX_RETRIES) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500))
+    }
   }
 
-  return { success: true }
+  // All retries exhausted. Password was changed in auth but the DB flag
+  // could not be updated. Log a critical error for manual resolution.
+  console.error(
+    `[forceChangePassword] CRITICAL: Password changed in auth but must_change_password flag NOT cleared for user ${userId}. Manual DB fix required.`
+  )
+  return {
+    success: false,
+    error: lastDbError instanceof Error
+      ? lastDbError.message
+      : 'データベースの更新に失敗しました。管理者に連絡してください。',
+  }
 }
 
 // ---------------------------------------------------------------------------

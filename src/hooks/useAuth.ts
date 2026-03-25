@@ -47,7 +47,20 @@ export function useAuth() {
           .select('*')
           .eq('id', authUser.id)
           .single()
-        if (profile) setUser(profile as User)
+        if (profile) {
+          setUser(profile as User)
+        } else {
+          // Retry via server-side API route (bypasses RLS)
+          try {
+            const res = await fetch(`/api/auth/profile?userId=${authUser.id}`)
+            if (res.ok) {
+              const apiProfile = await res.json()
+              setUser(apiProfile as User)
+            }
+          } catch (fetchErr) {
+            console.warn('Session profile fetch failed:', fetchErr)
+          }
+        }
       }
     }
     checkSession()
@@ -100,12 +113,13 @@ export function useAuth() {
 
       // Fallback: construct basic user from auth data
       console.warn('Profile fetch failed, using auth data fallback:', profileError?.message)
+      const inferredRole = data.user.user_metadata?.role || 'requester'
       const fallbackUser: User = {
         id: data.user.id,
         email: data.user.email || email,
         name: data.user.user_metadata?.name || email.split('@')[0],
         name_short: (data.user.user_metadata?.name || email.split('@')[0]).charAt(0),
-        role: 'creator',
+        role: inferredRole,
         avatar_color: 'av-a',
         weekly_capacity_hours: 16,
         is_active: true,

@@ -11,15 +11,15 @@ import {
 import type { WorkloadSummary } from '@/types/workload'
 
 function getBarColor(rate: number): string {
-  if (rate >= WORKLOAD_THRESHOLDS.danger) return '#C05050'
-  if (rate >= WORKLOAD_THRESHOLDS.warning) return '#C8A030'
-  return '#4A9482'
+  if (rate >= WORKLOAD_THRESHOLDS.danger) return 'var(--bar-danger, #C05050)'
+  if (rate >= WORKLOAD_THRESHOLDS.warning) return 'var(--bar-warning, #C8A030)'
+  return 'var(--bar-ok, #4A9482)'
 }
 
 function getRateColor(rate: number): string {
-  if (rate >= WORKLOAD_THRESHOLDS.danger) return 'text-[#C05050]'
-  if (rate >= WORKLOAD_THRESHOLDS.warning) return 'text-[#C8A030]'
-  return 'text-[#4A9482]'
+  if (rate >= WORKLOAD_THRESHOLDS.danger) return 'text-[#C05050] dark:text-[#E07070]'
+  if (rate >= WORKLOAD_THRESHOLDS.warning) return 'text-[#C8A030] dark:text-[#E0C050]'
+  return 'text-[#4A9482] dark:text-[#6FB5A3]'
 }
 
 function WorkloadRow({ summary }: { summary: WorkloadSummary }) {

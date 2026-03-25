@@ -14,11 +14,11 @@ interface CsvColumn {
 
 const CSV_COLUMNS: CsvColumn[] = [
   { header: 'ID', accessor: (t) => t.id },
-  { header: '\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8', accessor: (t) => t.client.name },
+  { header: '\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8', accessor: (t) => t.client?.name ?? '' },
   { header: '\u30BF\u30A4\u30C8\u30EB', accessor: (t) => t.title },
-  { header: '\u30B9\u30C6\u30FC\u30BF\u30B9', accessor: (t) => STATUS_LABELS[t.status] },
+  { header: '\u30B9\u30C6\u30FC\u30BF\u30B9', accessor: (t) => STATUS_LABELS[t.status] ?? t.status },
   { header: '\u9032\u6357(%)', accessor: (t) => String(t.progress) },
-  { header: '\u4F9D\u983C\u8005', accessor: (t) => t.requester.name },
+  { header: '\u4F9D\u983C\u8005', accessor: (t) => t.requester?.name ?? '' },
   {
     header: '\u62C5\u5F53\u8005',
     accessor: (t) => t.assigned_user?.name ?? '',
@@ -41,7 +41,7 @@ const CSV_COLUMNS: CsvColumn[] = [
     accessor: (t) =>
       t.estimated_hours != null ? formatHours(t.estimated_hours) : '',
   },
-  { header: '\u5B9F\u7E3E\u5DE5\u6570', accessor: (t) => formatHours(t.actual_hours) },
+  { header: '\u5B9F\u7E3E\u5DE5\u6570', accessor: (t) => formatHours(t.actual_hours ?? 0) },
   { header: '\u4F5C\u6210\u65E5', accessor: (t) => formatDate(t.created_at) },
 ]
 

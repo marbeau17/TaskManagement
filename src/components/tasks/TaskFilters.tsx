@@ -19,6 +19,19 @@ export function TaskFilters() {
     setRequestedBy,
   } = useFilterStore()
 
+  // Debounce search input by 300ms
+  const [searchInput, setSearchInput] = useState(search ?? '')
+
+  // Keep local input in sync if store search is reset externally
+  useEffect(() => {
+    setSearchInput(search ?? '')
+  }, [search])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput, setSearch])
+
   const { data: members } = useMembers()
   const { data: clients } = useQuery({
     queryKey: ['clients'],
@@ -37,8 +50,8 @@ export function TaskFilters() {
 
   return (
     <FilterBar
-      searchValue={search ?? ''}
-      onSearchChange={setSearch}
+      searchValue={searchInput}
+      onSearchChange={setSearchInput}
       filters={[
         {
           label: 'クライアント: すべて',

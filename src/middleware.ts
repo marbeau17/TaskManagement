@@ -1,3 +1,18 @@
+// =============================================================================
+// Next.js Middleware – Authentication guard
+//
+// MIGRATION NOTE (Next.js 16+):
+// The middleware API is deprecated starting in Next.js 16. When migrating,
+// replace this file with the new `instrumentation.ts` hooks or use the
+// built-in `next.config.ts` `rewrites`/`redirects` for simple cases.
+// For auth guards, consider using a Server Component layout wrapper or
+// the new `unstable_after` / route handler approach.
+// See: https://nextjs.org/docs/app/building-your-application/upgrading
+//
+// This middleware still works in Next.js 16 via the compatibility layer,
+// so no immediate migration is required.
+// =============================================================================
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
