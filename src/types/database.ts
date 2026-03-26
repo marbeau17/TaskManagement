@@ -73,6 +73,9 @@ export interface Task {
   is_draft: boolean
   template_id: string | null
   template_data: Record<string, any> | null
+  parent_task_id: string | null
+  wbs_code: string
+  start_date: string | null
   created_at: string
   updated_at: string
 }

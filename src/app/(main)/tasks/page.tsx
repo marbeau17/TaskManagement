@@ -10,6 +10,7 @@ import { TaskTable } from '@/components/tasks/TaskTable'
 import { BulkActionBar } from '@/components/tasks/BulkActionBar'
 import { useTasks } from '@/hooks/useTasks'
 import { useFilterStore } from '@/stores/filterStore'
+import { usePermission } from '@/hooks/usePermission'
 import { exportTasksCsv } from '@/lib/csv-export'
 import { PERIOD_OPTIONS } from '@/lib/constants'
 import type { TaskFilters as TaskFiltersType } from '@/types/task'
@@ -40,6 +41,7 @@ export default function TasksPage() {
     [search, client_id, assigned_to, requested_by, period]
   )
 
+  const { can } = usePermission()
   const { data: allTasks, isLoading } = useTasks(queryFilters)
   const tasks = allTasks ?? []
 
@@ -67,29 +69,33 @@ export default function TasksPage() {
           onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
         />
 
-        <button
-          onClick={handleCsvExport}
-          disabled={filteredTasks.length === 0}
-          className="
-            h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
-            border border-wf-border text-text2
-            hover:bg-surf2 transition-colors
-            disabled:opacity-40 disabled:cursor-not-allowed
-          "
-        >
-          CSV出力
-        </button>
+        {can('tasks', 'create') && (
+          <button
+            onClick={handleCsvExport}
+            disabled={filteredTasks.length === 0}
+            className="
+              h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
+              border border-wf-border text-text2
+              hover:bg-surf2 transition-colors
+              disabled:opacity-40 disabled:cursor-not-allowed
+            "
+          >
+            CSV出力
+          </button>
+        )}
 
-        <Link
-          href="/tasks/new"
-          className="
-            h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
-            bg-mint text-white hover:bg-mint-d transition-colors
-            inline-flex items-center
-          "
-        >
-          ＋ タスク依頼
-        </Link>
+        {can('tasks', 'create') && (
+          <Link
+            href="/tasks/new"
+            className="
+              h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
+              bg-mint text-white hover:bg-mint-d transition-colors
+              inline-flex items-center
+            "
+          >
+            ＋ タスク依頼
+          </Link>
+        )}
       </Topbar>
 
       <div className="flex-1 overflow-y-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]">

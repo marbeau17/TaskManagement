@@ -64,6 +64,14 @@ export async function getTasks(
     query = query.ilike('title', `%${filters.search}%`)
   }
 
+  if (filters?.parent_task_id !== undefined) {
+    if (filters.parent_task_id === null) {
+      query = query.is('parent_task_id', null)
+    } else {
+      query = query.eq('parent_task_id', filters.parent_task_id)
+    }
+  }
+
   if (filters?.period === 'week') {
     const now = new Date()
     // Monday-based week start
@@ -179,6 +187,8 @@ export async function createTask(
     assigned_to: step2?.assigned_to ?? null,
     confirmed_deadline: step2?.confirmed_deadline ?? null,
     estimated_hours: step2?.estimated_hours ?? null,
+    parent_task_id: step1.parent_task_id ?? null,
+    wbs_code: step1.wbs_code ?? '',
   }
 
   const { data, error } = await supabase
@@ -189,6 +199,33 @@ export async function createTask(
 
   if (error) throw error
   return data as Task
+}
+
+// ---------------------------------------------------------------------------
+// getSubtasks
+// ---------------------------------------------------------------------------
+
+export async function getSubtasks(
+  parentId: string
+): Promise<TaskWithRelations[]> {
+  if (useMock()) {
+    const { getMockSubtasks } = await import('@/lib/mock/handlers')
+    return getMockSubtasks(parentId)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(
+      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
+    )
+    .eq('parent_task_id', parentId)
+    .order('wbs_code', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as TaskWithRelations[]
 }
 
 // ---------------------------------------------------------------------------

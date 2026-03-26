@@ -13,6 +13,7 @@ export interface TaskFilters {
   requested_by?: string
   status?: TaskStatus | 'all'
   period?: 'week' | 'month' | 'all'
+  parent_task_id?: string | null
 }
 
 /** Step 1 of task creation: requester fills in basic info */
@@ -24,6 +25,8 @@ export interface TaskFormStep1 {
   reference_url?: string
   template_id?: string
   template_data?: Record<string, any>
+  parent_task_id?: string
+  wbs_code?: string
 }
 
 /** Step 2 of task creation: director assigns and confirms */

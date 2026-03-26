@@ -8,6 +8,7 @@ import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
+import { usePermission } from '@/hooks/usePermission'
 import type { Project, ProjectStatus } from '@/types/project'
 
 // ---------------------------------------------------------------------------
@@ -229,6 +230,7 @@ function CreateProjectModal({
 
 export default function ProjectsPage() {
   const router = useRouter()
+  const { can } = usePermission()
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -304,12 +306,14 @@ export default function ProjectsPage() {
   return (
     <>
       <Topbar title="プロジェクト管理">
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
-        >
-          + プロジェクト作成
-        </button>
+        {can('projects', 'create') && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
+          >
+            + プロジェクト作成
+          </button>
+        )}
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">

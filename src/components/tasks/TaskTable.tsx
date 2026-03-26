@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, ProgressBar, StatusChip } from '@/components/shared'
 import { formatDate, formatHours } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
+import { useSubtasks } from '@/hooks/useTasks'
 
 interface TaskTableProps {
   tasks: TaskWithRelations[]
@@ -15,6 +16,7 @@ interface TaskTableProps {
 }
 
 const COLUMNS = [
+  'WBS',
   'クライアント',
   'タスク名',
   '担当クリエイター',
@@ -27,27 +29,206 @@ const COLUMNS = [
 
 const PAGE_SIZE = 20
 
+/** Inline component to render subtask rows when a parent is expanded */
+function SubtaskRows({
+  parentId,
+  selected,
+  selectable,
+  onSelectOne,
+}: {
+  parentId: string
+  selected: Set<string>
+  selectable: boolean
+  onSelectOne: (id: string) => void
+}) {
+  const router = useRouter()
+  const { data: subtasks } = useSubtasks(parentId)
+
+  if (!subtasks || subtasks.length === 0) return null
+
+  return (
+    <>
+      {subtasks.map((task) => {
+        const deadline = task.confirmed_deadline ?? task.desired_deadline
+        const taskOverdue = deadline && task.status !== 'done' && isOverdue(deadline)
+        const taskDueToday = deadline && task.status !== 'done' && isToday(new Date(deadline))
+
+        return (
+          <tr
+            key={task.id}
+            onClick={() => router.push(`/tasks/${task.id}`)}
+            className={`
+              border-b border-wf-border cursor-pointer
+              hover:bg-surf2/50 transition-colors bg-surf2/30
+              ${taskOverdue ? 'bg-warn-bg' : ''}
+              ${selected.has(task.id) ? 'bg-mint-ll/40' : ''}
+            `}
+          >
+            {selectable && (
+              <td className="px-[8px] py-[10px]">
+                <input
+                  type="checkbox"
+                  checked={selected.has(task.id)}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    onSelectOne(task.id)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-[14px] h-[14px] rounded accent-[#2A9D8F] cursor-pointer"
+                />
+              </td>
+            )}
+
+            {/* WBS */}
+            <td className="px-[12px] py-[10px]">
+              <span className="text-[10.5px] font-mono text-text3">
+                {task.wbs_code || ''}
+              </span>
+            </td>
+
+            {/* Client */}
+            <td className="px-[12px] py-[10px]">
+              <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
+                {task.client.name}
+              </span>
+            </td>
+
+            {/* Task name (indented) */}
+            <td className="px-[12px] py-[10px] min-w-[180px]">
+              <div className="text-[12.5px] font-bold text-text leading-tight pl-[16px]">
+                <span className="text-text3 mr-[4px]">{'\u2514'}</span>
+                {task.title}
+              </div>
+              {task.description && (
+                <div className="text-[11px] text-text3 mt-[2px] line-clamp-1 pl-[16px]">
+                  {task.description}
+                </div>
+              )}
+            </td>
+
+            {/* Assignee */}
+            <td className="px-[12px] py-[10px]">
+              {task.assigned_user ? (
+                <div className="flex items-center gap-[6px]">
+                  <Avatar
+                    name_short={task.assigned_user.name_short}
+                    color={task.assigned_user.avatar_color}
+                    size="sm"
+                  />
+                  <span className="text-[11.5px] text-text whitespace-nowrap">
+                    {task.assigned_user.name}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[11.5px] italic text-warn">未アサイン</span>
+              )}
+            </td>
+
+            {/* Progress */}
+            <td className="px-[12px] py-[10px] min-w-[100px]">
+              <div className="flex items-center gap-[8px]">
+                <span className="text-[11px] font-semibold text-text2 w-[32px] text-right">
+                  {task.progress}%
+                </span>
+                <div className="flex-1 min-w-[50px]">
+                  <ProgressBar value={task.progress} height="sm" />
+                </div>
+              </div>
+            </td>
+
+            {/* Deadline */}
+            <td className="px-[12px] py-[10px]">
+              {deadline ? (
+                <span
+                  className={`text-[11.5px] whitespace-nowrap ${
+                    taskOverdue
+                      ? 'text-danger font-semibold'
+                      : taskDueToday
+                        ? 'text-warn font-semibold'
+                        : 'text-text'
+                  }`}
+                >
+                  {formatDate(deadline)}
+                </span>
+              ) : (
+                <span className="text-[11.5px] text-text3">-</span>
+              )}
+            </td>
+
+            {/* Estimate */}
+            <td className="px-[12px] py-[10px]">
+              <span className="text-[11.5px] text-text whitespace-nowrap">
+                {task.estimated_hours != null ? formatHours(task.estimated_hours) : '-'}
+              </span>
+            </td>
+
+            {/* Actual */}
+            <td className="px-[12px] py-[10px]">
+              <span className="text-[11.5px] text-text whitespace-nowrap">
+                {formatHours(task.actual_hours)}
+              </span>
+            </td>
+
+            {/* Status */}
+            <td className="px-[12px] py-[10px]">
+              <StatusChip status={task.status} size="sm" />
+            </td>
+          </tr>
+        )
+      })}
+    </>
+  )
+}
+
 export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTableProps) {
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+
+  const toggleExpand = useCallback((taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(taskId)) {
+        next.delete(taskId)
+      } else {
+        next.add(taskId)
+      }
+      return next
+    })
+  }, [])
+
+  // Identify which tasks have children in the current dataset
+  const parentIds = useMemo(() => {
+    const childParentIds = new Set<string>()
+    tasks.forEach((t) => {
+      if (t.parent_task_id) childParentIds.add(t.parent_task_id)
+    })
+    return childParentIds
+  }, [tasks])
+
+  // Filter out subtasks from top-level listing (only show root tasks)
+  const rootTasks = useMemo(() => {
+    return tasks.filter((t) => !t.parent_task_id)
+  }, [tasks])
 
   const selectable = !!onSelectionChange
   const selected = selectedIds ?? new Set<string>()
 
-  const totalPages = Math.max(1, Math.ceil(tasks.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(rootTasks.length / PAGE_SIZE))
 
   // Reset to page 1 if tasks change and current page is out of bounds
   const safePage = currentPage > totalPages ? 1 : currentPage
 
   const pagedTasks = useMemo(() => {
     const start = (safePage - 1) * PAGE_SIZE
-    return tasks.slice(start, start + PAGE_SIZE)
-  }, [tasks, safePage])
+    return rootTasks.slice(start, start + PAGE_SIZE)
+  }, [rootTasks, safePage])
 
   // Reset page when tasks array identity changes (filters applied)
-  const [prevTasksLen, setPrevTasksLen] = useState(tasks.length)
-  if (tasks.length !== prevTasksLen) {
-    setPrevTasksLen(tasks.length)
+  const [prevTasksLen, setPrevTasksLen] = useState(rootTasks.length)
+  if (rootTasks.length !== prevTasksLen) {
+    setPrevTasksLen(rootTasks.length)
     if (currentPage !== 1) setCurrentPage(1)
   }
 
@@ -209,10 +390,12 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                 deadline &&
                 task.status !== 'done' &&
                 isToday(new Date(deadline))
+              const hasChildren = parentIds.has(task.id)
+              const isExpanded = expandedIds.has(task.id)
 
               return (
+                <React.Fragment key={task.id}>
                 <tr
-                  key={task.id}
                   onClick={() => router.push(`/tasks/${task.id}`)}
                   className={`
                     border-b border-wf-border cursor-pointer
@@ -235,6 +418,26 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       />
                     </td>
                   )}
+
+                  {/* WBS */}
+                  <td className="px-[12px] py-[10px]">
+                    <div className="flex items-center gap-[4px]">
+                      {hasChildren && (
+                        <button
+                          type="button"
+                          onClick={(e) => toggleExpand(task.id, e)}
+                          className="text-[11px] text-text2 hover:text-mint w-[16px] h-[16px] flex items-center justify-center rounded hover:bg-surf2 transition-colors shrink-0"
+                        >
+                          {isExpanded ? '\u25BC' : '\u25B6'}
+                        </button>
+                      )}
+                      {task.wbs_code && (
+                        <span className="text-[10.5px] font-mono text-text3 whitespace-nowrap">
+                          {task.wbs_code}
+                        </span>
+                      )}
+                    </div>
+                  </td>
 
                   {/* Client */}
                   <td className="px-[12px] py-[10px]">
@@ -363,6 +566,17 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                     <StatusChip status={task.status} size="sm" />
                   </td>
                 </tr>
+
+                {/* Expanded subtask rows */}
+                {isExpanded && (
+                  <SubtaskRows
+                    parentId={task.id}
+                    selected={selected}
+                    selectable={selectable}
+                    onSelectOne={handleSelectOne}
+                  />
+                )}
+                </React.Fragment>
               )
             })}
           </tbody>

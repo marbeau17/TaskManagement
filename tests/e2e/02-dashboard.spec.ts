@@ -68,17 +68,19 @@ test.describe('TC-02: Dashboard', () => {
   })
 
   test('sidebar navigation items exist', async ({ page }) => {
+    // Shell renders two aside elements (desktop + tablet); pick the visible one
     const sidebar = page.locator('aside').first()
     await expect(sidebar).toBeVisible({ timeout: 10000 })
 
-    // Check for known sidebar items — use flexible matching so adding new items doesn't break the test
-    const expectedItems = ['ダッシュボード', 'タスク依頼', 'タスク一覧', 'クライアント', '稼働管理', 'メンバー', '設定', 'プロジェクト']
+    // Use href-based selectors — resilient to i18n text changes
+    const expectedHrefs = ['/dashboard', '/tasks/new', '/tasks', '/clients', '/workload', '/members', '/settings', '/projects', '/issues']
     let foundCount = 0
-    for (const item of expectedItems) {
-      const isVisible = await sidebar.locator(`text=${item}`).first().isVisible().catch(() => false)
+    for (const href of expectedHrefs) {
+      const link = sidebar.locator(`a[href="${href}"]`).first()
+      const isVisible = await link.isVisible().catch(() => false)
       if (isVisible) foundCount++
     }
-    // At least the core items should be present
+    // At least the core nav links should be present
     expect(foundCount).toBeGreaterThanOrEqual(6)
   })
 

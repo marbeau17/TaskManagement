@@ -101,6 +101,15 @@ export function getMockTasks(filters?: TaskFilters): TaskWithRelations[] {
     result = result.filter((t) => t.requested_by === filters.requested_by)
   }
 
+  // Parent task filter
+  if (filters.parent_task_id !== undefined) {
+    if (filters.parent_task_id === null) {
+      result = result.filter((t) => t.parent_task_id === null)
+    } else {
+      result = result.filter((t) => t.parent_task_id === filters.parent_task_id)
+    }
+  }
+
   // Search filter (matches title or client name, case-insensitive)
   if (filters.search) {
     const q = filters.search.toLowerCase()
@@ -150,6 +159,12 @@ export function getMockTaskById(id: string): TaskWithRelations | null {
   return tasks.find((t) => t.id === id) ?? null
 }
 
+export function getMockSubtasks(parentId: string): TaskWithRelations[] {
+  return tasks
+    .filter((t) => t.parent_task_id === parentId)
+    .sort((a, b) => (a.wbs_code ?? '').localeCompare(b.wbs_code ?? ''))
+}
+
 export function createMockTask(
   step1: TaskFormStep1,
   step2?: TaskFormStep2
@@ -183,6 +198,9 @@ export function createMockTask(
     is_draft: !step2,
     template_id: null,
     template_data: null,
+    parent_task_id: step1.parent_task_id ?? null,
+    wbs_code: step1.wbs_code ?? '',
+    start_date: null,
     created_at: now,
     updated_at: now,
   }

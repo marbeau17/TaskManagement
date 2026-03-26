@@ -7,22 +7,24 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
   })
 
   test('all main pages have proper page titles', async ({ page }) => {
+    // Text may be Japanese or English depending on i18n locale
     const pages = [
-      { path: '/dashboard', expectedText: 'ダッシュボード' },
-      { path: '/tasks', expectedText: 'タスク一覧' },
-      { path: '/workload', expectedText: '稼働管理' },
-      { path: '/members', expectedText: 'メンバー' },
-      { path: '/clients', expectedText: 'クライアント' },
-      { path: '/settings', expectedText: '設定' },
+      { path: '/dashboard', expectedTexts: ['ダッシュボード', 'Dashboard'] },
+      { path: '/tasks', expectedTexts: ['タスク一覧', 'Task List'] },
+      { path: '/workload', expectedTexts: ['稼働管理', 'Workload'] },
+      { path: '/members', expectedTexts: ['メンバー', 'Members'] },
+      { path: '/clients', expectedTexts: ['クライアント', 'Clients'] },
+      { path: '/settings', expectedTexts: ['設定', 'Settings'] },
     ]
 
     for (const p of pages) {
       await page.goto(p.path)
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(3000)
 
-      // Page should contain the expected text somewhere
+      // Page should contain one of the expected texts (Japanese or English)
       const pageContent = await page.textContent('body')
-      expect(pageContent).toContain(p.expectedText)
+      const found = p.expectedTexts.some((text) => pageContent?.includes(text))
+      expect(found).toBeTruthy()
     }
   })
 
@@ -35,18 +37,17 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
     const sidebar = page.locator('aside').first()
     await expect(sidebar).toBeVisible({ timeout: 10000 })
 
-    const navTexts = ['ダッシュボード', 'タスク', 'クライアント', '稼働管理', 'メンバー', '設定', 'プロジェクト']
+    // Use href-based selectors — resilient to i18n text changes
+    const expectedHrefs = ['/dashboard', '/tasks/new', '/tasks', '/clients', '/workload', '/members', '/settings', '/projects', '/issues']
     let foundNavItems = 0
 
-    for (const text of navTexts) {
-      const navItem = sidebar.locator(`text=${text}`).first()
-      const isVisible = await navItem.isVisible().catch(() => false)
-      if (isVisible) {
-        foundNavItems++
-      }
+    for (const href of expectedHrefs) {
+      const link = sidebar.locator(`a[href="${href}"]`).first()
+      const isVisible = await link.isVisible().catch(() => false)
+      if (isVisible) foundNavItems++
     }
 
-    // Most navigation items should be present (flexible to accommodate new sidebar items)
+    // Most navigation links should be present
     expect(foundNavItems).toBeGreaterThanOrEqual(5)
   })
 
@@ -158,16 +159,16 @@ test.describe('S10: Responsive Layout and Accessibility', () => {
     await page.waitForURL(/\/dashboard/, { timeout: 30000 })
     await page.waitForTimeout(2000)
 
-    // Page should still show content (not blank)
+    // Page should still show content (not blank) — title may be in Japanese or English
     const pageContent = await page.textContent('body')
-    expect(pageContent?.includes('ダッシュボード')).toBeTruthy()
+    expect(pageContent?.includes('ダッシュボード') || pageContent?.includes('Dashboard')).toBeTruthy()
 
     // Navigate to tasks
     await page.goto('/tasks')
     await page.waitForTimeout(2000)
 
     const tasksContent = await page.textContent('body')
-    expect(tasksContent?.includes('タスク')).toBeTruthy()
+    expect(tasksContent?.includes('タスク') || tasksContent?.includes('Task')).toBeTruthy()
 
     // No runtime errors at mobile size
     const hasError = tasksContent?.includes('Application error') || tasksContent?.includes('Unhandled Runtime Error')

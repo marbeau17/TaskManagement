@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Avatar, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
 import { formatDate } from '@/lib/utils'
 import { isValidTransition } from '@/lib/data/issues'
+import { IssueRelations } from '@/components/issues/IssueRelations'
 import type { IssueStatus } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -400,6 +401,9 @@ export default function IssueDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Issue Relations */}
+          <IssueRelations issueId={issue.id} />
 
           {/* Resolution notes */}
           {(issue.status === 'resolved' || issue.status === 'verified' || issue.status === 'closed' || issue.resolution_notes) && (

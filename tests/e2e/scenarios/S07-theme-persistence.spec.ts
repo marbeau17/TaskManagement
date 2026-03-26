@@ -11,11 +11,15 @@ test.describe('S07: Theme Switching and Persistence', () => {
     await page.waitForURL(/\/settings/, { timeout: 30000 })
     await page.waitForTimeout(2000)
 
-    // Step 3: Find theme toggle section
-    await expect(page.locator('text=テーマ設定')).toBeVisible({ timeout: 10000 })
+    // Step 3: Find theme toggle section — settings now uses tabs, and i18n may show English or Japanese
+    // Click the theme tab first (may say "テーマ設定" or "Theme")
+    const themeTab = page.locator('button', { hasText: /テーマ設定|Theme/ })
+    await expect(themeTab).toBeVisible({ timeout: 10000 })
+    await themeTab.click()
+    await page.waitForTimeout(500)
 
     // Step 4: Click "ダーク" → verify html has dark class
-    const darkBtn = page.locator('button', { hasText: 'ダーク' })
+    const darkBtn = page.locator('button', { hasText: /ダーク|Dark/ })
     await expect(darkBtn).toBeVisible({ timeout: 10000 })
     await darkBtn.click()
     await page.waitForTimeout(1000)
@@ -44,7 +48,12 @@ test.describe('S07: Theme Switching and Persistence', () => {
     await page.waitForURL(/\/settings/, { timeout: 30000 })
     await page.waitForTimeout(2000)
 
-    const lightBtn = page.locator('button', { hasText: 'ライト' })
+    // Click theme tab again
+    const themeTab2 = page.locator('button', { hasText: /テーマ設定|Theme/ })
+    await themeTab2.click()
+    await page.waitForTimeout(500)
+
+    const lightBtn = page.locator('button', { hasText: /ライト|Light/ })
     await expect(lightBtn).toBeVisible({ timeout: 10000 })
     await lightBtn.click()
     await page.waitForTimeout(1000)

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getTasks,
   getTaskById,
+  getSubtasks,
   createTask,
   updateTaskProgress,
   assignTask,
@@ -39,6 +40,14 @@ export function useTask(id: string) {
     queryKey: ['tasks', id],
     queryFn: () => getTaskById(id),
     enabled: !!id,
+  })
+}
+
+export function useSubtasks(parentId: string) {
+  return useQuery({
+    queryKey: ['subtasks', parentId],
+    queryFn: () => getSubtasks(parentId),
+    enabled: !!parentId,
   })
 }
 

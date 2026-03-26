@@ -85,7 +85,8 @@ test.describe('TC-09: Navigation', () => {
     await page.waitForTimeout(1000)
 
     // The dropdown menu items use role="menuitem" (Radix DropdownMenu)
-    const logoutItem = page.locator('[role="menuitem"]').filter({ hasText: 'ログアウト' })
+    // Text may be Japanese (ログアウト) or English (Logout) depending on i18n locale
+    const logoutItem = page.locator('[role="menuitem"]').filter({ hasText: /ログアウト|Logout/ })
     const logoutVisible = await logoutItem.isVisible({ timeout: 5000 }).catch(() => false)
 
     if (logoutVisible) {

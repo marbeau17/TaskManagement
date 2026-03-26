@@ -12,6 +12,7 @@ import { InviteMemberModal } from '@/components/members/InviteMemberModal'
 import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
 import { OrgChart } from '@/components/members/OrgChart'
 import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
+import { usePermission } from '@/hooks/usePermission'
 
 // ---------------------------------------------------------------------------
 // Tab type
@@ -435,6 +436,7 @@ function RoleManagementPanel() {
 
 export default function MembersPage() {
   const { data: members, isLoading } = useMembers()
+  const { can } = usePermission()
   const [activeTab, setActiveTab] = useState<TabId>('list')
   const [editingMember, setEditingMember] = useState<User | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -475,12 +477,14 @@ export default function MembersPage() {
   return (
     <>
       <Topbar title="メンバー管理">
-        <button
-          onClick={() => setInviteOpen(true)}
-          className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
-        >
-          + メンバー招待
-        </button>
+        {can('members', 'create') && (
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
+          >
+            + メンバー招待
+          </button>
+        )}
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
@@ -600,12 +604,14 @@ export default function MembersPage() {
                       >
                         編集
                       </button>
-                      <button
-                        onClick={() => handleDeleteClick(member)}
-                        className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
-                      >
-                        削除
-                      </button>
+                      {can('members', 'delete') && (
+                        <button
+                          onClick={() => handleDeleteClick(member)}
+                          className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
+                        >
+                          削除
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))

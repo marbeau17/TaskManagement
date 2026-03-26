@@ -9,6 +9,7 @@ import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { formatDate } from '@/lib/utils'
 import { exportIssuesCsv } from '@/lib/issue-csv-export'
+import { usePermission } from '@/hooks/usePermission'
 import type { IssueFilters } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -17,6 +18,7 @@ import type { IssueFilters } from '@/types/issue'
 
 export default function IssuesPage() {
   const router = useRouter()
+  const { can } = usePermission()
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -61,12 +63,14 @@ export default function IssuesPage() {
         >
           CSV出力
         </button>
-        <button
-          onClick={() => router.push('/issues/new')}
-          className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
-        >
-          + 課題報告
-        </button>
+        {can('issues', 'create') && (
+          <button
+            onClick={() => router.push('/issues/new')}
+            className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
+          >
+            + 課題報告
+          </button>
+        )}
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">

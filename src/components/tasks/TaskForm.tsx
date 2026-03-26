@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -41,6 +42,9 @@ interface TaskFormProps {
 // ---------------------------------------------------------------------------
 
 export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
+  const searchParams = useSearchParams()
+  const parentTaskId = searchParams.get('parent') ?? defaultValues?.parent_task_id ?? undefined
+
   const {
     register,
     handleSubmit,
@@ -116,6 +120,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
         selectedTemplateId && Object.keys(templateData).length > 0
           ? templateData
           : undefined,
+      parent_task_id: parentTaskId || undefined,
     }
     onSubmit(data)
   }
