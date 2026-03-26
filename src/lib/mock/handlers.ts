@@ -17,6 +17,8 @@ import type { TaskFilters, TaskFormStep1, TaskFormStep2, TaskProgressUpdate } fr
 import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
 import type { InviteMemberForm } from '@/types/member'
 import type { TaskTemplate, TemplateField } from '@/types/template'
+import type { Project, ProjectFilters } from '@/types/project'
+import type { Issue, IssueStatus, IssueComment, IssueFilters, CreateIssueData } from '@/types/issue'
 
 import {
   mockUsers,
@@ -26,6 +28,9 @@ import {
   mockActivityLogs,
   mockAttachments,
   mockTemplates,
+  mockProjects,
+  mockIssues,
+  mockIssueComments,
   DEFAULT_PASSWORD,
 } from './data'
 import type { MockUserWithPassword } from './data'
@@ -40,6 +45,9 @@ let activityLogs: ActivityLog[] = [...mockActivityLogs]
 let attachments: Attachment[] = [...mockAttachments]
 const users: MockUserWithPassword[] = [...mockUsers]
 const clients: Client[] = [...mockClients]
+let projects: Project[] = [...mockProjects]
+let issues: Issue[] = [...mockIssues]
+let issueComments: IssueComment[] = [...mockIssueComments]
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -159,6 +167,7 @@ export function createMockTask(
   const newTask: Task = {
     id,
     client_id: client.id,
+    project_id: null,
     title: step1.title,
     description: step1.description ?? null,
     status: step2 ? 'todo' : 'waiting',
@@ -683,6 +692,259 @@ export function updateMockProjectMemberHours(id: string, hours: number): Project
   if (!member) throw new Error(`ProjectMember not found: ${id}`)
   member.allocated_hours = hours
   return { ...member }
+}
+
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+export function getMockProjects(filters?: ProjectFilters): Project[] {
+  let result = [...projects]
+
+  if (filters?.status && filters.status !== 'all') {
+    result = result.filter((p) => p.status === filters.status)
+  }
+
+  if (filters?.pm_id) {
+    result = result.filter((p) => p.pm_id === filters.pm_id)
+  }
+
+  if (filters?.search) {
+    const q = filters.search.toLowerCase()
+    result = result.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+    )
+  }
+
+  return result
+}
+
+export function getMockProjectById(id: string): Project | null {
+  return projects.find((p) => p.id === id) ?? null
+}
+
+export function createMockProject(
+  data: Omit<Project, 'id' | 'next_issue_seq' | 'created_at' | 'updated_at' | 'pm'>
+): Project {
+  const now = new Date().toISOString()
+  const newProject: Project = {
+    ...data,
+    id: genId('proj'),
+    next_issue_seq: 1,
+    created_at: now,
+    updated_at: now,
+    pm: data.pm_id ? findUser(data.pm_id) : undefined,
+  }
+  projects = [newProject, ...projects]
+  return newProject
+}
+
+export function updateMockProject(
+  id: string,
+  data: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'pm'>>
+): Project {
+  const index = projects.findIndex((p) => p.id === id)
+  if (index === -1) throw new Error(`Project not found: ${id}`)
+
+  const now = new Date().toISOString()
+  const updated: Project = {
+    ...projects[index],
+    ...data,
+    id,
+    updated_at: now,
+    pm: data.pm_id !== undefined
+      ? data.pm_id ? findUser(data.pm_id) : undefined
+      : projects[index].pm,
+  }
+
+  projects = [...projects]
+  projects[index] = updated
+  return updated
+}
+
+export function deleteMockProject(id: string): boolean {
+  const index = projects.findIndex((p) => p.id === id)
+  if (index === -1) return false
+  projects = projects.filter((p) => p.id !== id)
+  return true
+}
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+const VALID_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
+  open: ['in_progress', 'closed'],
+  in_progress: ['resolved', 'open', 'closed'],
+  resolved: ['verified', 'open'],
+  verified: ['closed', 'open'],
+  closed: ['open'],
+}
+
+export function getMockIssues(filters?: IssueFilters): Issue[] {
+  let result = [...issues]
+
+  if (filters?.project_id) {
+    result = result.filter((i) => i.project_id === filters.project_id)
+  }
+  if (filters?.type && filters.type !== 'all') {
+    result = result.filter((i) => i.type === filters.type)
+  }
+  if (filters?.severity && filters.severity !== 'all') {
+    result = result.filter((i) => i.severity === filters.severity)
+  }
+  if (filters?.status && filters.status !== 'all') {
+    result = result.filter((i) => i.status === filters.status)
+  }
+  if (filters?.assigned_to) {
+    result = result.filter((i) => i.assigned_to === filters.assigned_to)
+  }
+  if (filters?.source) {
+    result = result.filter((i) => i.source === filters.source)
+  }
+  if (filters?.search) {
+    const q = filters.search.toLowerCase()
+    result = result.filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.description.toLowerCase().includes(q) ||
+        i.issue_key.toLowerCase().includes(q)
+    )
+  }
+
+  return result
+}
+
+export function getMockIssueById(id: string): Issue | null {
+  const issue = issues.find((i) => i.id === id)
+  if (!issue) return null
+  // Attach project relation
+  const project = projects.find((p) => p.id === issue.project_id)
+  return { ...issue, project }
+}
+
+export function createMockIssue(data: CreateIssueData): Issue {
+  const now = new Date().toISOString()
+
+  // Find project and generate issue key
+  const project = projects.find((p) => p.id === data.project_id)
+  if (!project) throw new Error(`Project not found: ${data.project_id}`)
+
+  const issueKey = `${project.key_prefix}-${project.next_issue_seq}`
+  project.next_issue_seq += 1
+
+  const reporter = findUser('u1') // default mock current user
+
+  const newIssue: Issue = {
+    id: genId('iss'),
+    project_id: data.project_id,
+    issue_key: issueKey,
+    type: data.type,
+    severity: data.severity,
+    priority: 0,
+    status: 'open',
+    title: data.title,
+    description: data.description ?? '',
+    reproduction_steps: data.reproduction_steps ?? '',
+    expected_result: data.expected_result ?? '',
+    actual_result: data.actual_result ?? '',
+    environment: data.environment ?? {},
+    source: data.source ?? 'internal',
+    reported_by: 'u1',
+    assigned_to: data.assigned_to ?? null,
+    task_id: data.task_id ?? null,
+    resolution_notes: '',
+    git_branch: '',
+    git_pr_url: '',
+    labels: data.labels ?? [],
+    reopen_count: 0,
+    created_at: now,
+    updated_at: now,
+    reporter,
+    assignee: data.assigned_to ? findUser(data.assigned_to) : undefined,
+    project,
+  }
+
+  issues = [newIssue, ...issues]
+  return newIssue
+}
+
+export function updateMockIssue(
+  id: string,
+  data: Partial<Issue>
+): Issue {
+  const index = issues.findIndex((i) => i.id === id)
+  if (index === -1) throw new Error(`Issue not found: ${id}`)
+
+  const existing = issues[index]
+  const now = new Date().toISOString()
+
+  const updated: Issue = {
+    ...existing,
+    ...data,
+    id,
+    updated_at: now,
+    reporter: data.reported_by
+      ? findUser(data.reported_by)
+      : existing.reporter,
+    assignee:
+      data.assigned_to !== undefined
+        ? data.assigned_to
+          ? findUser(data.assigned_to)
+          : undefined
+        : existing.assignee,
+  }
+
+  issues = [...issues]
+  issues[index] = updated
+  return updated
+}
+
+export function transitionMockIssueStatus(
+  id: string,
+  newStatus: IssueStatus
+): Issue {
+  const issue = issues.find((i) => i.id === id)
+  if (!issue) throw new Error(`Issue not found: ${id}`)
+
+  const currentStatus = issue.status
+  if (!VALID_TRANSITIONS[currentStatus]?.includes(newStatus)) {
+    throw new Error(`Invalid status transition: ${currentStatus} -> ${newStatus}`)
+  }
+
+  const updateData: Partial<Issue> = { status: newStatus }
+
+  // Track reopens
+  if (newStatus === 'open' && currentStatus !== 'open') {
+    updateData.reopen_count = (issue.reopen_count ?? 0) + 1
+  }
+
+  return updateMockIssue(id, updateData)
+}
+
+// ---------------------------------------------------------------------------
+// Issue Comments
+// ---------------------------------------------------------------------------
+
+export function getMockIssueComments(issueId: string): IssueComment[] {
+  return issueComments.filter((c) => c.issue_id === issueId)
+}
+
+export function addMockIssueComment(issueId: string, body: string): IssueComment {
+  const userId = 'u1' // default mock current user
+  const user = findUser(userId)
+  const newComment: IssueComment = {
+    id: genId('ic'),
+    issue_id: issueId,
+    user_id: userId,
+    body,
+    created_at: new Date().toISOString(),
+    user,
+  }
+  issueComments = [...issueComments, newComment]
+  return newComment
 }
 
 // ---------------------------------------------------------------------------

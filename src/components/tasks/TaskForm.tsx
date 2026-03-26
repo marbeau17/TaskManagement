@@ -9,6 +9,7 @@ import type { TaskTemplate } from '@/types/template'
 import { useClients } from '@/hooks/useClients'
 import { useTasks } from '@/hooks/useTasks'
 import { useTemplates } from '@/hooks/useTemplates'
+import { useProjects } from '@/hooks/useProjects'
 import { TemplateFieldRenderer } from '@/components/tasks/TemplateFieldRenderer'
 
 // ---------------------------------------------------------------------------
@@ -55,6 +56,10 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
     },
     mode: 'onTouched',
   })
+
+  // Project state
+  const { data: projectList } = useProjects()
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
 
   // Template state
   const { data: templates } = useTemplates()
@@ -117,6 +122,40 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
+      {/* Project selector */}
+      <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
+        <div className="px-6 py-4 border-b border-wf-border">
+          <h2 className="text-[15px] font-bold text-text1">
+            プロジェクト
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          <label
+            htmlFor="project_select"
+            className="block text-[12.5px] font-semibold text-text2 mb-1.5"
+          >
+            プロジェクト (任意)
+          </label>
+          <select
+            id="project_select"
+            value={selectedProjectId}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            className="
+              w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
+              bg-surface
+              focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
+            "
+          >
+            <option value="">プロジェクトなし</option>
+            {(projectList ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                [{p.key_prefix}] {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Template selector */}
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         <div className="px-6 py-4 border-b border-wf-border">

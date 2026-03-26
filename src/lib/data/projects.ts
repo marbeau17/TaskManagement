@@ -1,53 +1,55 @@
 // =============================================================================
-// Data abstraction layer – Project Members
+// Data abstraction layer – Projects
 // =============================================================================
 
-import type { ProjectMember } from '@/types/database'
+import type { Project, ProjectFilters } from '@/types/project'
 import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
-// getProjectMembers
+// getProjects
 // ---------------------------------------------------------------------------
 
-export async function getProjectMembers(projectName?: string): Promise<ProjectMember[]> {
+export async function getProjects(filters?: ProjectFilters): Promise<Project[]> {
   if (useMock()) {
-    const { getMockProjectMembers } = await import('@/lib/mock/handlers')
-    return getMockProjectMembers(projectName)
+    const { getMockProjects } = await import('@/lib/mock/handlers')
+    return getMockProjects(filters)
   }
 
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  // NOTE: project_members table is not yet in the generated Supabase types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
-    .from('project_members')
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
+    .from('projects')
+    .select('*, pm:users!pm_id(*)')
     .order('created_at', { ascending: false })
 
-  if (projectName) {
-    query = query.eq('project_name', projectName)
+  if (filters?.status && filters.status !== 'all') {
+    query = query.eq('status', filters.status)
+  }
+
+  if (filters?.pm_id) {
+    query = query.eq('pm_id', filters.pm_id)
+  }
+
+  if (filters?.search) {
+    query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
   }
 
   const { data, error } = await query
 
   if (error) throw error
-  return (data ?? []) as ProjectMember[]
+  return (data ?? []) as Project[]
 }
 
 // ---------------------------------------------------------------------------
-// addProjectMember
+// getProjectById
 // ---------------------------------------------------------------------------
 
-export async function addProjectMember(
-  projectName: string,
-  pmId: string,
-  memberId: string,
-  allocatedHours: number
-): Promise<ProjectMember> {
+export async function getProjectById(id: string): Promise<Project | null> {
   if (useMock()) {
-    const { addMockProjectMember } = await import('@/lib/mock/handlers')
-    return addMockProjectMember(projectName, pmId, memberId, allocatedHours)
+    const { getMockProjectById } = await import('@/lib/mock/handlers')
+    return getMockProjectById(id)
   }
 
   const { createClient } = await import('@/lib/supabase/client')
@@ -55,28 +57,80 @@ export async function addProjectMember(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('project_members')
-    .insert({
-      project_name: projectName,
-      pm_id: pmId,
-      member_id: memberId,
-      allocated_hours: allocatedHours,
-    })
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
+    .from('projects')
+    .select('*, pm:users!pm_id(*)')
+    .eq('id', id)
     .single()
 
-  if (error) throw error
-  return data as ProjectMember
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw error
+  }
+  return data as Project
 }
 
 // ---------------------------------------------------------------------------
-// removeProjectMember
+// createProject
 // ---------------------------------------------------------------------------
 
-export async function removeProjectMember(id: string): Promise<boolean> {
+export async function createProject(
+  data: Omit<Project, 'id' | 'next_issue_seq' | 'created_at' | 'updated_at' | 'pm'>
+): Promise<Project> {
   if (useMock()) {
-    const { removeMockProjectMember } = await import('@/lib/mock/handlers')
-    return removeMockProjectMember(id)
+    const { createMockProject } = await import('@/lib/mock/handlers')
+    return createMockProject(data)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: result, error } = await (supabase as any)
+    .from('projects')
+    .insert(data)
+    .select('*, pm:users!pm_id(*)')
+    .single()
+
+  if (error) throw error
+  return result as Project
+}
+
+// ---------------------------------------------------------------------------
+// updateProject
+// ---------------------------------------------------------------------------
+
+export async function updateProject(
+  id: string,
+  data: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'pm'>>
+): Promise<Project> {
+  if (useMock()) {
+    const { updateMockProject } = await import('@/lib/mock/handlers')
+    return updateMockProject(id, data)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: result, error } = await (supabase as any)
+    .from('projects')
+    .update(data)
+    .eq('id', id)
+    .select('*, pm:users!pm_id(*)')
+    .single()
+
+  if (error) throw error
+  return result as Project
+}
+
+// ---------------------------------------------------------------------------
+// deleteProject
+// ---------------------------------------------------------------------------
+
+export async function deleteProject(id: string): Promise<boolean> {
+  if (useMock()) {
+    const { deleteMockProject } = await import('@/lib/mock/handlers')
+    return deleteMockProject(id)
   }
 
   const { createClient } = await import('@/lib/supabase/client')
@@ -84,35 +138,10 @@ export async function removeProjectMember(id: string): Promise<boolean> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
-    .from('project_members')
+    .from('projects')
     .delete()
     .eq('id', id)
 
   if (error) throw error
   return true
-}
-
-// ---------------------------------------------------------------------------
-// updateProjectMemberHours
-// ---------------------------------------------------------------------------
-
-export async function updateProjectMemberHours(id: string, hours: number): Promise<ProjectMember> {
-  if (useMock()) {
-    const { updateMockProjectMemberHours } = await import('@/lib/mock/handlers')
-    return updateMockProjectMemberHours(id, hours)
-  }
-
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
-    .from('project_members')
-    .update({ allocated_hours: hours })
-    .eq('id', id)
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
-    .single()
-
-  if (error) throw error
-  return data as ProjectMember
 }

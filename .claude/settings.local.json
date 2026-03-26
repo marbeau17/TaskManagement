@@ -93,7 +93,15 @@
       "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/login\")",
       "Bash(npx playwright:*)",
       "Bash(find /Users/yasudaosamu/Desktop/codes/TaskManagement/tests -type f -name *.test.* -o -name *.spec.*)",
-      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/projects\")"
+      "Bash(curl -sL \"https://task-management-nine-iota.vercel.app/projects\")",
+      "Bash(node -e \"require\\(''dns''\\).resolve\\(''db.ewlxqiowzdebksykxvuv.supabase.co'', \\(e,a\\) => console.log\\(e||a\\)\\)\")",
+      "Bash(curl:*)",
+      "Bash(SERVICE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM0MDAxNSwiZXhwIjoyMDg5OTE2MDE1fQ.54kL2bgGZbYzw38qez3dQQavr-Wbts9HhZS4MiuI4CM\")",
+      "Bash(SK=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3bHhxaW93emRlYmtzeWt4dnV2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM0MDAxNSwiZXhwIjoyMDg5OTE2MDE1fQ.54kL2bgGZbYzw38qez3dQQavr-Wbts9HhZS4MiuI4CM\")",
+      "Bash(nslookup db.ewlxqiowzdebksykxvuv.supabase.co 8.8.8.8)",
+      "Bash(dig db.ewlxqiowzdebksykxvuv.supabase.co)",
+      "Bash(host db.ewlxqiowzdebksykxvuv.supabase.co)",
+      "Bash(ping6 -c 1 2406:da1c:f42:ae17:4d08:a6ed:4a6c:9c39)"
     ]
   }
 }

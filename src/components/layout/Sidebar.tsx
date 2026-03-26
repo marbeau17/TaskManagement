@@ -28,6 +28,7 @@ const MAIN_NAV = [
   { id: 'dashboard', label: 'ダッシュボード', icon: '📊', href: '/dashboard' },
   { id: 'request', label: 'タスク依頼', icon: '📝', href: '/tasks/new' },
   { id: 'tasks', label: 'タスク一覧', icon: '📋', href: '/tasks', badgeDynamic: true },
+  { id: 'issues', label: '課題管理', icon: '🐛', href: '/issues' },
   { id: 'clients', label: 'クライアント', icon: '🏢', href: '/clients' },
   { id: 'projects', label: 'プロジェクト', icon: '📁', href: '/projects' },
   { id: 'workload', label: '稼働管理', icon: '⏱', href: '/workload' },

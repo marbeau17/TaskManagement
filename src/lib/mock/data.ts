@@ -12,6 +12,8 @@ import type {
   Attachment,
 } from '@/types/database'
 import type { TaskTemplate } from '@/types/template'
+import type { Project } from '@/types/project'
+import type { Issue, IssueComment } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
 // Default password for mock users
@@ -268,6 +270,7 @@ const rawTasks: Task[] = [
   {
     id: 't1',
     client_id: 'c1',
+    project_id: 'proj1',
     title: 'TOPページ コーディング',
     description: 'TOPページのレスポンシブ対応コーディング。デザインカンプに基づいて実装。',
     status: 'in_progress',
@@ -290,6 +293,7 @@ const rawTasks: Task[] = [
   {
     id: 't2',
     client_id: 'c2',
+    project_id: null,
     title: '採用バナー制作',
     description: '採用サイト用のバナー画像制作。サイズ: 1200x628px。',
     status: 'waiting',
@@ -312,6 +316,7 @@ const rawTasks: Task[] = [
   {
     id: 't3',
     client_id: 'c3',
+    project_id: null,
     title: 'LP 原稿執筆',
     description: 'ランディングページ用のコピーライティング。',
     status: 'done',
@@ -334,6 +339,7 @@ const rawTasks: Task[] = [
   {
     id: 't4',
     client_id: 'c1',
+    project_id: 'proj1',
     title: '会社案内 デザイン',
     description: '会社案内パンフレットのデザイン。A4 三つ折り。',
     status: 'in_progress',
@@ -356,6 +362,7 @@ const rawTasks: Task[] = [
   {
     id: 't5',
     client_id: 'c3',
+    project_id: 'proj3',
     title: 'SNSバナー制作 5点',
     description: 'Instagram / X 用のバナー画像5点セット。',
     status: 'in_progress',
@@ -378,6 +385,7 @@ const rawTasks: Task[] = [
   {
     id: 't6',
     client_id: 'c2',
+    project_id: null,
     title: 'ニュースレター原稿',
     description: '月次ニュースレターの原稿作成。',
     status: 'waiting',
@@ -400,6 +408,7 @@ const rawTasks: Task[] = [
   {
     id: 't7',
     client_id: 'c3',
+    project_id: 'proj3',
     title: 'LP ファーストビュー',
     description: 'ランディングページのファーストビューデザイン。',
     status: 'in_progress',
@@ -422,6 +431,7 @@ const rawTasks: Task[] = [
   {
     id: 't8',
     client_id: 'c1',
+    project_id: 'proj1',
     title: 'ECサイト 商品ページ更新',
     description: '新商品追加に伴う商品ページの更新作業。',
     status: 'todo',
@@ -444,6 +454,7 @@ const rawTasks: Task[] = [
   {
     id: 't9',
     client_id: 'c2',
+    project_id: 'proj2',
     title: 'メルマガテンプレートデザイン',
     description: 'HTMLメルマガのテンプレートデザイン作成。',
     status: 'todo',
@@ -466,6 +477,7 @@ const rawTasks: Task[] = [
   {
     id: 't10',
     client_id: 'c3',
+    project_id: 'proj3',
     title: 'ロゴリニューアル提案',
     description: 'ロゴマークのリニューアル案を3パターン提案。',
     status: 'done',
@@ -488,6 +500,7 @@ const rawTasks: Task[] = [
   {
     id: 't11',
     client_id: 'c1',
+    project_id: null,
     title: '製品カタログ DTP',
     description: '新製品カタログのDTP作業。A4 16ページ。',
     status: 'in_progress',
@@ -510,6 +523,7 @@ const rawTasks: Task[] = [
   {
     id: 't12',
     client_id: 'c2',
+    project_id: 'proj2',
     title: '名刺デザイン',
     description: '役員用名刺の新デザイン。両面カラー。',
     status: 'done',
@@ -532,6 +546,7 @@ const rawTasks: Task[] = [
   {
     id: 't13',
     client_id: 'c3',
+    project_id: 'proj3',
     title: 'ウェブ広告バナーセット',
     description: 'Google / Yahoo ディスプレイ広告用バナー6サイズ。',
     status: 'todo',
@@ -554,6 +569,7 @@ const rawTasks: Task[] = [
   {
     id: 't14',
     client_id: 'c1',
+    project_id: null,
     title: 'プレスリリース用画像',
     description: 'プレスリリース配信用のOGP画像とサムネイル画像。',
     status: 'todo',
@@ -816,5 +832,204 @@ export const mockTemplates: TaskTemplate[] = [
     created_by: null,
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+export const mockProjects: Project[] = [
+  {
+    id: 'proj1',
+    name: 'サンプル社 Webリニューアル',
+    description: '株式会社サンプルのコーポレートサイトリニューアルプロジェクト',
+    status: 'active',
+    pm_id: 'u2',
+    key_prefix: 'SWR',
+    next_issue_seq: 3,
+    start_date: '2025-04-01',
+    end_date: '2025-09-30',
+    created_at: '2025-03-15T09:00:00',
+    updated_at: '2025-04-10T12:00:00',
+    pm: findUser('u2'),
+  },
+  {
+    id: 'proj2',
+    name: 'テスト工業 ECサイト構築',
+    description: 'テスト工業株式会社のECサイト新規構築',
+    status: 'planning',
+    pm_id: 'u5',
+    key_prefix: 'TEC',
+    next_issue_seq: 2,
+    start_date: '2025-05-01',
+    end_date: '2025-12-31',
+    created_at: '2025-04-01T09:00:00',
+    updated_at: '2025-04-08T10:00:00',
+    pm: findUser('u5'),
+  },
+  {
+    id: 'proj3',
+    name: 'グローバル商事 SNSキャンペーン',
+    description: 'グローバル商事のSNSマーケティングキャンペーン運用',
+    status: 'active',
+    pm_id: 'u2',
+    key_prefix: 'GSC',
+    next_issue_seq: 2,
+    start_date: '2025-03-01',
+    end_date: '2025-06-30',
+    created_at: '2025-02-20T09:00:00',
+    updated_at: '2025-04-11T15:00:00',
+    pm: findUser('u2'),
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+export const mockIssues: Issue[] = [
+  {
+    id: 'iss1',
+    project_id: 'proj1',
+    issue_key: 'SWR-1',
+    type: 'bug',
+    severity: 'high',
+    priority: 1,
+    status: 'open',
+    title: 'TOPページのスライダーが iOS Safari で表示崩れ',
+    description: 'iOS 17 Safari にてTOPページのヒーロースライダーが正しく表示されない。画像が横にはみ出す。',
+    reproduction_steps: '1. iOS 17 Safari でTOPページにアクセス\n2. ヒーロースライダーを確認',
+    expected_result: 'スライダーが画面幅に収まって表示される',
+    actual_result: '画像が右側にはみ出し、横スクロールが発生する',
+    environment: { os: 'iOS 17.4', browser: 'Safari', device: 'iPhone 15' },
+    source: 'internal',
+    reported_by: 'u7',
+    assigned_to: 'u7',
+    task_id: 't1',
+    resolution_notes: '',
+    git_branch: 'fix/slider-ios-safari',
+    git_pr_url: '',
+    labels: ['frontend', 'mobile'],
+    reopen_count: 0,
+    created_at: '2025-04-10T14:00:00',
+    updated_at: '2025-04-10T14:00:00',
+    reporter: findUser('u7'),
+    assignee: findUser('u7'),
+  },
+  {
+    id: 'iss2',
+    project_id: 'proj1',
+    issue_key: 'SWR-2',
+    type: 'improvement',
+    severity: 'medium',
+    priority: 2,
+    status: 'in_progress',
+    title: 'お問い合わせフォームのバリデーション強化',
+    description: 'メールアドレスと電話番号のバリデーションをより厳密にする',
+    reproduction_steps: '',
+    expected_result: '不正な形式のメールアドレス・電話番号が入力された場合にエラーメッセージが表示される',
+    actual_result: '一部不正な形式でも送信が通ってしまう',
+    environment: {},
+    source: 'customer',
+    reported_by: 'u2',
+    assigned_to: 'u11',
+    task_id: null,
+    resolution_notes: '',
+    git_branch: 'feat/form-validation',
+    git_pr_url: '',
+    labels: ['frontend', 'ux'],
+    reopen_count: 0,
+    created_at: '2025-04-11T10:00:00',
+    updated_at: '2025-04-11T16:00:00',
+    reporter: findUser('u2'),
+    assignee: findUser('u11'),
+  },
+  {
+    id: 'iss3',
+    project_id: 'proj2',
+    issue_key: 'TEC-1',
+    type: 'question',
+    severity: 'low',
+    priority: 3,
+    status: 'resolved',
+    title: '決済APIの本番キー発行手順の確認',
+    description: '本番環境用の決済APIキー発行手順について確認したい',
+    reproduction_steps: '',
+    expected_result: '',
+    actual_result: '',
+    environment: {},
+    source: 'internal',
+    reported_by: 'u6',
+    assigned_to: 'u5',
+    task_id: null,
+    resolution_notes: '決済プロバイダーの管理画面から発行可能。手順書をWikiに追加済み。',
+    git_branch: '',
+    git_pr_url: '',
+    labels: ['backend', 'documentation'],
+    reopen_count: 0,
+    created_at: '2025-04-08T09:00:00',
+    updated_at: '2025-04-09T11:00:00',
+    reporter: findUser('u6'),
+    assignee: findUser('u5'),
+  },
+  {
+    id: 'iss4',
+    project_id: 'proj3',
+    issue_key: 'GSC-1',
+    type: 'incident',
+    severity: 'critical',
+    priority: 1,
+    status: 'closed',
+    title: 'SNS自動投稿が停止していた（API認証期限切れ）',
+    description: '3/25〜3/27の間、SNS自動投稿が停止していた。原因はAPIトークンの有効期限切れ。',
+    reproduction_steps: '',
+    expected_result: '毎日9:00にSNS投稿が自動実行される',
+    actual_result: '3/25以降、投稿が実行されていなかった',
+    environment: { platform: 'Instagram API', service: 'cron-scheduler' },
+    source: 'internal',
+    reported_by: 'u8',
+    assigned_to: 'u7',
+    task_id: null,
+    resolution_notes: 'APIトークンを再発行し、自動投稿を再開。今後はトークン期限切れ30日前にアラート通知を設定。',
+    git_branch: '',
+    git_pr_url: '',
+    labels: ['ops', 'urgent'],
+    reopen_count: 0,
+    created_at: '2025-03-27T08:00:00',
+    updated_at: '2025-03-28T17:00:00',
+    reporter: findUser('u8'),
+    assignee: findUser('u7'),
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Issue Comments
+// ---------------------------------------------------------------------------
+
+export const mockIssueComments: IssueComment[] = [
+  {
+    id: 'ic1',
+    issue_id: 'iss1',
+    user_id: 'u7',
+    body: 'viewport meta タグとCSS overflow の設定を確認中です。',
+    created_at: '2025-04-10T15:00:00',
+    user: findUser('u7'),
+  },
+  {
+    id: 'ic2',
+    issue_id: 'iss1',
+    user_id: 'u2',
+    body: 'お客様からも同じ報告が来ています。優先的に対応をお願いします。',
+    created_at: '2025-04-10T16:30:00',
+    user: findUser('u2'),
+  },
+  {
+    id: 'ic3',
+    issue_id: 'iss2',
+    user_id: 'u11',
+    body: 'zod を使ったバリデーションスキーマを実装中です。明日PRを出します。',
+    created_at: '2025-04-11T17:00:00',
+    user: findUser('u11'),
   },
 ]

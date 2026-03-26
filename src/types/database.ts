@@ -57,6 +57,7 @@ export interface Client {
 export interface Task {
   id: string
   client_id: string
+  project_id: string | null
   title: string
   description: string | null
   status: TaskStatus
@@ -141,3 +142,18 @@ export interface ActivityLog {
   created_at: string
   user?: User
 }
+
+// ---------------------------------------------------------------------------
+// Re-exports from domain-specific type files
+// ---------------------------------------------------------------------------
+
+export type { Project, ProjectStatus, ProjectFilters } from './project'
+export type {
+  Issue,
+  IssueType,
+  IssueSeverity,
+  IssueStatus,
+  IssueComment,
+  IssueFilters,
+  CreateIssueData,
+} from './issue'
