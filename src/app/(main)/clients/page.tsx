@@ -77,11 +77,13 @@ function DeleteConfirmDialog({
   onClose,
   onConfirm,
   deleting,
+  error,
 }: {
   client: Client
   onClose: () => void
   onConfirm: () => void
   deleting: boolean
+  error?: string
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
@@ -92,6 +94,12 @@ function DeleteConfirmDialog({
         <p className="text-[12px] text-text2 mb-[20px]">
           「{client.name}」を削除しますか？この操作は元に戻せません。
         </p>
+
+        {error && (
+          <div className="text-[12px] text-danger bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[6px] mb-[12px]">
+            {error}
+          </div>
+        )}
 
         <div className="flex justify-end gap-[8px]">
           <button
@@ -148,10 +156,22 @@ export default function ClientsPage() {
     setEditingClient(null)
   }
 
+  const [deleteError, setDeleteError] = useState('')
+
   const handleDeleteConfirm = async () => {
     if (!deletingClient) return
-    await deleteMutation.mutateAsync(deletingClient.id)
-    setDeletingClient(null)
+    setDeleteError('')
+    try {
+      await deleteMutation.mutateAsync(deletingClient.id)
+      setDeletingClient(null)
+    } catch (e: any) {
+      const msg = e?.message || String(e)
+      if (msg.includes('foreign key') || msg.includes('violates') || msg.includes('referenced')) {
+        setDeleteError('このクライアントにはタスクが紐づいているため削除できません。先にタスクを別のクライアントに移動してください。')
+      } else {
+        setDeleteError('削除に失敗しました: ' + msg)
+      }
+    }
   }
 
   return (
@@ -247,9 +267,10 @@ export default function ClientsPage() {
       {deletingClient && (
         <DeleteConfirmDialog
           client={deletingClient}
-          onClose={() => setDeletingClient(null)}
+          onClose={() => { setDeletingClient(null); setDeleteError(''); }}
           onConfirm={handleDeleteConfirm}
           deleting={deleteMutation.isPending}
+          error={deleteError}
         />
       )}
     </>
