@@ -1,6 +1,14 @@
 import { create } from 'zustand'
+import type { Locale } from '@/lib/i18n/translations'
 
 type Theme = 'light' | 'dark' | 'system'
+
+function detectLocale(): Locale {
+  if (typeof window === 'undefined') return 'ja'
+  const stored = localStorage.getItem('workflow-locale') as Locale | null
+  if (stored === 'ja' || stored === 'en') return stored
+  return navigator.language.startsWith('ja') ? 'ja' : 'en'
+}
 
 interface UiState {
   sidebarOpen: boolean
@@ -17,6 +25,9 @@ interface UiState {
 
   theme: Theme
   setTheme: (theme: Theme) => void
+
+  locale: Locale
+  setLocale: (locale: Locale) => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -40,5 +51,13 @@ export const useUiStore = create<UiState>((set) => ({
       localStorage.setItem('workflow-theme', theme)
     }
     set({ theme })
+  },
+
+  locale: detectLocale(),
+  setLocale: (locale) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('workflow-locale', locale)
+    }
+    set({ locale })
   },
 }))

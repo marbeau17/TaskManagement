@@ -8,6 +8,7 @@ import { useIssues } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { formatDate } from '@/lib/utils'
+import { exportIssuesCsv } from '@/lib/issue-csv-export'
 import type { IssueFilters } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,15 @@ export default function IssuesPage() {
   return (
     <>
       <Topbar title="課題管理">
+        <button
+          onClick={() => {
+            if (issues && issues.length > 0) exportIssuesCsv(issues)
+          }}
+          disabled={!issues || issues.length === 0}
+          className="px-[14px] py-[6px] text-[12px] font-semibold text-text bg-surf2 border border-wf-border rounded-[6px] hover:bg-wf-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          CSV出力
+        </button>
         <button
           onClick={() => router.push('/issues/new')}
           className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
@@ -147,7 +157,7 @@ export default function IssuesPage() {
                 className="bg-surface border border-border2 rounded-[8px] p-[12px] cursor-pointer hover:border-mint transition-colors"
               >
                 <div className="flex items-center justify-between mb-[6px]">
-                  <span className="text-[11px] font-mono text-mint font-semibold">{issue.issue_key}</span>
+                  <span className="text-[11.5px] font-mono text-mint font-bold tracking-wide">{issue.issue_key}</span>
                   <IssueStatusBadge status={issue.status} size="sm" />
                 </div>
                 <div className="text-[13px] font-bold text-text mb-[6px] leading-tight">{issue.title}</div>
@@ -201,7 +211,7 @@ export default function IssuesPage() {
                       onClick={() => router.push(`/issues/${issue.id}`)}
                       className="border-b border-wf-border cursor-pointer hover:bg-surf2/50 transition-colors"
                     >
-                      <td className="px-[12px] py-[10px] text-[11.5px] font-mono text-mint font-semibold whitespace-nowrap">
+                      <td className="px-[12px] py-[10px] text-[12px] font-mono text-mint font-bold whitespace-nowrap tracking-wide">
                         {issue.issue_key}
                       </td>
                       <td className="px-[12px] py-[10px]">

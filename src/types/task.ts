@@ -8,6 +8,7 @@ import { TaskStatus } from './database'
 export interface TaskFilters {
   search?: string
   client_id?: string
+  project_id?: string
   assigned_to?: string
   requested_by?: string
   status?: TaskStatus | 'all'

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Topbar } from '@/components/layout'
 import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
+import { useTasks } from '@/hooks/useTasks'
 import { useCreateIssue } from '@/hooks/useIssues'
 import type { IssueType, IssueSeverity, CreateIssueData } from '@/types/issue'
 
@@ -31,8 +32,22 @@ export default function NewIssuePage() {
   const [actualResult, setActualResult] = useState('')
   const [environment, setEnvironment] = useState('')
   const [assigneeId, setAssigneeId] = useState('')
+  const [taskId, setTaskId] = useState('')
+  const [taskSearch, setTaskSearch] = useState('')
   const [source, setSource] = useState<'internal' | 'customer'>('internal')
   const [labelsInput, setLabelsInput] = useState('')
+
+  // Fetch tasks belonging to the selected project
+  const { data: projectTasks } = useTasks(
+    projectId ? { project_id: projectId } : undefined
+  )
+
+  const filteredTasks = useMemo(() => {
+    if (!projectTasks) return []
+    if (!taskSearch.trim()) return projectTasks
+    const q = taskSearch.toLowerCase()
+    return projectTasks.filter((t) => t.title.toLowerCase().includes(q))
+  }, [projectTasks, taskSearch])
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.is_active),
@@ -72,6 +87,7 @@ export default function NewIssuePage() {
       environment: Object.keys(envObj).length > 0 ? envObj : undefined,
       source,
       assigned_to: assigneeId || undefined,
+      task_id: taskId || undefined,
       labels: labels.length > 0 ? labels : undefined,
     }
 
@@ -281,6 +297,37 @@ export default function NewIssuePage() {
                   ))}
                 </select>
               </div>
+
+              {/* Related task */}
+              {projectId && (
+                <div>
+                  <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
+                    関連タスク
+                  </label>
+                  <input
+                    type="text"
+                    value={taskSearch}
+                    onChange={(e) => setTaskSearch(e.target.value)}
+                    placeholder="タスク名で検索..."
+                    className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint mb-1.5"
+                  />
+                  <select
+                    value={taskId}
+                    onChange={(e) => setTaskId(e.target.value)}
+                    className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
+                  >
+                    <option value="">なし</option>
+                    {filteredTasks.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                  {projectTasks && projectTasks.length === 0 && (
+                    <p className="text-[10px] text-text3 mt-1">このプロジェクトにはタスクがありません</p>
+                  )}
+                </div>
+              )}
 
               {/* Source */}
               <div>

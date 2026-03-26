@@ -170,7 +170,7 @@ export default function IssueDetailPage() {
         >
           &larr; 一覧に戻る
         </button>
-        <span className="text-[11px] font-mono text-mint font-bold">{issue.issue_key}</span>
+        <span className="text-[16px] font-mono text-mint font-bold tracking-wide">{issue.issue_key}</span>
         <h1 className="text-[15px] font-bold text-text truncate max-w-[400px]">
           {issue.title}
         </h1>

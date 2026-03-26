@@ -8,6 +8,8 @@ import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
+import { LanguageToggle } from '@/components/shared/LanguageToggle'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,19 +29,19 @@ interface SidebarProps {
 }
 
 const MAIN_NAV = [
-  { id: 'dashboard', label: 'ダッシュボード', icon: '📊', href: '/dashboard' },
-  { id: 'request', label: 'タスク依頼', icon: '📝', href: '/tasks/new' },
-  { id: 'tasks', label: 'タスク一覧', icon: '📋', href: '/tasks', badgeDynamic: true },
-  { id: 'issues', label: '課題管理', icon: '🐛', href: '/issues' },
-  { id: 'clients', label: 'クライアント', icon: '🏢', href: '/clients' },
-  { id: 'projects', label: 'プロジェクト', icon: '📁', href: '/projects' },
-  { id: 'workload', label: '稼働管理', icon: '⏱', href: '/workload' },
+  { id: 'dashboard', labelKey: 'nav.dashboard', icon: '📊', href: '/dashboard' },
+  { id: 'request', labelKey: 'nav.taskRequest', icon: '📝', href: '/tasks/new' },
+  { id: 'tasks', labelKey: 'nav.taskList', icon: '📋', href: '/tasks', badgeDynamic: true },
+  { id: 'issues', labelKey: 'nav.issues', icon: '🐛', href: '/issues' },
+  { id: 'clients', labelKey: 'nav.clients', icon: '🏢', href: '/clients' },
+  { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
+  { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
 ]
 
 const SYSTEM_NAV = [
-  { id: 'templates', label: 'テンプレート', icon: '📝', href: '/templates' },
-  { id: 'members', label: 'メンバー', icon: '👥', href: '/members' },
-  { id: 'settings', label: '設定', icon: '⚙', href: '/settings' },
+  { id: 'templates', labelKey: 'nav.templates', icon: '📝', href: '/templates' },
+  { id: 'members', labelKey: 'nav.members', icon: '👥', href: '/members' },
+  { id: 'settings', labelKey: 'nav.settings', icon: '⚙', href: '/settings' },
 ]
 
 export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarProps) {
@@ -49,6 +51,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const { theme, setTheme } = useTheme()
+  const { t } = useI18n()
 
   // Dynamic badge: count tasks with status 'waiting'
   const waitingCount = useMemo(() => {
@@ -83,13 +86,11 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
     router.push('/login')
   }, [logout, router])
 
-  const roleLabel: Record<string, string> = {
-    admin: '管理者',
-    director: 'ディレクター',
-    requester: '依頼者',
-    creator: 'クリエイター',
+  const roleLabel = (role: string) => {
+    const key = `role.${role}`
+    const translated = t(key)
+    return translated !== key ? translated : role
   }
-  // For custom roles, fall back to the raw role string
 
   return (
     <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none`}>
@@ -105,18 +106,19 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[4px]`}>
         {!collapsed && (
           <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-            メイン
+            {t('sidebar.main')}
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
           {MAIN_NAV.map((item) => {
             const isActive = activePage === item.id
+            const label = t(item.labelKey)
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 onClick={onNavigate}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={`
                   flex items-center ${collapsed ? 'justify-center px-[4px]' : 'gap-[8px] px-[10px]'} py-[7px] rounded-[6px]
                   text-[12.5px] no-underline transition-colors relative group
@@ -127,7 +129,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 `}
               >
                 <span className="text-[14px] w-[18px] text-center">{item.icon}</span>
-                {!collapsed && <span className="flex-1">{item.label}</span>}
+                {!collapsed && <span className="flex-1">{label}</span>}
                 {!collapsed && item.badgeDynamic && waitingCount > 0 && (
                   <span className="bg-white/25 text-white text-[9px] font-bold px-[5px] py-[1px] rounded-full min-w-[18px] text-center">
                     {waitingCount}
@@ -141,7 +143,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 {/* Tooltip for collapsed mode */}
                 {collapsed && (
                   <span className="absolute left-full ml-[8px] px-[8px] py-[4px] bg-text text-white text-[11px] rounded-[4px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
-                    {item.label}
+                    {label}
                   </span>
                 )}
               </Link>
@@ -154,7 +156,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
         {!collapsed && (
           <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-            クリエイター
+            {t('sidebar.creators')}
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
@@ -187,18 +189,19 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
         {!collapsed && (
           <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-            システム
+            {t('sidebar.system')}
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
           {SYSTEM_NAV.map((item) => {
             const isActive = activePage === item.id
+            const label = t(item.labelKey)
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 onClick={onNavigate}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={`
                   flex items-center ${collapsed ? 'justify-center px-[4px]' : 'gap-[8px] px-[10px]'} py-[7px] rounded-[6px]
                   text-[12.5px] no-underline transition-colors relative group
@@ -209,11 +212,11 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 `}
               >
                 <span className="text-[14px] w-[18px] text-center">{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && <span>{label}</span>}
                 {/* Tooltip for collapsed mode */}
                 {collapsed && (
                   <span className="absolute left-full ml-[8px] px-[8px] py-[4px] bg-text text-white text-[11px] rounded-[4px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
-                    {item.label}
+                    {label}
                   </span>
                 )}
               </Link>
@@ -224,6 +227,11 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Language toggle */}
+      <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} pb-[8px] ${collapsed ? 'flex justify-center' : ''}`}>
+        <LanguageToggle variant="sidebar" />
+      </div>
 
       {/* Current user info */}
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} pb-[14px]`}>
@@ -239,7 +247,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" sideOffset={8}>
                 <div className="px-[8px] py-[4px] text-[11px] text-muted-foreground">
-                  {user?.name ?? '...'} - {user ? (roleLabel[user.role] ?? user.role) : ''}
+                  {user?.name ?? '...'} - {user ? roleLabel(user.role) : ''}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -247,14 +255,14 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   onSelect={() => setShowPasswordModal(true)}
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
-                  パスワード変更
+                  {t('auth.changePassword')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={nextTheme}
                 >
                   <ThemeIcon className="w-[14px] h-[14px]" />
-                  テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
+                  {t('settings.theme')}: {theme === 'light' ? t('settings.light') : theme === 'dark' ? t('settings.dark') : t('settings.system')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -262,7 +270,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   onSelect={handleLogout}
                 >
                   <LogOut className="w-[14px] h-[14px]" />
-                  ログアウト
+                  {t('auth.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -276,7 +284,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 {user?.name ?? '...'}
               </span>
               <span className="text-[9.5px] text-white/50 leading-tight">
-                {user ? (roleLabel[user.role] ?? user.role) : ''}
+                {user ? roleLabel(user.role) : ''}
               </span>
             </div>
             <DropdownMenu>
@@ -291,14 +299,14 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   onSelect={() => setShowPasswordModal(true)}
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
-                  パスワード変更
+                  {t('auth.changePassword')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={nextTheme}
                 >
                   <ThemeIcon className="w-[14px] h-[14px]" />
-                  テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
+                  {t('settings.theme')}: {theme === 'light' ? t('settings.light') : theme === 'dark' ? t('settings.dark') : t('settings.system')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -306,7 +314,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   onSelect={handleLogout}
                 >
                   <LogOut className="w-[14px] h-[14px]" />
-                  ログアウト
+                  {t('auth.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

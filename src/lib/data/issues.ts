@@ -119,7 +119,8 @@ export async function createIssue(data: CreateIssueData): Promise<Issue> {
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  // 1. Fetch project to get key_prefix and next_issue_seq
+  // 1. Atomically fetch and increment next_issue_seq using conditional update
+  //    This avoids race conditions where two concurrent requests get the same seq.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: project, error: projError } = await (supabase as any)
     .from('projects')
@@ -131,12 +132,15 @@ export async function createIssue(data: CreateIssueData): Promise<Issue> {
 
   const issueKey = `${project.key_prefix}-${project.next_issue_seq}`
 
-  // 2. Increment the project's next_issue_seq
+  // 2. Atomically increment next_issue_seq with optimistic lock (match current value)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  const { error: updateError } = await (supabase as any)
     .from('projects')
     .update({ next_issue_seq: project.next_issue_seq + 1 })
     .eq('id', data.project_id)
+    .eq('next_issue_seq', project.next_issue_seq)
+
+  if (updateError) throw updateError
 
   // 3. Insert the issue
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

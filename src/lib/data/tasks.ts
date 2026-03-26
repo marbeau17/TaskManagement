@@ -48,6 +48,10 @@ export async function getTasks(
     query = query.eq('client_id', filters.client_id)
   }
 
+  if (filters?.project_id) {
+    query = query.eq('project_id', filters.project_id)
+  }
+
   if (filters?.assigned_to) {
     query = query.eq('assigned_to', filters.assigned_to)
   }

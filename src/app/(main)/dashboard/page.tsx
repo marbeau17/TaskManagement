@@ -10,6 +10,7 @@ import {
   UnassignedTasks,
   ClientView,
   RecentActivity,
+  ProjectIssueSummary,
 } from '@/components/dashboard'
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
@@ -100,6 +101,9 @@ export default function DashboardPage() {
         ) : (
           <ClientView />
         )}
+
+        {/* Project issue summary */}
+        <ProjectIssueSummary />
 
         {/* Recent activity feed */}
         <RecentActivity />
