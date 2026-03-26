@@ -5,7 +5,12 @@ import { Topbar } from '@/components/layout'
 import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
 import { MemberWorkloadTable } from '@/components/workload/MemberWorkloadTable'
-import { useWorkloadKpi, useWorkloadSummaries } from '@/hooks/useWorkload'
+import { ResourceLoadChart } from '@/components/workload/ResourceLoadChart'
+import {
+  useWorkloadKpi,
+  useWorkloadSummaries,
+  useResourceLoadData,
+} from '@/hooks/useWorkload'
 import { PERIOD_OPTIONS } from '@/lib/constants'
 
 export default function WorkloadPage() {
@@ -13,6 +18,8 @@ export default function WorkloadPage() {
   const { data: kpi, isLoading: kpiLoading } = useWorkloadKpi()
   const { data: summaries, isLoading: summariesLoading } =
     useWorkloadSummaries()
+  const { data: resourceLoad, isLoading: resourceLoadLoading } =
+    useResourceLoadData()
 
   return (
     <>
@@ -37,6 +44,13 @@ export default function WorkloadPage() {
           </div>
         ) : (
           <WorkloadKpi data={kpi} />
+        )}
+
+        {/* Resource Load / Capacity Chart */}
+        {resourceLoadLoading || !resourceLoad ? (
+          <div className="bg-surface border border-border2 rounded-[10px] h-[420px] animate-pulse" />
+        ) : (
+          <ResourceLoadChart data={resourceLoad} />
         )}
 
         {/* Member Workload Table */}

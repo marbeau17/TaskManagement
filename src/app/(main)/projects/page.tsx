@@ -237,7 +237,8 @@ export default function ProjectsPage() {
 
   const { data: projects, isLoading } = useProjects()
   const { data: members } = useMembers()
-  const { data: allTasks } = useTasks()
+  const { data: allTasksResult } = useTasks()
+  const allTasks = allTasksResult?.data
   const { data: allIssues } = useIssues()
   const createProjectMutation = useCreateProject()
 

@@ -11,6 +11,8 @@ import {
   ClientView,
   RecentActivity,
   ProjectIssueSummary,
+  BurndownChart,
+  EstimateVsActualChart,
 } from '@/components/dashboard'
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
@@ -101,6 +103,12 @@ export default function DashboardPage() {
         ) : (
           <ClientView />
         )}
+
+        {/* Burndown chart */}
+        <BurndownChart />
+
+        {/* Estimate vs Actual */}
+        <EstimateVsActualChart />
 
         {/* Project issue summary */}
         <ProjectIssueSummary />

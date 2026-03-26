@@ -31,6 +31,7 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
 export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [warning, setWarning] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const { user, setUser } = useAuthStore()
@@ -67,12 +68,22 @@ export default function ChangePasswordPage() {
     async (data: ChangePasswordFormValues) => {
       if (!user) return
       setError('')
+      setWarning('')
       setLoading(true)
 
       try {
         const result = await forceChangePassword(user.id, data.newPassword)
         if (result.success) {
           setUser({ ...user, must_change_password: false })
+          setSuccess(true)
+        } else if (result.passwordChanged) {
+          // Partial success: password was changed but DB flag update failed.
+          // Update local state so the user isn't stuck on this page, and show warning.
+          setUser({ ...user, must_change_password: false })
+          setWarning(
+            result.error ??
+              'パスワードは変更されましたが、システムフラグの更新に失敗しました。管理者に連絡してください。'
+          )
           setSuccess(true)
         } else {
           setError(result.error ?? 'パスワードの変更に失敗しました')
@@ -108,8 +119,15 @@ export default function ChangePasswordPage() {
         </div>
 
         {success ? (
-          <div className="bg-ok-bg border border-ok rounded-[6px] px-[10px] py-[8px] text-[12px] text-ok text-center">
-            パスワードが変更されました。ダッシュボードに移動します…
+          <div className="space-y-[8px]">
+            <div className="bg-ok-bg border border-ok rounded-[6px] px-[10px] py-[8px] text-[12px] text-ok text-center">
+              パスワードが変更されました。ダッシュボードに移動します…
+            </div>
+            {warning && (
+              <div className="bg-warn-bg border border-warn rounded-[6px] px-[10px] py-[8px] text-[12px] text-warn text-center">
+                {warning}
+              </div>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-[16px]">

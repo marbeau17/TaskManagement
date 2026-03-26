@@ -13,7 +13,7 @@ const HEIGHTS = {
 
 function getBarColor(value: number): string {
   if (value >= 100) return 'var(--color-ok)'
-  if (value >= 75) return '#C8A030'
+  if (value >= 75) return 'var(--bar-warning, #C8A030)'
   if (value >= 26) return 'var(--color-mint)'
   return 'var(--color-text3)'
 }

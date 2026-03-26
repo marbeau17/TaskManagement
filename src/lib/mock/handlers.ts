@@ -91,6 +91,11 @@ export function getMockTasks(filters?: TaskFilters): TaskWithRelations[] {
     result = result.filter((t) => t.client_id === filters.client_id)
   }
 
+  // Project filter
+  if (filters.project_id) {
+    result = result.filter((t) => t.project_id === filters.project_id)
+  }
+
   // Assigned-to filter
   if (filters.assigned_to) {
     result = result.filter((t) => t.assigned_to === filters.assigned_to)
@@ -135,8 +140,9 @@ export function getMockTasks(filters?: TaskFilters): TaskWithRelations[] {
       endOfWeek.setDate(startOfWeek.getDate() + 7)
 
       result = result.filter((t) => {
-        if (!t.confirmed_deadline) return false
-        const d = new Date(t.confirmed_deadline)
+        const dl = t.confirmed_deadline ?? t.desired_deadline
+        if (!dl) return false
+        const d = new Date(dl)
         return d >= startOfWeek && d < endOfWeek
       })
     } else {
@@ -145,8 +151,9 @@ export function getMockTasks(filters?: TaskFilters): TaskWithRelations[] {
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
 
       result = result.filter((t) => {
-        if (!t.confirmed_deadline) return false
-        const d = new Date(t.confirmed_deadline)
+        const dl = t.confirmed_deadline ?? t.desired_deadline
+        if (!dl) return false
+        const d = new Date(dl)
         return d >= startOfMonth && d < endOfMonth
       })
     }
@@ -309,6 +316,28 @@ export function bulkUpdateMockTaskStatus(
       task.updated_at = new Date().toISOString()
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk assign
+// ---------------------------------------------------------------------------
+
+export function bulkAssignMockTasks(taskIds: string[], userId: string): void {
+  for (const id of taskIds) {
+    const task = tasks.find((t) => t.id === id)
+    if (task) {
+      task.assigned_to = userId
+      task.updated_at = new Date().toISOString()
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk delete
+// ---------------------------------------------------------------------------
+
+export function bulkDeleteMockTasks(taskIds: string[]): void {
+  tasks = tasks.filter((t) => !taskIds.includes(t.id))
 }
 
 // ---------------------------------------------------------------------------
@@ -557,6 +586,10 @@ export function addMockAttachment(
 
   attachments = [newAttachment, ...attachments]
   return newAttachment
+}
+
+export function deleteMockAttachment(id: string): void {
+  attachments = attachments.filter((a) => a.id !== id)
 }
 
 // ---------------------------------------------------------------------------

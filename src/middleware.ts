@@ -18,7 +18,10 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Paths that should never require authentication
-const PUBLIC_PATHS = ['/login', '/change-password', '/api/']
+const PUBLIC_PATHS = ['/login', '/api/']
+
+// Paths allowed when must_change_password is true (avoid redirect loops)
+const PASSWORD_CHANGE_ALLOWED_PATHS = ['/change-password']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -79,6 +82,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // ---------------------------------------------------------------------------
+  // B-003: Enforce password change – prevent bypass via direct URL access
+  // ---------------------------------------------------------------------------
+  const isOnAllowedPath = PASSWORD_CHANGE_ALLOWED_PATHS.some((p) =>
+    pathname.startsWith(p)
+  )
+
+  if (!isOnAllowedPath) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('must_change_password')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.must_change_password) {
+      const changePasswordUrl = new URL('/change-password', request.url)
+      return NextResponse.redirect(changePasswordUrl)
+    }
+  }
+
   return supabaseResponse
 }
 
@@ -93,6 +116,6 @@ export const config = {
      * - api/auth (auth API routes)
      * - public files (images, etc.)
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|login|change-password|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|login|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

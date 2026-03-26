@@ -71,12 +71,12 @@ export function ProjectIssueSummary() {
 
               <div className="flex items-center gap-[6px] shrink-0 ml-[8px]">
                 {summary.criticalCount > 0 && (
-                  <span className="text-[10px] font-bold text-white bg-red-500 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
+                  <span className="text-[10px] font-bold text-white bg-red-500 dark:bg-red-400 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
                     {summary.criticalCount}
                   </span>
                 )}
                 {summary.highCount > 0 && (
-                  <span className="text-[10px] font-bold text-white bg-orange-500 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
+                  <span className="text-[10px] font-bold text-white bg-orange-500 dark:bg-orange-400 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
                     {summary.highCount}
                   </span>
                 )}

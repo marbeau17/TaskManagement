@@ -81,7 +81,7 @@ export async function GET() {
       const { data, error } = await supabase
         .from('tasks')
         .select(
-          '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+          '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
         )
         .order('created_at', { ascending: false })
 

@@ -373,7 +373,7 @@ function RoleManagementPanel() {
       </div>
 
       {/* Role list */}
-      <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+      <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
         <div className="grid grid-cols-[1fr_80px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
           <div>ロール名</div>
           <div className="text-center">種別</div>

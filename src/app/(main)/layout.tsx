@@ -37,7 +37,8 @@ export default function MainLayout({
         .eq('id', user.id)
         .single()
 
-      if (profile?.must_change_password) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((profile as any)?.must_change_password) {
         router.replace('/change-password')
         return
       }

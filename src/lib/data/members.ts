@@ -227,7 +227,7 @@ export async function changePassword(
 export async function forceChangePassword(
   userId: string,
   newPassword: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; passwordChanged?: boolean; error?: string }> {
   if (useMock()) {
     const { forceChangeMockPassword } = await import('@/lib/mock/handlers')
     return forceChangeMockPassword(userId, newPassword)
@@ -282,9 +282,8 @@ export async function forceChangePassword(
   )
   return {
     success: false,
-    error: lastDbError instanceof Error
-      ? lastDbError.message
-      : 'データベースの更新に失敗しました。管理者に連絡してください。',
+    passwordChanged: true,
+    error: 'パスワードは変更されましたが、システムフラグの更新に失敗しました。管理者に連絡してください。',
   }
 }
 

@@ -16,6 +16,8 @@ import type {
   TaskFormStep1,
   TaskFormStep2,
   TaskProgressUpdate,
+  PaginationParams,
+  PaginatedResult,
 } from '@/types/task'
 import { useMock } from '@/lib/utils'
 
@@ -24,11 +26,18 @@ import { useMock } from '@/lib/utils'
 // ---------------------------------------------------------------------------
 
 export async function getTasks(
-  filters?: TaskFilters
-): Promise<TaskWithRelations[]> {
+  filters?: TaskFilters,
+  pagination?: PaginationParams
+): Promise<PaginatedResult<TaskWithRelations>> {
   if (useMock()) {
     const { getMockTasks } = await import('@/lib/mock/handlers')
-    return getMockTasks(filters)
+    const all = getMockTasks(filters)
+    if (pagination) {
+      const { page, pageSize } = pagination
+      const start = (page - 1) * pageSize
+      return { data: all.slice(start, start + pageSize), totalCount: all.length }
+    }
+    return { data: all, totalCount: all.length }
   }
 
   const { createClient } = await import('@/lib/supabase/client')
@@ -37,7 +46,8 @@ export async function getTasks(
   let query = supabase
     .from('tasks')
     .select(
-      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
+      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)',
+      { count: 'exact' }
     )
 
   if (filters?.status && filters.status !== 'all') {
@@ -96,9 +106,39 @@ export async function getTasks(
 
   query = query.order('created_at', { ascending: false })
 
-  const { data, error } = await query
+  // Apply pagination range
+  if (pagination) {
+    const { page, pageSize } = pagination
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    query = query.range(from, to)
+  }
+
+  const { data, error, count } = await query
   if (error) throw error
-  return (data ?? []) as TaskWithRelations[]
+  return { data: (data ?? []) as TaskWithRelations[], totalCount: count ?? 0 }
+}
+
+// ---------------------------------------------------------------------------
+// getWaitingTaskCount – lightweight count for sidebar badge
+// ---------------------------------------------------------------------------
+
+export async function getWaitingTaskCount(): Promise<number> {
+  if (useMock()) {
+    const { getMockTasks } = await import('@/lib/mock/handlers')
+    const all = getMockTasks()
+    return all.filter((t) => t.status === 'waiting').length
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { count, error } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'waiting')
+
+  if (error) throw error
+  return count ?? 0
 }
 
 // ---------------------------------------------------------------------------
@@ -319,6 +359,52 @@ export async function bulkUpdateTaskStatus(
     .update({ status })
     .in('id', taskIds)
 
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
+// bulkAssignTasks
+// ---------------------------------------------------------------------------
+
+export async function bulkAssignTasks(taskIds: string[], userId: string): Promise<void> {
+  if (useMock()) {
+    const { bulkAssignMockTasks } = await import('@/lib/mock/handlers')
+    return bulkAssignMockTasks(taskIds, userId)
+  }
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { error } = await supabase.from('tasks').update({ assigned_to: userId }).in('id', taskIds)
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
+// bulkDeleteTasks
+// ---------------------------------------------------------------------------
+
+export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
+  if (useMock()) {
+    const { bulkDeleteMockTasks } = await import('@/lib/mock/handlers')
+    return bulkDeleteMockTasks(taskIds)
+  }
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { error } = await supabase.from('tasks').delete().in('id', taskIds)
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
+// deleteAttachmentRecord
+// ---------------------------------------------------------------------------
+
+export async function deleteAttachmentRecord(attachmentId: string): Promise<void> {
+  if (useMock()) {
+    const { deleteMockAttachment } = await import('@/lib/mock/handlers')
+    deleteMockAttachment(attachmentId)
+    return
+  }
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { error } = await supabase.from('attachments').delete().eq('id', attachmentId)
   if (error) throw error
 }
 

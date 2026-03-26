@@ -156,6 +156,10 @@
   --bar-warning: #E0C050;
   --bar-ok: #6FB5A3;
 
+  /* KPI card / chart dark overrides */
+  --color-info: #7AAAD8;
+  --color-purple: #A080D0;
+
   /* WorkFlow Design System Dark Overrides */
   --color-wf-bg: #1A2420;
   --color-surface: #1F2E28;

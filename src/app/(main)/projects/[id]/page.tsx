@@ -13,10 +13,12 @@ import {
 } from '@/hooks/useProjects'
 import { updateProjectMemberHours } from '@/lib/data/project-members'
 import { useQueryClient } from '@tanstack/react-query'
-import { Avatar, ProgressBar, KpiCard } from '@/components/shared'
+import { Avatar, ProgressBar, KpiCard, RoleChip } from '@/components/shared'
 import { IssueStatusBadge, SeverityBadge, IssueTypeBadge } from '@/components/shared'
 import { TaskTable } from '@/components/tasks/TaskTable'
 import { formatDate } from '@/lib/utils'
+import { MilestoneList } from '@/components/projects/MilestoneList'
+import { WorkflowEditor } from '@/components/projects/WorkflowEditor'
 import type { ProjectStatus } from '@/types/project'
 import type { ProjectMember } from '@/types/database'
 
@@ -53,8 +55,14 @@ function AddMemberModal({
 }) {
   const [selectedMemberId, setSelectedMemberId] = useState('')
   const [hours, setHours] = useState('40')
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const availableMembers = members.filter((m) => !existingMemberIds.has(m.id))
+  const availableMembers = useMemo(() => {
+    const filtered = members.filter((m) => !existingMemberIds.has(m.id))
+    if (!searchQuery.trim()) return filtered
+    const q = searchQuery.trim().toLowerCase()
+    return filtered.filter((m) => m.name.toLowerCase().includes(q))
+  }, [members, existingMemberIds, searchQuery])
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -64,17 +72,28 @@ function AddMemberModal({
         </h2>
         <div className="space-y-[12px]">
           <div>
-            <label className="text-[11px] text-text2 font-medium block mb-[4px]">メンバー</label>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">メンバー検索</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="名前で検索..."
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint mb-[6px]"
+            />
             <select
               value={selectedMemberId}
               onChange={(e) => setSelectedMemberId(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              size={Math.min(availableMembers.length + 1, 6)}
             >
               <option value="">選択してください</option>
               {availableMembers.map((m) => (
                 <option key={m.id} value={m.id}>{m.name} ({m.role})</option>
               ))}
             </select>
+            {searchQuery && availableMembers.length === 0 && (
+              <p className="text-[11px] text-text3 mt-[4px]">該当するメンバーが見つかりません</p>
+            )}
           </div>
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">割当時間 (h/月)</label>
@@ -106,6 +125,59 @@ function AddMemberModal({
 }
 
 // ---------------------------------------------------------------------------
+// Edit hours modal
+// ---------------------------------------------------------------------------
+
+function EditHoursModal({
+  member,
+  currentHours,
+  onClose,
+  onSave,
+  saving,
+}: {
+  member: { name: string }
+  currentHours: number
+  onClose: () => void
+  onSave: (hours: number) => void
+  saving: boolean
+}) {
+  const [hours, setHours] = useState(String(currentHours))
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[380px]">
+        <h2 className="text-[15px] font-bold text-text mb-[8px]">割当時間の編集</h2>
+        <p className="text-[12px] text-text2 mb-[16px]">{member.name}</p>
+        <div>
+          <label className="text-[11px] text-text2 font-medium block mb-[4px]">割当時間 (h/月)</label>
+          <input
+            type="number"
+            value={hours}
+            onChange={(e) => setHours(e.target.value)}
+            className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            min="0"
+            step="1"
+            autoFocus
+          />
+        </div>
+        <div className="flex justify-end gap-[8px] mt-[20px]">
+          <button onClick={onClose} className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors">
+            キャンセル
+          </button>
+          <button
+            onClick={() => onSave(Number(hours) || 0)}
+            disabled={saving}
+            className="px-[16px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors disabled:opacity-50"
+          >
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Tabs
 // ---------------------------------------------------------------------------
 
@@ -113,7 +185,9 @@ const TABS = [
   { id: 'overview', label: '概要' },
   { id: 'tasks', label: 'タスク' },
   { id: 'issues', label: '課題' },
+  { id: 'milestones', label: 'マイルストーン' },
   { id: 'members', label: 'メンバー' },
+  { id: 'workflow', label: 'ワークフロー' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -129,9 +203,12 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [showAddMember, setShowAddMember] = useState(false)
   const [removingMember, setRemovingMember] = useState<ProjectMember | null>(null)
+  const [editingMember, setEditingMember] = useState<ProjectMember | null>(null)
+  const [savingHours, setSavingHours] = useState(false)
 
   const { data: project, isLoading: projectLoading } = useProject(params.id)
-  const { data: allTasks } = useTasks()
+  const { data: allTasksResult } = useTasks()
+  const allTasks = allTasksResult?.data
   const { data: allIssues } = useIssues()
   const { data: allProjectMembers } = useProjectMembers()
   const { data: users } = useMembers()
@@ -198,9 +275,22 @@ export default function ProjectDetailPage() {
   }
 
   const handleUpdateHours = async (id: string, hours: number) => {
-    await updateProjectMemberHours(id, hours)
-    queryClient.invalidateQueries({ queryKey: ['project-members'] })
+    setSavingHours(true)
+    try {
+      await updateProjectMemberHours(id, hours)
+      queryClient.invalidateQueries({ queryKey: ['project-members'] })
+      setEditingMember(null)
+    } finally {
+      setSavingHours(false)
+    }
   }
+
+  // Member KPIs
+  const memberKpis = useMemo(() => {
+    const count = projectMembers.length
+    const totalHours = projectMembers.reduce((sum, m) => sum + (m.allocated_hours ?? 0), 0)
+    return { count, totalHours }
+  }, [projectMembers])
 
   if (projectLoading) {
     return (
@@ -401,9 +491,20 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
+        {/* ============ Milestones tab ============ */}
+        {activeTab === 'milestones' && (
+          <MilestoneList projectId={project.id} />
+        )}
+
         {/* ============ Members tab ============ */}
         {activeTab === 'members' && (
           <div className="space-y-[16px]">
+            {/* Member summary KPIs */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]">
+              <KpiCard label="メンバー数" value={memberKpis.count} unit="名" variant="info" />
+              <KpiCard label="合計割当時間" value={memberKpis.totalHours} unit="h/月" variant="mint" />
+            </div>
+
             <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
               <div className="px-[12px] py-[8px] bg-surf2 border-b border-border2 flex items-center justify-between">
                 <h3 className="text-[12px] font-bold text-text2">
@@ -417,8 +518,9 @@ export default function ProjectDetailPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-[1fr_100px_80px] gap-[8px] px-[16px] py-[8px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+              <div className="grid grid-cols-[1fr_80px_100px_80px] gap-[8px] px-[16px] py-[8px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
                 <div>メンバー</div>
+                <div>ロール</div>
                 <div className="text-right">割当時間</div>
                 <div className="text-center">操作</div>
               </div>
@@ -431,16 +533,24 @@ export default function ProjectDetailPage() {
                 projectMembers.map((pm) => (
                   <div
                     key={pm.id}
-                    className="grid grid-cols-[1fr_100px_80px] gap-[8px] px-[16px] py-[8px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                    className="grid grid-cols-[1fr_80px_100px_80px] gap-[8px] px-[16px] py-[8px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
                   >
                     <div className="flex items-center gap-[8px]">
                       <Avatar name_short={pm.member?.name_short ?? '?'} color={pm.member?.avatar_color ?? 'av-a'} size="sm" />
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-[12px] font-medium truncate">{pm.member?.name ?? '不明'}</span>
-                        <span className="text-[10px] text-text3">{pm.member?.role ?? ''}</span>
-                      </div>
+                      <span className="text-[12px] font-medium truncate">{pm.member?.name ?? '不明'}</span>
                     </div>
-                    <div className="text-right text-[12px] text-text2">{pm.allocated_hours}h</div>
+                    <div>
+                      {pm.member?.role && <RoleChip role={pm.member.role} />}
+                    </div>
+                    <div className="text-right">
+                      <button
+                        onClick={() => setEditingMember(pm)}
+                        className="text-[12px] text-text2 hover:text-mint hover:underline cursor-pointer transition-colors"
+                        title="クリックして割当時間を編集"
+                      >
+                        {pm.allocated_hours}h
+                      </button>
+                    </div>
                     <div className="text-center">
                       <button
                         onClick={() => setRemovingMember(pm)}
@@ -469,6 +579,17 @@ export default function ProjectDetailPage() {
         />
       )}
 
+      {/* Edit hours modal */}
+      {editingMember && (
+        <EditHoursModal
+          member={{ name: editingMember.member?.name ?? 'メンバー' }}
+          currentHours={editingMember.allocated_hours ?? 0}
+          onClose={() => setEditingMember(null)}
+          onSave={(hours) => handleUpdateHours(editingMember.id, hours)}
+          saving={savingHours}
+        />
+      )}
+
       {/* Remove confirmation */}
       {removingMember && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -492,6 +613,11 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+        {/* ============ Workflow tab ============ */}
+        {activeTab === 'workflow' && (
+          <WorkflowEditor projectId={project.id} />
+        )}
     </>
   )
 }

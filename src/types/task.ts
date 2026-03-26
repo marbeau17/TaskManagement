@@ -36,6 +36,18 @@ export interface TaskFormStep2 {
   estimated_hours: number
 }
 
+/** Pagination parameters for list queries */
+export interface PaginationParams {
+  page: number
+  pageSize: number
+}
+
+/** Paginated result wrapper */
+export interface PaginatedResult<T> {
+  data: T[]
+  totalCount: number
+}
+
 /** Payload for updating task progress */
 export interface TaskProgressUpdate {
   progress: number

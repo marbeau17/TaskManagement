@@ -15,31 +15,45 @@ import {
   getActivityLogs,
   getRecentActivityLogs,
   getAttachments,
+  getWaitingTaskCount,
+  bulkAssignTasks,
+  bulkDeleteTasks,
 } from '@/lib/data/tasks'
 import type { TaskStatus } from '@/types/database'
+import { useRealtimeComments, useRealtimeTaskStatus } from './useRealtimeSubscription'
 import type {
   TaskFilters,
   TaskFormStep1,
   TaskFormStep2,
   TaskProgressUpdate,
+  PaginationParams,
 } from '@/types/task'
 
 // ---------------------------------------------------------------------------
 // Task list & detail
 // ---------------------------------------------------------------------------
 
-export function useTasks(filters?: TaskFilters) {
+export function useTasks(filters?: TaskFilters, pagination?: PaginationParams) {
+  useRealtimeTaskStatus()
   return useQuery({
-    queryKey: ['tasks', filters],
-    queryFn: () => getTasks(filters),
+    queryKey: ['tasks', filters, pagination],
+    queryFn: () => getTasks(filters, pagination),
   })
 }
 
 export function useTask(id: string) {
+  useRealtimeTaskStatus(id)
   return useQuery({
     queryKey: ['tasks', id],
     queryFn: () => getTaskById(id),
     enabled: !!id,
+  })
+}
+
+export function useWaitingTaskCount() {
+  return useQuery({
+    queryKey: ['tasks', 'waitingCount'],
+    queryFn: getWaitingTaskCount,
   })
 }
 
@@ -135,7 +149,25 @@ export function useBulkUpdateTaskStatus() {
 // Comments
 // ---------------------------------------------------------------------------
 
+export function useBulkAssignTasks() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskIds, userId }: { taskIds: string[]; userId: string }) =>
+      bulkAssignTasks(taskIds, userId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+  })
+}
+
+export function useBulkDeleteTasks() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskIds: string[]) => bulkDeleteTasks(taskIds),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+  })
+}
+
 export function useComments(taskId: string) {
+  useRealtimeComments(taskId)
   return useQuery({
     queryKey: ['comments', taskId],
     queryFn: () => getComments(taskId),
@@ -198,7 +230,8 @@ export function useAttachments(taskId: string) {
 // ---------------------------------------------------------------------------
 
 export function useTaskStats() {
-  const { data: tasks, ...rest } = useTasks()
+  const { data: result, ...rest } = useTasks()
+  const tasks = result?.data
 
   const stats = useMemo(() => {
     if (!tasks) {

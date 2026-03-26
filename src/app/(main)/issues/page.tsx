@@ -10,6 +10,7 @@ import { useMembers } from '@/hooks/useMembers'
 import { formatDate } from '@/lib/utils'
 import { exportIssuesCsv } from '@/lib/issue-csv-export'
 import { usePermission } from '@/hooks/usePermission'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { IssueFilters } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,8 @@ import type { IssueFilters } from '@/types/issue'
 export default function IssuesPage() {
   const router = useRouter()
   const { can } = usePermission()
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const search = useDebounce(searchInput, 300)
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [severityFilter, setSeverityFilter] = useState('')
@@ -77,8 +79,8 @@ export default function IssuesPage() {
         {/* Filters */}
         <div className="mb-[16px]">
           <FilterBar
-            searchValue={search}
-            onSearchChange={setSearch}
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
             filters={[
               {
                 label: 'プロジェクト',

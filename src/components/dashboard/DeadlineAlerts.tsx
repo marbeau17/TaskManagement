@@ -83,7 +83,8 @@ function AlertItem({ row }: { row: AlertRow }) {
 }
 
 export function DeadlineAlerts() {
-  const { data: tasks, isLoading } = useTasks()
+  const { data: tasksResult, isLoading } = useTasks()
+  const tasks = tasksResult?.data
 
   const alertRows = useMemo<AlertRow[]>(() => {
     if (!tasks) return []

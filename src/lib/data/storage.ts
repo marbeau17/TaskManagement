@@ -7,12 +7,80 @@ import { useMock } from '@/lib/utils'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
+// ---------------------------------------------------------------------------
+// Allowed file types
+// ---------------------------------------------------------------------------
+
+export const ALLOWED_MIME_TYPES = [
+  // Images
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  // PDF
+  'application/pdf',
+  // Office docs
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  // Text / CSV
+  'text/plain',
+  'text/csv',
+  // ZIP
+  'application/zip',
+  'application/x-zip-compressed',
+] as const
+
+/** Value for `<input accept="...">` — mirrors ALLOWED_MIME_TYPES */
+export const FILE_INPUT_ACCEPT = ALLOWED_MIME_TYPES.join(',')
+
+// ---------------------------------------------------------------------------
+// validateFile — checks size + MIME type, returns Japanese error or null
+// ---------------------------------------------------------------------------
+
+export function validateFile(file: File): string | null {
+  if (file.size > MAX_FILE_SIZE) {
+    return 'ファイルサイズが10MBを超えています'
+  }
+  if (
+    !(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)
+  ) {
+    return '許可されていないファイル形式です。画像、PDF、Office文書、テキスト、CSV、ZIPファイルのみアップロードできます'
+  }
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// deleteFile — removes a file from Supabase Storage
+// ---------------------------------------------------------------------------
+
+export async function deleteFile(path: string): Promise<void> {
+  if (useMock()) {
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    return
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { error } = await supabase.storage.from('attachments').remove([path])
+  if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------------
+// uploadFile
+// ---------------------------------------------------------------------------
+
 export async function uploadFile(
   taskId: string,
   file: File
 ): Promise<{ path: string; name: string; size: number; type: string }> {
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error('ファイルサイズが10MBを超えています')
+  const validationError = validateFile(file)
+  if (validationError) {
+    throw new Error(validationError)
   }
 
   if (useMock()) {

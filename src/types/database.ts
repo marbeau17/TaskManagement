@@ -92,6 +92,90 @@ export interface TaskAssignee {
   user?: User
 }
 
+export interface TaskWatcher {
+  id: string
+  task_id: string
+  user_id: string
+  created_at: string
+  user?: User
+}
+
+export type NotificationType =
+  | 'task_assigned'
+  | 'task_status_changed'
+  | 'comment_added'
+  | 'deadline_changed'
+  | 'mention'
+  | 'info'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  message: string
+  link: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export interface TimeLog {
+  id: string
+  task_id: string
+  user_id: string
+  hours: number
+  description: string
+  logged_date: string
+  created_at: string
+  user?: User
+}
+
+export interface TimeLogSummary {
+  user_id: string
+  user_name: string
+  total_hours: number
+}
+
+export type CustomFieldType = 'text' | 'number' | 'select' | 'date' | 'checkbox'
+
+export interface CustomFieldDefinition {
+  id: string
+  project_id: string
+  name: string
+  field_type: CustomFieldType
+  options: string[]
+  required: boolean
+  sort_order: number
+  created_at: string
+}
+
+export interface CustomFieldValue {
+  id: string
+  entity_type: 'issue' | 'task'
+  entity_id: string
+  field_id: string
+  value: unknown
+  created_at: string
+  definition?: CustomFieldDefinition
+}
+
+export interface CreateCustomFieldDefinition {
+  project_id: string
+  name: string
+  field_type: CustomFieldType
+  options?: string[]
+  required?: boolean
+  sort_order?: number
+}
+
+export interface UpdateCustomFieldDefinition {
+  name?: string
+  field_type?: CustomFieldType
+  options?: string[]
+  required?: boolean
+  sort_order?: number
+}
+
 export interface TaskWithRelations extends Task {
   client: Client
   assigned_user: User | null

@@ -31,49 +31,92 @@ function WorkloadRow({ summary }: { summary: WorkloadSummary }) {
   const isOverloaded = utilization_rate >= WORKLOAD_THRESHOLDS.danger
 
   return (
-    <div
-      className={`grid grid-cols-[140px_1fr_52px_100px_72px] items-center gap-[8px] px-[12px] py-[8px] border-b border-border2 ${
-        isOverloaded ? 'bg-danger-bg' : ''
-      }`}
-    >
-      {/* 担当者 */}
-      <div className="flex items-center gap-[8px]">
-        <Avatar
-          name_short={user.name_short}
-          color={user.avatar_color}
-          size="sm"
-        />
-        <span className="text-[12px] text-text truncate">{user.name}</span>
-      </div>
-
-      {/* 稼働バー */}
-      <div className="w-full bg-surf2 rounded-full overflow-hidden" style={{ height: 8 }}>
-        <div
-          className="h-full rounded-full transition-all duration-300"
-          style={{
-            width: `${Math.min(100, utilization_rate)}%`,
-            backgroundColor: barColor,
-          }}
-        />
-      </div>
-
-      {/* % */}
-      <span className={`text-[12px] font-bold text-right ${rateColor}`}>
-        {utilization_rate}%
-      </span>
-
-      {/* 実績/見積 */}
-      <span className="text-[11px] text-text2 text-right">
-        {formatHours(actual_hours)} / {formatHours(capacity_hours)}
-      </span>
-
-      {/* 状態チップ */}
-      <span
-        className={`${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} text-[10px] px-[8px] py-[2px] rounded-full font-semibold border text-center whitespace-nowrap`}
+    <>
+      {/* Mobile card layout */}
+      <div
+        className={`md:hidden px-[12px] py-[10px] border-b border-border2 space-y-[6px] ${
+          isOverloaded ? 'bg-danger-bg' : ''
+        }`}
       >
-        {statusLabel}
-      </span>
-    </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-[8px]">
+            <Avatar
+              name_short={user.name_short}
+              color={user.avatar_color}
+              size="sm"
+            />
+            <span className="text-[12px] text-text truncate">{user.name}</span>
+          </div>
+          <div className="flex items-center gap-[8px]">
+            <span className={`text-[12px] font-bold ${rateColor}`}>
+              {utilization_rate}%
+            </span>
+            <span
+              className={`${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} text-[10px] px-[8px] py-[2px] rounded-full font-semibold border whitespace-nowrap`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+        </div>
+        <div className="w-full bg-surf2 rounded-full overflow-hidden" style={{ height: 8 }}>
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${Math.min(100, utilization_rate)}%`,
+              backgroundColor: barColor,
+            }}
+          />
+        </div>
+        <div className="text-[11px] text-text2">
+          {formatHours(actual_hours)} / {formatHours(capacity_hours)}
+        </div>
+      </div>
+
+      {/* Desktop grid layout */}
+      <div
+        className={`hidden md:grid grid-cols-[140px_1fr_52px_100px_72px] items-center gap-[8px] px-[12px] py-[8px] border-b border-border2 ${
+          isOverloaded ? 'bg-danger-bg' : ''
+        }`}
+      >
+        {/* 担当者 */}
+        <div className="flex items-center gap-[8px]">
+          <Avatar
+            name_short={user.name_short}
+            color={user.avatar_color}
+            size="sm"
+          />
+          <span className="text-[12px] text-text truncate">{user.name}</span>
+        </div>
+
+        {/* 稼働バー */}
+        <div className="w-full bg-surf2 rounded-full overflow-hidden" style={{ height: 8 }}>
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${Math.min(100, utilization_rate)}%`,
+              backgroundColor: barColor,
+            }}
+          />
+        </div>
+
+        {/* % */}
+        <span className={`text-[12px] font-bold text-right ${rateColor}`}>
+          {utilization_rate}%
+        </span>
+
+        {/* 実績/見積 */}
+        <span className="text-[11px] text-text2 text-right">
+          {formatHours(actual_hours)} / {formatHours(capacity_hours)}
+        </span>
+
+        {/* 状態チップ */}
+        <span
+          className={`${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} text-[10px] px-[8px] py-[2px] rounded-full font-semibold border text-center whitespace-nowrap`}
+        >
+          {statusLabel}
+        </span>
+      </div>
+    </>
   )
 }
 
@@ -95,8 +138,8 @@ export function CreatorWorkload() {
         <h3 className="text-[13px] font-bold text-text">👤 クリエイター稼働状況</h3>
       </div>
 
-      {/* Column headers */}
-      <div className="grid grid-cols-[140px_1fr_52px_100px_72px] items-center gap-[8px] px-[12px] py-[6px] border-b border-border2 bg-surf2">
+      {/* Column headers (desktop only) */}
+      <div className="hidden md:grid grid-cols-[140px_1fr_52px_100px_72px] items-center gap-[8px] px-[12px] py-[6px] border-b border-border2 bg-surf2">
         <span className="text-[10px] text-text3 font-semibold">担当者</span>
         <span className="text-[10px] text-text3 font-semibold">稼働バー</span>
         <span className="text-[10px] text-text3 font-semibold text-right">%</span>

@@ -31,7 +31,8 @@ function UnassignedItem({ task }: { task: TaskWithRelations }) {
 }
 
 export function UnassignedTasks() {
-  const { data: tasks, isLoading } = useTasks()
+  const { data: tasksResult, isLoading } = useTasks()
+  const tasks = tasksResult?.data
 
   const unassigned = useMemo(() => {
     if (!tasks) return []

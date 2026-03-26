@@ -40,7 +40,8 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Fetch all tasks for autocomplete
-  const { data: allTasks } = useTasks()
+  const { data: allTasksResult } = useTasks()
+  const allTasks = allTasksResult?.data
 
   // Filter suggestions
   const suggestions = (allTasks ?? []).filter((task) => {

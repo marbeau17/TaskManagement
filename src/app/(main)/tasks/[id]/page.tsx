@@ -13,6 +13,7 @@ import { ActivityLog } from '@/components/tasks/ActivityLog'
 import { AttachmentList } from '@/components/tasks/AttachmentList'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
+import { WatcherButton } from '@/components/tasks/WatcherButton'
 
 export default function TaskDetailPage() {
   const params = useParams<{ id: string }>()
@@ -93,6 +94,7 @@ export default function TaskDetailPage() {
         </h1>
 
         <StatusChip status={task.status} />
+        <WatcherButton taskId={task.id} />
 
         {/* Spacer */}
         <div className="flex-1" />

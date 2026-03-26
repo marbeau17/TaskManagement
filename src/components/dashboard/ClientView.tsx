@@ -139,7 +139,8 @@ function ClientTaskRow({ task }: { task: TaskWithRelations }) {
 // ---------------------------------------------------------------------------
 
 export function ClientView() {
-  const { data: tasks, isLoading: tasksLoading } = useTasks()
+  const { data: tasksResult, isLoading: tasksLoading } = useTasks()
+  const tasks = tasksResult?.data
   const { data: members, isLoading: membersLoading } = useMembers()
 
   const isLoading = tasksLoading || membersLoading

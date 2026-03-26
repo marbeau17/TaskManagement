@@ -7,7 +7,7 @@ import { Settings, KeyRound, LogOut, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useMembers } from '@/hooks/useMembers'
-import { useTasks } from '@/hooks/useTasks'
+import { useWaitingTaskCount } from '@/hooks/useTasks'
 import { useI18n } from '@/hooks/useI18n'
 import { LanguageToggle } from '@/components/shared/LanguageToggle'
 import {
@@ -39,6 +39,7 @@ const MAIN_NAV = [
 ]
 
 const SYSTEM_NAV = [
+  { id: 'reports', labelKey: 'nav.reports', icon: '📊', href: '/reports' },
   { id: 'templates', labelKey: 'nav.templates', icon: '📝', href: '/templates' },
   { id: 'members', labelKey: 'nav.members', icon: '👥', href: '/members' },
   { id: 'settings', labelKey: 'nav.settings', icon: '⚙', href: '/settings' },
@@ -47,17 +48,11 @@ const SYSTEM_NAV = [
 export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarProps) {
   const { user, logout } = useAuth()
   const { data: members } = useMembers()
-  const { data: allTasks } = useTasks()
+  const { data: waitingCount = 0 } = useWaitingTaskCount()
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const { theme, setTheme } = useTheme()
   const { t } = useI18n()
-
-  // Dynamic badge: count tasks with status 'waiting'
-  const waitingCount = useMemo(() => {
-    if (!allTasks) return 0
-    return allTasks.filter((t) => t.status === 'waiting').length
-  }, [allTasks])
 
   // Derive creator list dynamically from members data
   const creators = useMemo(() => {

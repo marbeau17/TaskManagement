@@ -143,7 +143,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                 key={idx}
                 className="bg-surf2 rounded-lg border border-wf-border p-4 space-y-3"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] text-text3 font-bold w-6 text-center">
                     {idx + 1}
                   </span>
@@ -152,7 +152,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                     value={field.label}
                     onChange={(e) => updateField(idx, { label: e.target.value })}
                     placeholder="フィールド名"
-                    className={`flex-1 ${inputClass}`}
+                    className={`flex-1 min-w-[120px] ${inputClass}`}
                   />
                   <select
                     value={field.type}

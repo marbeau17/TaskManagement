@@ -1,8 +1,8 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { uploadFile } from '@/lib/data/storage'
-import { addAttachmentRecord } from '@/lib/data/tasks'
+import { uploadFile, deleteFile } from '@/lib/data/storage'
+import { addAttachmentRecord, deleteAttachmentRecord } from '@/lib/data/tasks'
 
 // ---------------------------------------------------------------------------
 // useUploadAttachment — uploads a file and creates the DB record
@@ -28,6 +28,37 @@ export function useUploadAttachment() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['attachments', variables.taskId] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// useDeleteAttachment — deletes file from storage + removes DB record
+// ---------------------------------------------------------------------------
+
+export function useDeleteAttachment() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      attachmentId,
+      storagePath,
+      taskId,
+    }: {
+      attachmentId: string
+      storagePath: string
+      taskId: string
+    }) => {
+      // 1. Remove file from storage
+      await deleteFile(storagePath)
+
+      // 2. Delete the DB record
+      await deleteAttachmentRecord(attachmentId)
+
+      return { taskId }
+    },
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['attachments', result.taskId] })
     },
   })
 }

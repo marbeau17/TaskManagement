@@ -79,8 +79,8 @@ export function getWorkloadStatus(rate: number): WorkloadStatus {
  * Return a Tailwind text-colour class based on utilization rate.
  */
 export function getWorkloadColor(rate: number): string {
-  if (rate >= WORKLOAD_THRESHOLDS.danger) return 'text-red-600'
-  if (rate >= WORKLOAD_THRESHOLDS.warning) return 'text-amber-600'
-  if (rate > 0) return 'text-emerald-600'
-  return 'text-slate-400'
+  if (rate >= WORKLOAD_THRESHOLDS.danger) return 'text-red-600 dark:text-red-400'
+  if (rate >= WORKLOAD_THRESHOLDS.warning) return 'text-amber-600 dark:text-amber-400'
+  if (rate > 0) return 'text-emerald-600 dark:text-emerald-400'
+  return 'text-slate-400 dark:text-slate-500'
 }

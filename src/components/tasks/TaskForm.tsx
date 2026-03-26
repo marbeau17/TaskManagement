@@ -99,7 +99,8 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
   const { data: clients } = useClients()
 
   // Fetch existing tasks for task title suggestions
-  const { data: tasks } = useTasks()
+  const { data: tasksResult } = useTasks()
+  const tasks = tasksResult?.data
 
   // Deduplicate task titles for suggestions
   const uniqueTaskTitles = useMemo(() => {

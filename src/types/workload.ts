@@ -19,6 +19,31 @@ export interface WorkloadSummary {
   status: WorkloadStatus
 }
 
+/** Per-client hours segment for the resource load chart */
+export interface ClientHoursSegment {
+  client_id: string
+  client_name: string
+  hours: number
+}
+
+/** Per-member resource load data for stacked bar chart */
+export interface ResourceLoadEntry {
+  user_id: string
+  user_name: string
+  user_name_short: string
+  capacity_hours: number
+  total_assigned_hours: number
+  utilization_rate: number
+  /** Keyed by client_name for recharts dynamic keys */
+  client_hours: Record<string, number>
+}
+
+/** Full resource load chart data */
+export interface ResourceLoadData {
+  entries: ResourceLoadEntry[]
+  client_names: string[]
+}
+
 /** Team-level KPI aggregation */
 export interface WorkloadKpiData {
   team_avg_utilization: number

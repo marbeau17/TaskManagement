@@ -10,11 +10,11 @@ interface KpiCardProps {
 }
 
 const VARIANT_COLORS: Record<KpiCardProps['variant'], string> = {
-  mint: '#6FB5A3',
-  warning: '#C8A030',
-  danger: '#C05050',
-  info: '#1E4A7A',
-  purple: '#8060B0',
+  mint: 'var(--color-mint, #6FB5A3)',
+  warning: 'var(--bar-warning, #C8A030)',
+  danger: 'var(--bar-danger, #C05050)',
+  info: 'var(--color-info, #1E4A7A)',
+  purple: 'var(--color-purple, #8060B0)',
 }
 
 export function KpiCard({ label, value, unit, subText, subColor, variant }: KpiCardProps) {

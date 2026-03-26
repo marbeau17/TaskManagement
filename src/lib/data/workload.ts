@@ -2,8 +2,8 @@
 // Data abstraction layer – Workload
 // =============================================================================
 
-import type { User } from '@/types/database'
-import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
+import type { User, Client } from '@/types/database'
+import type { WorkloadSummary, WorkloadKpiData, ResourceLoadData, ResourceLoadEntry } from '@/types/workload'
 import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -119,5 +119,84 @@ export async function getWorkloadKpi(): Promise<WorkloadKpiData> {
     total_count: totalCount,
     overloaded_count: overloadedMembers.length,
     overloaded_members: overloadedMembers,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getResourceLoadData — per-member hours broken down by client
+// ---------------------------------------------------------------------------
+
+export async function getResourceLoadData(): Promise<ResourceLoadData> {
+  if (useMock()) {
+    const { getMockResourceLoadData } = await import('@/lib/mock/handlers')
+    return getMockResourceLoadData()
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // Fetch active users
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('is_active', true)
+
+  if (usersError) throw usersError
+  const typedUsers = (users ?? []) as User[]
+
+  // Fetch clients for name mapping
+  const { data: clientRows, error: clientsError } = await supabase
+    .from('clients')
+    .select('id, name')
+
+  if (clientsError) throw clientsError
+  const clientNameMap = new Map(
+    ((clientRows ?? []) as Client[]).map((c) => [c.id, c.name])
+  )
+
+  // Fetch active tasks with assignees
+  const { data: tasks, error: tasksError } = await supabase
+    .from('tasks')
+    .select('assigned_to, client_id, status, estimated_hours')
+    .not('assigned_to', 'is', null)
+    .neq('status', 'rejected')
+    .neq('status', 'done')
+
+  if (tasksError) throw tasksError
+
+  const allClientNames = new Set<string>()
+
+  const entries: ResourceLoadEntry[] = typedUsers.map((user) => {
+    const userTasks = (tasks ?? []).filter((t) => t.assigned_to === user.id)
+
+    const clientHours: Record<string, number> = {}
+    for (const t of userTasks) {
+      const clientName = clientNameMap.get(t.client_id) ?? '未分類'
+      allClientNames.add(clientName)
+      clientHours[clientName] =
+        (clientHours[clientName] ?? 0) + (t.estimated_hours ?? 0)
+    }
+
+    const totalAssigned = Object.values(clientHours).reduce(
+      (s, v) => s + v,
+      0
+    )
+    const cap = user.weekly_capacity_hours
+    const rate = cap > 0 ? Math.round((totalAssigned / cap) * 100) : 0
+
+    return {
+      user_id: user.id,
+      user_name: user.name,
+      user_name_short: user.name_short,
+      capacity_hours: cap,
+      total_assigned_hours: totalAssigned,
+      utilization_rate: rate,
+      client_hours: clientHours,
+    }
+  })
+
+  return {
+    entries,
+    client_names: Array.from(allClientNames).sort(),
   }
 }

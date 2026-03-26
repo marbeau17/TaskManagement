@@ -49,18 +49,38 @@ export function useAuth() {
           .single()
         if (profile) {
           setUser(profile as User)
-        } else {
-          // Retry via server-side API route (bypasses RLS)
-          try {
-            const res = await fetch(`/api/auth/profile?userId=${authUser.id}`)
-            if (res.ok) {
-              const apiProfile = await res.json()
-              setUser(apiProfile as User)
-            }
-          } catch (fetchErr) {
-            console.warn('Session profile fetch failed:', fetchErr)
-          }
+          return
         }
+        // Retry via server-side API route (bypasses RLS)
+        try {
+          const res = await fetch(`/api/auth/profile?userId=${authUser.id}`)
+          if (res.ok) {
+            const apiProfile = await res.json()
+            setUser(apiProfile as User)
+            return
+          }
+        } catch (fetchErr) {
+          console.warn('Session profile fetch failed:', fetchErr)
+        }
+        // B-008: Fallback with least-privileged role
+        console.warn('Session profile fetch failed for all methods, using least-privileged fallback')
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: (authUser.email || '').split('@')[0],
+          name_short: (authUser.email || '?').charAt(0),
+          role: 'requester',
+          avatar_color: 'av-a',
+          weekly_capacity_hours: 16,
+          is_active: true,
+          must_change_password: false,
+          manager_id: null,
+          level: '',
+          department: '',
+          title: '',
+          created_at: authUser.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
       }
     }
     checkSession()
@@ -113,7 +133,8 @@ export function useAuth() {
 
       // Fallback: construct basic user from auth data
       console.warn('Profile fetch failed, using auth data fallback:', profileError?.message)
-      const inferredRole = data.user.user_metadata?.role || 'requester'
+      // B-008: Always use least-privileged role — never trust user_metadata.role
+      const inferredRole = 'requester' as const
       const fallbackUser: User = {
         id: data.user.id,
         email: data.user.email || email,

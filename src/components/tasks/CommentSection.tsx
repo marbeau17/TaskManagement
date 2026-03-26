@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useComments, useAddComment } from '@/hooks/useTasks'
-import { Avatar } from '@/components/shared'
+import { Avatar, MentionInput, MentionText } from '@/components/shared'
 import { useMock } from '@/lib/utils'
 
 interface CommentSectionProps {
@@ -108,7 +108,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
                 </span>
               </div>
               <p className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">
-                {comment.body}
+                <MentionText text={comment.body} />
               </p>
             </div>
           )
@@ -117,10 +117,10 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
 
       {/* New comment input */}
       <div className="flex flex-col gap-2">
-        <textarea
+        <MentionInput
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="コメントを入力..."
+          onChange={setBody}
+          placeholder="コメントを入力... (@でメンバーをメンション)"
           rows={3}
           className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-none focus:outline-none focus:border-mint"
         />

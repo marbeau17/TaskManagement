@@ -404,6 +404,25 @@ export interface Database {
         ]
       }
     }
+      task_watchers: {
+        Row: { id: string; task_id: string; user_id: string; created_at: string }
+        Insert: { id?: string; task_id: string; user_id: string; created_at?: string }
+        Update: { id?: string; task_id?: string; user_id?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: 'task_watchers_task_id_fkey'; columns: ['task_id']; isOneToOne: false; referencedRelation: 'tasks'; referencedColumns: ['id'] },
+          { foreignKeyName: 'task_watchers_user_id_fkey'; columns: ['user_id']; isOneToOne: false; referencedRelation: 'users'; referencedColumns: ['id'] },
+        ]
+      }
+      time_logs: {
+        Row: { id: string; task_id: string; user_id: string; hours: number; description: string; logged_date: string; created_at: string }
+        Insert: { id?: string; task_id: string; user_id: string; hours: number; description?: string; logged_date?: string; created_at?: string }
+        Update: { id?: string; task_id?: string; user_id?: string; hours?: number; description?: string; logged_date?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: 'time_logs_task_id_fkey'; columns: ['task_id']; isOneToOne: false; referencedRelation: 'tasks'; referencedColumns: ['id'] },
+          { foreignKeyName: 'time_logs_user_id_fkey'; columns: ['user_id']; isOneToOne: false; referencedRelation: 'users'; referencedColumns: ['id'] },
+        ]
+      }
+    }
     Views: {
       [_ in never]: never
     }

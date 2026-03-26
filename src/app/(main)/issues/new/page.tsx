@@ -38,9 +38,10 @@ export default function NewIssuePage() {
   const [labelsInput, setLabelsInput] = useState('')
 
   // Fetch tasks belonging to the selected project
-  const { data: projectTasks } = useTasks(
+  const { data: projectTasksResult } = useTasks(
     projectId ? { project_id: projectId } : undefined
   )
+  const projectTasks = projectTasksResult?.data
 
   const filteredTasks = useMemo(() => {
     if (!projectTasks) return []
