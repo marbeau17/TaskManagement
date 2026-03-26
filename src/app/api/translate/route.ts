@@ -3,8 +3,24 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   const { text, targetLang } = await request.json()
 
-  // Get Gemini API key from settings or env
-  const apiKey = process.env.GEMINI_API_KEY || ''
+  // Get Gemini API key: prefer env var, fall back to app_settings in DB
+  let apiKey = process.env.GEMINI_API_KEY || ''
+
+  if (!apiKey) {
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const supabase = createAdminClient()
+      const { data } = await (supabase as any)
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'gemini_api_key')
+        .single()
+      apiKey = (data as { value: string } | null)?.value ?? ''
+    } catch {
+      // DB lookup failed — continue with empty key
+    }
+  }
+
   if (!apiKey) {
     return NextResponse.json(
       { error: 'Gemini API key not configured' },

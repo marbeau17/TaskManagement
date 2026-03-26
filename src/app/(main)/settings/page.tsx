@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Topbar } from '@/components/layout'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { LanguageToggle } from '@/components/shared/LanguageToggle'
 import { useI18n } from '@/hooks/useI18n'
+import { getSetting, setSetting } from '@/lib/data/settings'
 
 type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'ai'
 
@@ -35,10 +36,29 @@ export default function SettingsPage() {
   const [aiTesting, setAiTesting] = useState(false)
 
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  // Load saved Gemini API key from database on mount
+  useEffect(() => {
+    getSetting('gemini_api_key').then((val) => {
+      if (val) setGeminiApiKey(val)
+    })
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      // Persist Gemini API key to app_settings
+      if (geminiApiKey) {
+        await setSetting('gemini_api_key', geminiApiKey)
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      console.error('Failed to save settings:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleTestAi = async () => {
@@ -321,9 +341,10 @@ export default function SettingsPage() {
         <div className="flex items-center gap-[12px] mt-[16px]">
           <button
             onClick={handleSave}
-            className="px-[20px] py-[8px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium cursor-pointer"
+            disabled={saving}
+            className="px-[20px] py-[8px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium cursor-pointer disabled:opacity-50"
           >
-            {t('common.save')}
+            {saving ? t('common.loading') : t('common.save')}
           </button>
           {saved && (
             <span className="text-[12px] text-ok font-medium">
