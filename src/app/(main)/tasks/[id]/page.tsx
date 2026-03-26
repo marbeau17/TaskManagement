@@ -61,7 +61,7 @@ export default function TaskDetailPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-wf-border bg-surface">
+      <div className="shrink-0 flex flex-wrap items-center gap-2 md:gap-3 px-3 md:px-6 py-3 border-b border-wf-border bg-surface">
         <button
           type="button"
           onClick={() => router.back()}
@@ -105,15 +105,7 @@ export default function TaskDetailPage() {
       </div>
 
       {/* 2-column layout */}
-      <div
-        className="flex-1 overflow-y-auto p-6"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1.6fr 1fr',
-          gap: 24,
-          alignItems: 'start',
-        }}
-      >
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4 lg:gap-6 items-start">
         {/* Left column */}
         <div className="flex flex-col gap-4">
           <TaskDetailInfo task={task} />

@@ -87,9 +87,9 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
   }, [summaries])
 
   return (
-    <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+    <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+      <div className="min-w-[700px] grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
         <div>担当者</div>
         <div className="text-center">ロール</div>
         <div>稼働バー</div>
@@ -107,7 +107,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
           <div
             key={s.user.id}
             className={`
-              grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
+              min-w-[700px] grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
               border-b border-border2 last:border-b-0 items-center text-[12px] text-text
               ${isOverloaded ? 'bg-red-50 dark:bg-red-950/30' : 'hover:bg-surf2/50'}
               transition-colors

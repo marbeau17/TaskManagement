@@ -22,6 +22,8 @@ interface SidebarProps {
   activePage: string
   /** Called when a nav link is clicked (used to close mobile sidebar) */
   onNavigate?: () => void
+  /** When true, show only icons (tablet collapsed mode) */
+  collapsed?: boolean
 }
 
 const MAIN_NAV = [
@@ -40,7 +42,7 @@ const SYSTEM_NAV = [
   { id: 'settings', label: '設定', icon: '⚙', href: '/settings' },
 ]
 
-export function Sidebar({ activePage, onNavigate }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarProps) {
   const { user, logout } = useAuth()
   const { data: members } = useMembers()
   const { data: allTasks } = useTasks()
@@ -90,20 +92,22 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   // For custom roles, fall back to the raw role string
 
   return (
-    <aside className="w-[192px] bg-mint-dd flex flex-col h-full shrink-0 select-none">
+    <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none`}>
       {/* Logo */}
-      <div className="px-[16px] pt-[16px] pb-[12px]">
-        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline">
+      <div className={`${collapsed ? 'px-[8px] pt-[16px] pb-[12px] flex justify-center' : 'px-[16px] pt-[16px] pb-[12px]'}`}>
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? 'WorkFlow' : undefined}>
           <span className="text-[18px]">✦</span>
-          <span className="text-[15px] font-bold tracking-wide">WorkFlow</span>
+          {!collapsed && <span className="text-[15px] font-bold tracking-wide">WorkFlow</span>}
         </Link>
       </div>
 
       {/* メイン section */}
-      <div className="px-[10px] mt-[4px]">
-        <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-          メイン
-        </div>
+      <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[4px]`}>
+        {!collapsed && (
+          <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
+            メイン
+          </div>
+        )}
         <nav className="flex flex-col gap-[2px]">
           {MAIN_NAV.map((item) => {
             const isActive = activePage === item.id
@@ -112,9 +116,10 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                 key={item.id}
                 href={item.href}
                 onClick={onNavigate}
+                title={collapsed ? item.label : undefined}
                 className={`
-                  flex items-center gap-[8px] px-[10px] py-[7px] rounded-[6px]
-                  text-[12.5px] no-underline transition-colors
+                  flex items-center ${collapsed ? 'justify-center px-[4px]' : 'gap-[8px] px-[10px]'} py-[7px] rounded-[6px]
+                  text-[12.5px] no-underline transition-colors relative group
                   ${isActive
                     ? 'bg-white/[0.17] text-white font-semibold'
                     : 'text-white/[0.68] hover:bg-white/[0.08] hover:text-white/[0.85]'
@@ -122,10 +127,21 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                 `}
               >
                 <span className="text-[14px] w-[18px] text-center">{item.icon}</span>
-                <span className="flex-1">{item.label}</span>
-                {item.badgeDynamic && waitingCount > 0 && (
+                {!collapsed && <span className="flex-1">{item.label}</span>}
+                {!collapsed && item.badgeDynamic && waitingCount > 0 && (
                   <span className="bg-white/25 text-white text-[9px] font-bold px-[5px] py-[1px] rounded-full min-w-[18px] text-center">
                     {waitingCount}
+                  </span>
+                )}
+                {collapsed && item.badgeDynamic && waitingCount > 0 && (
+                  <span className="absolute -top-[2px] -right-[2px] bg-white/25 text-white text-[8px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                    {waitingCount}
+                  </span>
+                )}
+                {/* Tooltip for collapsed mode */}
+                {collapsed && (
+                  <span className="absolute left-full ml-[8px] px-[8px] py-[4px] bg-text text-white text-[11px] rounded-[4px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                    {item.label}
                   </span>
                 )}
               </Link>
@@ -135,34 +151,45 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
       </div>
 
       {/* クリエイター section */}
-      <div className="px-[10px] mt-[16px]">
-        <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-          クリエイター
-        </div>
+      <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
+        {!collapsed && (
+          <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
+            クリエイター
+          </div>
+        )}
         <nav className="flex flex-col gap-[2px]">
           {creators.map((creator) => (
             <Link
               key={creator.id}
               href={`/workload?creator=${creator.id}`}
               onClick={onNavigate}
-              className="
-                flex items-center gap-[8px] px-[10px] py-[5px] rounded-[6px]
-                text-[12px] text-white/[0.68] no-underline transition-colors
+              title={collapsed ? creator.name : undefined}
+              className={`
+                flex items-center ${collapsed ? 'justify-center px-[4px]' : 'gap-[8px] px-[10px]'} py-[5px] rounded-[6px]
+                text-[12px] text-white/[0.68] no-underline transition-colors relative group
                 hover:bg-white/[0.08] hover:text-white/[0.85]
-              "
+              `}
             >
               <Avatar name_short={creator.short} color={creator.color} size="sm" />
-              <span className="flex-1">{creator.name}</span>
+              {!collapsed && <span className="flex-1">{creator.name}</span>}
+              {/* Tooltip for collapsed mode */}
+              {collapsed && (
+                <span className="absolute left-full ml-[8px] px-[8px] py-[4px] bg-text text-white text-[11px] rounded-[4px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                  {creator.name}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
       </div>
 
       {/* システム section */}
-      <div className="px-[10px] mt-[16px]">
-        <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-          システム
-        </div>
+      <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
+        {!collapsed && (
+          <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
+            システム
+          </div>
+        )}
         <nav className="flex flex-col gap-[2px]">
           {SYSTEM_NAV.map((item) => {
             const isActive = activePage === item.id
@@ -171,9 +198,10 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                 key={item.id}
                 href={item.href}
                 onClick={onNavigate}
+                title={collapsed ? item.label : undefined}
                 className={`
-                  flex items-center gap-[8px] px-[10px] py-[7px] rounded-[6px]
-                  text-[12.5px] no-underline transition-colors
+                  flex items-center ${collapsed ? 'justify-center px-[4px]' : 'gap-[8px] px-[10px]'} py-[7px] rounded-[6px]
+                  text-[12.5px] no-underline transition-colors relative group
                   ${isActive
                     ? 'bg-white/[0.17] text-white font-semibold'
                     : 'text-white/[0.68] hover:bg-white/[0.08] hover:text-white/[0.85]'
@@ -181,7 +209,13 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                 `}
               >
                 <span className="text-[14px] w-[18px] text-center">{item.icon}</span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
+                {/* Tooltip for collapsed mode */}
+                {collapsed && (
+                  <span className="absolute left-full ml-[8px] px-[8px] py-[4px] bg-text text-white text-[11px] rounded-[4px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                    {item.label}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -192,49 +226,92 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
       <div className="flex-1" />
 
       {/* Current user info */}
-      <div className="px-[10px] pb-[14px]">
-        <div className="flex items-center gap-[8px] px-[10px] py-[8px] rounded-[6px] bg-white/[0.08]">
-          <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-[11.5px] text-white font-semibold leading-tight truncate">
-              {user?.name ?? '...'}
-            </span>
-            <span className="text-[9.5px] text-white/50 leading-tight">
-              {user ? (roleLabel[user.role] ?? user.role) : ''}
-            </span>
+      <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} pb-[14px]`}>
+        {collapsed ? (
+          /* Collapsed: avatar only with dropdown */
+          <div className="flex flex-col items-center gap-[6px]">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="p-[6px] rounded-[6px] bg-white/[0.08] hover:bg-white/[0.15] transition-colors cursor-pointer"
+                title={user?.name ?? ''}
+              >
+                <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" sideOffset={8}>
+                <div className="px-[8px] py-[4px] text-[11px] text-muted-foreground">
+                  {user?.name ?? '...'} - {user ? (roleLabel[user.role] ?? user.role) : ''}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={() => setShowPasswordModal(true)}
+                >
+                  <KeyRound className="w-[14px] h-[14px]" />
+                  パスワード変更
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={nextTheme}
+                >
+                  <ThemeIcon className="w-[14px] h-[14px]" />
+                  テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
+                  onSelect={handleLogout}
+                >
+                  <LogOut className="w-[14px] h-[14px]" />
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="p-[4px] rounded-[4px] text-white/50 hover:text-white hover:bg-white/[0.12] transition-colors cursor-pointer"
-            >
-              <Settings className="w-[14px] h-[14px]" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end" sideOffset={8}>
-              <DropdownMenuItem
-                className="text-[12px] gap-[8px] cursor-pointer"
-                onSelect={() => setShowPasswordModal(true)}
+        ) : (
+          /* Expanded: full user info */
+          <div className="flex items-center gap-[8px] px-[10px] py-[8px] rounded-[6px] bg-white/[0.08]">
+            <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-[11.5px] text-white font-semibold leading-tight truncate">
+                {user?.name ?? '...'}
+              </span>
+              <span className="text-[9.5px] text-white/50 leading-tight">
+                {user ? (roleLabel[user.role] ?? user.role) : ''}
+              </span>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="p-[4px] rounded-[4px] text-white/50 hover:text-white hover:bg-white/[0.12] transition-colors cursor-pointer"
               >
-                <KeyRound className="w-[14px] h-[14px]" />
-                パスワード変更
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-[12px] gap-[8px] cursor-pointer"
-                onSelect={nextTheme}
-              >
-                <ThemeIcon className="w-[14px] h-[14px]" />
-                テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
-                onSelect={handleLogout}
-              >
-                <LogOut className="w-[14px] h-[14px]" />
-                ログアウト
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                <Settings className="w-[14px] h-[14px]" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="end" sideOffset={8}>
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={() => setShowPasswordModal(true)}
+                >
+                  <KeyRound className="w-[14px] h-[14px]" />
+                  パスワード変更
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={nextTheme}
+                >
+                  <ThemeIcon className="w-[14px] h-[14px]" />
+                  テーマ: {theme === 'light' ? 'ライト' : theme === 'dark' ? 'ダーク' : 'システム'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
+                  onSelect={handleLogout}
+                >
+                  <LogOut className="w-[14px] h-[14px]" />
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       {/* Password change modal */}

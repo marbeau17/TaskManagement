@@ -51,7 +51,7 @@ export default function DashboardPage() {
       </Topbar>
 
       {/* Main content area */}
-      <div className="flex-1 overflow-y-auto p-[20px] flex flex-col gap-[16px]">
+      <div className="flex-1 overflow-y-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]">
         {/* KPI Cards */}
         <KpiCards />
 
@@ -87,7 +87,7 @@ export default function DashboardPage() {
 
         {/* Tab content */}
         {dashboardView === 'creator' ? (
-          <div className="grid gap-[16px]" style={{ gridTemplateColumns: '1.7fr 1fr' }}>
+          <div className="flex flex-col md:grid md:grid-cols-[1.7fr_1fr] gap-[16px]">
             {/* Left column: Creator workload */}
             <CreatorWorkload />
 

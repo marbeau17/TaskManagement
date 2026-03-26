@@ -121,8 +121,8 @@ function EditMemberModal({
   )
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[400px] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[400px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           メンバー編集
         </h2>
@@ -483,7 +483,7 @@ export default function MembersPage() {
         </button>
       </Topbar>
 
-      <div className="flex-1 overflow-auto p-[20px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
         {/* Tab bar */}
         <div className="flex gap-[4px] mb-[16px] border-b border-border2">
           {tabs.map((tab) => (
@@ -529,9 +529,9 @@ export default function MembersPage() {
               </p>
             </div>
 
-            <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+            <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
               {/* Header */}
-              <div className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+              <div className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
                 <div>名前</div>
                 <div>メール</div>
                 <div className="text-center">ロール</div>
@@ -549,7 +549,7 @@ export default function MembersPage() {
                 members?.map((member) => (
                   <div
                     key={member.id}
-                    className="grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                    className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
                   >
                     {/* Name */}
                     <div className="flex items-center gap-[8px]">
@@ -621,7 +621,7 @@ export default function MembersPage() {
         )}
 
         {activeTab === 'orgchart' && (
-          <>
+          <div className="overflow-x-auto">
             {isLoading ? (
               <div className="py-[32px] text-center text-[12px] text-text3">
                 読み込み中...
@@ -629,7 +629,7 @@ export default function MembersPage() {
             ) : members ? (
               <OrgChart members={members} />
             ) : null}
-          </>
+          </div>
         )}
 
         {activeTab === 'roles' && <RoleManagementPanel />}

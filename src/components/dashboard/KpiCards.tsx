@@ -8,7 +8,7 @@ export function KpiCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-4 gap-[12px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="bg-surface border border-border2 rounded-[10px] p-[13px] shadow h-[88px] animate-pulse" />
         ))}
@@ -17,7 +17,7 @@ export function KpiCards() {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-[12px]">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
       {/* 今週のタスク数 */}
       <KpiCard
         label="今週のタスク数"

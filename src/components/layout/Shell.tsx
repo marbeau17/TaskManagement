@@ -32,12 +32,17 @@ export function Shell({ children }: ShellProps) {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-wf-bg">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-[192px] shrink-0">
+      {/* Desktop sidebar (>1024px): full width */}
+      <aside className="hidden lg:flex w-[192px] shrink-0">
         <Sidebar activePage={activePage} />
       </aside>
 
-      {/* Mobile overlay sidebar */}
+      {/* Tablet sidebar (768-1024px): collapsed icon-only */}
+      <aside className="hidden md:flex lg:hidden w-[56px] shrink-0">
+        <Sidebar activePage={activePage} collapsed />
+      </aside>
+
+      {/* Mobile overlay sidebar (<768px) */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40">
           {/* Backdrop */}
@@ -53,8 +58,8 @@ export function Shell({ children }: ShellProps) {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile hamburger button */}
-        <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0">
+        {/* Mobile hamburger bar (<768px) */}
+        <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0 sticky top-0 z-30">
           <button
             onClick={() => setMobileOpen(true)}
             className="p-[6px] rounded-[6px] text-text2 hover:bg-surf2 transition-colors"

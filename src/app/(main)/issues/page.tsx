@@ -59,7 +59,7 @@ export default function IssuesPage() {
         </button>
       </Topbar>
 
-      <div className="flex-1 overflow-auto p-[20px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
         {/* Filters */}
         <div className="mb-[16px]">
           <FilterBar
@@ -132,9 +132,47 @@ export default function IssuesPage() {
           </div>
         )}
 
-        {/* Issue table */}
+        {/* Issue cards - mobile */}
         {!isLoading && (
-          <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+          <div className="md:hidden flex flex-col gap-[8px]">
+            {(!issues || issues.length === 0) && (
+              <div className="py-[32px] text-center text-text3 text-[13px]">
+                課題が見つかりませんでした
+              </div>
+            )}
+            {issues?.map((issue) => (
+              <div
+                key={issue.id}
+                onClick={() => router.push(`/issues/${issue.id}`)}
+                className="bg-surface border border-border2 rounded-[8px] p-[12px] cursor-pointer hover:border-mint transition-colors"
+              >
+                <div className="flex items-center justify-between mb-[6px]">
+                  <span className="text-[11px] font-mono text-mint font-semibold">{issue.issue_key}</span>
+                  <IssueStatusBadge status={issue.status} size="sm" />
+                </div>
+                <div className="text-[13px] font-bold text-text mb-[6px] leading-tight">{issue.title}</div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-[6px]">
+                    <IssueTypeBadge type={issue.type} size="sm" />
+                    <SeverityBadge severity={issue.severity} size="sm" />
+                  </div>
+                  {issue.assignee ? (
+                    <div className="flex items-center gap-[4px]">
+                      <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
+                      <span className="text-[11px] text-text">{issue.assignee.name}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-text3">未アサイン</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Issue table - desktop */}
+        {!isLoading && (
+          <div className="hidden md:block bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>

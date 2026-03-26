@@ -109,8 +109,8 @@ function CreateProjectModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[460px] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[460px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           プロジェクト作成
         </h2>
@@ -312,7 +312,7 @@ export default function ProjectsPage() {
         </button>
       </Topbar>
 
-      <div className="flex-1 overflow-auto p-[20px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
         {/* Filters */}
         <div className="mb-[16px]">
           <FilterBar
@@ -350,7 +350,7 @@ export default function ProjectsPage() {
         )}
 
         {/* Project grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
           {filteredProjects.map((project) => {
             const stats = projectStats[project.id] ?? { taskCount: 0, doneCount: 0, issueCount: 0 }
             const completionRate = stats.taskCount > 0

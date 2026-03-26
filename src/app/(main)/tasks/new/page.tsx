@@ -87,7 +87,7 @@ export default function TaskNewPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
       <div className="bg-surface border-b border-wf-border shrink-0">
-        <div className="max-w-[780px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[780px] mx-auto px-3 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <h1 className="text-[16px] font-bold text-text1">
               タスク依頼 — STEP {currentStep}
@@ -118,7 +118,7 @@ export default function TaskNewPage() {
 
       {/* Main content */}
       <div className="flex-1 overflow-y-auto">
-      <div className="max-w-[780px] mx-auto px-6 py-8">
+      <div className="max-w-[780px] mx-auto px-3 md:px-6 py-6 md:py-8">
         {/* Notice bar */}
         <div className="mb-6 px-4 py-3 rounded-lg bg-info-bg border border-info-b text-[12.5px] text-info">
           📝 依頼情報を入力して送信すると、管理者・ディレクターにアサイン依頼の通知が届きます。

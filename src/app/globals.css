@@ -205,3 +205,19 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
+
+/* Responsive: mobile card view utility */
+@media (max-width: 767px) {
+  .mobile-card-view table {
+    display: none;
+  }
+  .mobile-card-view .mobile-cards {
+    display: flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-card-view .mobile-cards {
+    display: none;
+  }
+}

@@ -24,10 +24,10 @@ export default function WorkloadPage() {
         />
       </Topbar>
 
-      <div className="flex-1 overflow-auto p-[20px] space-y-[16px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px] space-y-[16px]">
         {/* KPI Cards */}
         {kpiLoading || !kpi ? (
-          <div className="grid grid-cols-4 gap-[12px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}

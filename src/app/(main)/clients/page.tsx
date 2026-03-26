@@ -28,8 +28,8 @@ function ClientModal({
   const [name, setName] = useState(client?.name ?? '')
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[380px]">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[380px]">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           {client ? 'クライアント編集' : 'クライアント追加'}
         </h2>
@@ -84,8 +84,8 @@ function DeleteConfirmDialog({
   deleting: boolean
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[380px]">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[380px]">
         <h2 className="text-[15px] font-bold text-text mb-[8px]">
           クライアント削除
         </h2>
@@ -165,7 +165,7 @@ export default function ClientsPage() {
         </button>
       </Topbar>
 
-      <div className="flex-1 overflow-auto p-[20px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
         {/* Count */}
         <div className="flex items-center justify-between mb-[12px]">
           <p className="text-[12px] text-text2">
@@ -173,9 +173,9 @@ export default function ClientsPage() {
           </p>
         </div>
 
-        <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
+        <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+          <div className="min-w-[400px] grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
             <div>名前</div>
             <div className="text-center">作成日</div>
             <div className="text-center">操作</div>
@@ -190,7 +190,7 @@ export default function ClientsPage() {
             clients?.map((client) => (
               <div
                 key={client.id}
-                className="grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                className="min-w-[400px] grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
               >
                 {/* Name */}
                 <div className="flex items-center gap-[8px]">

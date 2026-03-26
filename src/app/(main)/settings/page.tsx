@@ -31,7 +31,7 @@ export default function SettingsPage() {
     <>
       <Topbar title="設定" />
 
-      <div className="flex-1 overflow-auto p-[20px] space-y-[16px] max-w-[640px]">
+      <div className="flex-1 overflow-auto p-[12px] md:p-[20px] space-y-[16px] max-w-[640px]">
         {/* Theme Settings */}
         <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
           <h2 className="text-[14px] font-bold text-text mb-[12px]">

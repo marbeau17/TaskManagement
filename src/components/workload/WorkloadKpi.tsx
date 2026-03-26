@@ -11,7 +11,7 @@ export function WorkloadKpi({ data }: WorkloadKpiProps) {
   const prevWeekDiff = '+3pt' // mock comparison
 
   return (
-    <div className="grid grid-cols-4 gap-[12px]">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
       <KpiCard
         label="チーム平均稼働率"
         value={data.team_avg_utilization}

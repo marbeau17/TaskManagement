@@ -80,7 +80,90 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
 
   return (
     <div>
-      <div className="overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden">
+        {pagedTasks.length === 0 && (
+          <div className="px-[12px] py-[32px] text-center text-text3 text-[13px]">
+            タスクが見つかりませんでした
+          </div>
+        )}
+        <div className="flex flex-col gap-[8px] p-[12px]">
+          {pagedTasks.map((task) => {
+            const deadline = task.confirmed_deadline ?? task.desired_deadline
+            const taskOverdue =
+              deadline && task.status !== 'done' && isOverdue(deadline)
+            const taskDueToday =
+              deadline && task.status !== 'done' && isToday(new Date(deadline))
+
+            return (
+              <div
+                key={task.id}
+                onClick={() => router.push(`/tasks/${task.id}`)}
+                className={`
+                  rounded-[8px] border border-wf-border p-[12px] cursor-pointer
+                  hover:bg-surf2/50 transition-colors
+                  ${taskOverdue ? 'bg-warn-bg' : 'bg-surface'}
+                  ${selected.has(task.id) ? 'ring-2 ring-mint-ll' : ''}
+                `}
+              >
+                <div className="flex items-center justify-between mb-[6px]">
+                  <span className="text-[11px] font-bold text-text2">{task.client.name}</span>
+                  <StatusChip status={task.status} size="sm" />
+                </div>
+                <div className="text-[13px] font-bold text-text mb-[6px] leading-tight">
+                  {task.title}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-[6px]">
+                    {task.assignees && task.assignees.length > 0 ? (
+                      <div className="flex items-center -space-x-2">
+                        {task.assignees.slice(0, 3).map((a) =>
+                          a.user ? (
+                            <Avatar
+                              key={a.id}
+                              name_short={a.user.name_short}
+                              color={a.user.avatar_color}
+                              size="sm"
+                            />
+                          ) : null
+                        )}
+                      </div>
+                    ) : task.assigned_user ? (
+                      <Avatar
+                        name_short={task.assigned_user.name_short}
+                        color={task.assigned_user.avatar_color}
+                        size="sm"
+                      />
+                    ) : (
+                      <span className="text-[11px] italic text-warn">未アサイン</span>
+                    )}
+                  </div>
+                  {deadline ? (
+                    <span
+                      className={`text-[11px] ${
+                        taskOverdue
+                          ? 'text-danger font-semibold'
+                          : taskDueToday
+                            ? 'text-warn font-semibold'
+                            : 'text-text2'
+                      }`}
+                    >
+                      {taskOverdue && '🚨 '}
+                      {taskDueToday && !taskOverdue && '⚠ '}
+                      {formatDate(deadline)}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-text3">-</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-wf-border">
