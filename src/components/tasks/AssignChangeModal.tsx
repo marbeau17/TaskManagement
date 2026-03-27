@@ -21,21 +21,9 @@ import {
   useRemoveTaskAssignee,
 } from '@/hooks/useTaskAssignees'
 import { WORKLOAD_THRESHOLDS } from '@/lib/constants'
+import { useI18n } from '@/hooks/useI18n'
 import type { TaskWithRelations } from '@/types/database'
 import type { TaskFormStep2 } from '@/types/task'
-
-// ---------------------------------------------------------------------------
-// Validation schema (for deadline / hours – assignee managed separately)
-// ---------------------------------------------------------------------------
-
-const schema = z.object({
-  confirmed_deadline: z.string().min(1, '確定納期は必須です'),
-  estimated_hours: z
-    .number({ error: '見積時間を入力してください' })
-    .min(0.5, '0.5h以上を入力してください'),
-})
-
-type FormValues = z.infer<typeof schema>
 
 // ---------------------------------------------------------------------------
 // Props
@@ -72,6 +60,7 @@ export function AssignChangeModal({
   onOpenChange,
   task,
 }: AssignChangeModalProps) {
+  const { t } = useI18n()
   const { data: members } = useMembers()
   const { data: workloads } = useWorkloadSummaries()
   const { data: assignees } = useTaskAssignees(task.id)
@@ -80,6 +69,16 @@ export function AssignChangeModal({
   const assignTask = useAssignTask()
   const [successMessage, setSuccessMessage] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState('')
+
+  // Validation schema (inside component to use t())
+  const schema = useMemo(() => z.object({
+    confirmed_deadline: z.string().min(1, t('assign.validation.deadlineRequired')),
+    estimated_hours: z
+      .number({ error: t('assign.validation.enterEstimatedHours') })
+      .min(0.5, t('assign.validation.minHours')),
+  }), [t])
+
+  type FormValues = z.infer<typeof schema>
 
   // Filter to creator-role members only
   const creators = useMemo(() => {
@@ -187,17 +186,17 @@ export function AssignChangeModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[15px] font-bold text-text">
-            アサイン変更
+            {t('assignChange.title')}
           </DialogTitle>
           <DialogDescription className="text-[12px] text-text3">
-            {task.title} のアサイン情報を変更します
+            {task.title} {t('assignChange.description')}
           </DialogDescription>
         </DialogHeader>
 
         {/* Success feedback */}
         {successMessage && (
           <div className="rounded-lg bg-ok-bg border border-ok-b px-4 py-3 text-[12px] text-ok font-semibold text-center">
-            アサインを変更しました
+            {t('assignChange.success')}
           </div>
         )}
 
@@ -205,7 +204,7 @@ export function AssignChangeModal({
         {assignees && assignees.length > 0 && (
           <div className="space-y-2">
             <p className="text-[12px] font-semibold text-text2">
-              現在のアサイン ({assignees.length}名)
+              {t('assignChange.currentAssignees')} ({assignees.length}{t('assignChange.members')})
             </p>
             {assignees.map((assignee) => {
               const user = assignee.user
@@ -228,7 +227,7 @@ export function AssignChangeModal({
                     onClick={() => handleRemoveAssignee(user.id)}
                     disabled={removeAssignee.isPending}
                     className="text-[14px] text-text3 hover:text-danger transition-colors leading-none px-1 disabled:opacity-50"
-                    title="アサイン解除"
+                    title={t('assignChange.removeAssign')}
                   >
                     ×
                   </button>
@@ -241,7 +240,7 @@ export function AssignChangeModal({
         {/* Add assignee section */}
         <div className="space-y-2">
           <p className="text-[12px] font-semibold text-text2">
-            メンバーを追加
+            {t('assignChange.addMember')}
           </p>
           <div className="flex items-center gap-2">
             <select
@@ -249,13 +248,13 @@ export function AssignChangeModal({
               onChange={(e) => setSelectedUserId(e.target.value)}
               className="flex-1 rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
             >
-              <option value="">選択してください</option>
+              <option value="">{t('assign.selectPlaceholder')}</option>
               {availableCreators.map((c) => {
                 const wl = workloadMap.get(c.id)
                 const rate = wl ? wl.utilization_rate : 0
                 return (
                   <option key={c.id} value={c.id}>
-                    {c.name}（稼働率 {rate}%）
+                    {c.name}({t('assign.utilizationRate')} {rate}%)
                   </option>
                 )
               })}
@@ -266,7 +265,7 @@ export function AssignChangeModal({
               disabled={!selectedUserId || addAssignee.isPending}
               className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {addAssignee.isPending ? '追加中...' : '追加'}
+              {addAssignee.isPending ? t('assignChange.adding') : t('common.add')}
             </button>
           </div>
 
@@ -276,11 +275,11 @@ export function AssignChangeModal({
               className={`rounded-lg p-3 border ${getUtilBg(selectedWorkloadPreview.currentRate)} border-wf-border`}
             >
               <p className="text-[11px] font-semibold text-text2 mb-2">
-                稼働率プレビュー
+                {t('assign.workloadPreview')}
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-text3">現在の稼働率</span>
+                  <span className="text-text3">{t('assign.currentUtilization')}</span>
                   <span className={`font-bold ${getUtilColor(selectedWorkloadPreview.currentRate)}`}>
                     {selectedWorkloadPreview.currentRate}%
                   </span>
@@ -291,13 +290,13 @@ export function AssignChangeModal({
                 </div>
                 {selectedWorkloadPreview.currentRate >= WORKLOAD_THRESHOLDS.danger && (
                   <p className="text-[10px] text-danger font-semibold mt-1">
-                    キャパシティを超過しています
+                    {t('assignChange.capacityExceeded')}
                   </p>
                 )}
                 {selectedWorkloadPreview.currentRate >= WORKLOAD_THRESHOLDS.warning &&
                   selectedWorkloadPreview.currentRate < WORKLOAD_THRESHOLDS.danger && (
                     <p className="text-[10px] text-warn font-semibold mt-1">
-                      稼働率が高くなっています
+                      {t('assign.highUtilization')}
                     </p>
                   )}
               </div>
@@ -312,7 +311,7 @@ export function AssignChangeModal({
               htmlFor="modal_confirmed_deadline"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              確定納期 <span className="text-danger">*</span>
+              {t('assign.confirmedDeadline')} <span className="text-danger">*</span>
             </label>
             <input
               id="modal_confirmed_deadline"
@@ -338,7 +337,7 @@ export function AssignChangeModal({
               htmlFor="modal_estimated_hours"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              見積工数（h） <span className="text-danger">*</span>
+              {t('assignChange.estimatedHours')} <span className="text-danger">*</span>
             </label>
             <Controller
               control={control}
@@ -349,7 +348,7 @@ export function AssignChangeModal({
                   type="number"
                   step={0.5}
                   min={0.5}
-                  placeholder="例: 8"
+                  placeholder={t('assign.estimatedHoursPlaceholder')}
                   className={`
                     w-full rounded-lg border px-3 py-2 text-[13px] text-text1
                     bg-surface placeholder:text-text3
@@ -379,14 +378,14 @@ export function AssignChangeModal({
               onClick={() => onOpenChange(false)}
               className="flex-1 py-2 rounded-lg text-[12px] font-semibold text-text2 bg-surf2 border border-wf-border hover:bg-wf-border transition-colors"
             >
-              キャンセル
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={assignTask.isPending}
               className="flex-1 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {assignTask.isPending ? '変更中...' : '保存する'}
+              {assignTask.isPending ? t('assignChange.saving') : t('assignChange.save')}
             </button>
           </div>
         </form>

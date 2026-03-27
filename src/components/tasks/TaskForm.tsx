@@ -12,20 +12,23 @@ import { useTasks } from '@/hooks/useTasks'
 import { useTemplates } from '@/hooks/useTemplates'
 import { useProjects } from '@/hooks/useProjects'
 import { TemplateFieldRenderer } from '@/components/tasks/TemplateFieldRenderer'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Zod schema for Step 1
 // ---------------------------------------------------------------------------
 
-const step1Schema = z.object({
-  client_name: z.string().min(1, 'クライアント名は必須です'),
-  title: z.string().min(1, 'タスク名は必須です'),
-  description: z.string().optional(),
-  desired_deadline: z.string().optional(),
-  reference_url: z.string().optional(),
-})
+function createStep1Schema(t: (key: string) => string) {
+  return z.object({
+    client_name: z.string().min(1, t('taskForm.clientNameRequired')),
+    title: z.string().min(1, t('taskForm.taskNameRequired')),
+    description: z.string().optional(),
+    desired_deadline: z.string().optional(),
+    reference_url: z.string().optional(),
+  })
+}
 
-type Step1FormValues = z.infer<typeof step1Schema>
+type Step1FormValues = z.infer<ReturnType<typeof createStep1Schema>>
 
 // ---------------------------------------------------------------------------
 // Props
@@ -42,8 +45,11 @@ interface TaskFormProps {
 // ---------------------------------------------------------------------------
 
 export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
+  const { t } = useI18n()
   const searchParams = useSearchParams()
   const parentTaskId = searchParams.get('parent') ?? defaultValues?.parent_task_id ?? undefined
+
+  const step1Schema = useMemo(() => createStep1Schema(t), [t])
 
   const {
     register,
@@ -99,8 +105,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
   const { data: clients } = useClients()
 
   // Fetch existing tasks for task title suggestions
-  const { data: tasksResult } = useTasks()
-  const tasks = tasksResult?.data
+  const { data: tasks } = useTasks()
 
   // Deduplicate task titles for suggestions
   const uniqueTaskTitles = useMemo(() => {
@@ -132,7 +137,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         <div className="px-6 py-4 border-b border-wf-border">
           <h2 className="text-[15px] font-bold text-text1">
-            プロジェクト
+            {t('taskForm.projectSection')}
           </h2>
         </div>
         <div className="px-6 py-5">
@@ -140,7 +145,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             htmlFor="project_select"
             className="block text-[12.5px] font-semibold text-text2 mb-1.5"
           >
-            プロジェクト (任意)
+            {t('taskForm.projectLabel')}
           </label>
           <select
             id="project_select"
@@ -152,7 +157,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
             "
           >
-            <option value="">プロジェクトなし</option>
+            <option value="">{t('taskForm.projectNone')}</option>
             {(projectList ?? []).map((p) => (
               <option key={p.id} value={p.id}>
                 [{p.key_prefix}] {p.name}
@@ -166,7 +171,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         <div className="px-6 py-4 border-b border-wf-border">
           <h2 className="text-[15px] font-bold text-text1">
-            📑 テンプレート
+            {t('taskForm.templateSection')}
           </h2>
         </div>
         <div className="px-6 py-5">
@@ -174,7 +179,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             htmlFor="template_select"
             className="block text-[12.5px] font-semibold text-text2 mb-1.5"
           >
-            テンプレート
+            {t('taskForm.templateLabel')}
           </label>
           <select
             id="template_select"
@@ -186,7 +191,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
             "
           >
-            <option value="">テンプレートなし（汎用）</option>
+            <option value="">{t('taskForm.templateNone')}</option>
             {(templates ?? []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name} ({t.category})
@@ -195,7 +200,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
           </select>
           {selectedTemplate && (
             <p className="mt-1.5 text-[11px] text-text3">
-              {selectedTemplate.fields.length} 個の追加フィールドがあります
+              {selectedTemplate.fields.length} {t('taskForm.templateFieldCount')}
             </p>
           )}
         </div>
@@ -206,7 +211,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
         {/* Card header */}
         <div className="px-6 py-4 border-b border-wf-border">
           <h2 className="text-[15px] font-bold text-text1">
-            📋 依頼基本情報
+            {t('taskForm.basicInfoSection')}
           </h2>
         </div>
 
@@ -218,14 +223,14 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               htmlFor="client_name"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              クライアント名 <span className="text-danger">*</span>
+              {t('taskForm.clientName')} <span className="text-danger">*</span>
             </label>
             <input
               id="client_name"
               type="text"
               list="client-list"
               autoComplete="off"
-              placeholder="例: 株式会社サンプル"
+              placeholder={t('taskForm.clientPlaceholder')}
               className={`
                 w-full rounded-lg border px-3 py-2 text-[13px] text-text1
                 bg-surface placeholder:text-text3
@@ -252,14 +257,14 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               htmlFor="title"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              タスク名 <span className="text-danger">*</span>
+              {t('taskForm.taskName')} <span className="text-danger">*</span>
             </label>
             <input
               id="title"
               type="text"
               list="task-title-list"
               autoComplete="off"
-              placeholder="例: LP制作・バナーデザイン"
+              placeholder={t('taskForm.taskPlaceholder')}
               className={`
                 w-full rounded-lg border px-3 py-2 text-[13px] text-text1
                 bg-surface placeholder:text-text3
@@ -286,12 +291,12 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               htmlFor="description"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              説明
+              {t('taskForm.description')}
             </label>
             <textarea
               id="description"
               rows={4}
-              placeholder="タスクの詳細や要件を入力してください"
+              placeholder={t('taskForm.descriptionPlaceholder')}
               className="
                 w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
                 bg-surface placeholder:text-text3 resize-y
@@ -307,7 +312,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               htmlFor="desired_deadline"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              希望納期
+              {t('taskForm.desiredDeadline')}
             </label>
             <input
               id="desired_deadline"
@@ -327,7 +332,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               htmlFor="reference_url"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              参考URL
+              {t('taskForm.referenceUrl')}
             </label>
             <input
               id="reference_url"
@@ -349,7 +354,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
         <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
           <div className="px-6 py-4 border-b border-wf-border">
             <h2 className="text-[15px] font-bold text-text1">
-              📑 {selectedTemplate.name} — 追加情報
+              📑 {selectedTemplate.name} — {t('taskForm.additionalInfo')}
             </h2>
           </div>
           <div className="px-6 py-5 space-y-5">
@@ -376,7 +381,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             hover:bg-wf-border transition-colors
           "
         >
-          キャンセル
+          {t('taskForm.cancel')}
         </button>
         <button
           type="submit"
@@ -386,7 +391,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             disabled:opacity-50 disabled:cursor-not-allowed
           "
         >
-          依頼を登録してアサインを依頼 →
+          {t('taskForm.submit')}
         </button>
       </div>
     </form>

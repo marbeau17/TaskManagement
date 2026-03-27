@@ -5,16 +5,24 @@ import { useTaskDependencies, useAddTaskDependency, useRemoveTaskDependency } fr
 import { useTasks } from '@/hooks/useTasks'
 import { StatusChip } from '@/components/shared'
 import type { RelationType, TaskDependency } from '@/types/relation'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Relation type config
 // ---------------------------------------------------------------------------
 
-const RELATION_TYPE_CONFIG: Record<RelationType, { label: string; icon: string }> = {
-  blocks: { label: 'ブロック', icon: '\u26D4' },
-  is_blocked_by: { label: 'ブロックされている', icon: '\u23F3' },
-  relates_to: { label: '関連', icon: '\uD83D\uDD17' },
-  duplicates: { label: '重複', icon: '\uD83D\uDCC4' },
+const RELATION_TYPE_ICONS: Record<RelationType, string> = {
+  blocks: '\u26D4',
+  is_blocked_by: '\u23F3',
+  relates_to: '\uD83D\uDD17',
+  duplicates: '\uD83D\uDCC4',
+}
+
+const RELATION_TYPE_KEYS: Record<RelationType, string> = {
+  blocks: 'dependency.blocks',
+  is_blocked_by: 'dependency.isBlockedBy',
+  relates_to: 'dependency.relatesTo',
+  duplicates: 'dependency.duplicates',
 }
 
 const RELATION_TYPES: RelationType[] = ['blocks', 'is_blocked_by', 'relates_to', 'duplicates']
@@ -28,6 +36,7 @@ interface TaskDependenciesProps {
 }
 
 export function TaskDependencies({ taskId }: TaskDependenciesProps) {
+  const { t } = useI18n()
   const { data: dependencies, isLoading } = useTaskDependencies(taskId)
   const addDependency = useAddTaskDependency()
   const removeDependency = useRemoveTaskDependency()
@@ -40,8 +49,7 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Fetch all tasks for autocomplete
-  const { data: allTasksResult } = useTasks()
-  const allTasks = allTasksResult?.data
+  const { data: allTasks } = useTasks()
 
   // Filter suggestions
   const suggestions = (allTasks ?? []).filter((task) => {
@@ -105,13 +113,13 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13px] font-bold text-text">依存関係</h3>
+        <h3 className="text-[13px] font-bold text-text">{t('dependency.title')}</h3>
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
           className="text-[12px] font-bold text-mint hover:text-mint-d transition-colors"
         >
-          {showForm ? 'キャンセル' : '+ 関連追加'}
+          {showForm ? t('common.cancel') : t('dependency.addRelation')}
         </button>
       </div>
 
@@ -124,9 +132,9 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
             onChange={(e) => setRelationType(e.target.value as RelationType)}
             className="w-full border border-wf-border rounded-md px-2 py-1.5 text-[12px] text-text bg-surface focus:outline-none focus:border-mint"
           >
-            {RELATION_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {RELATION_TYPE_CONFIG[t].icon} {RELATION_TYPE_CONFIG[t].label}
+            {RELATION_TYPES.map((rt) => (
+              <option key={rt} value={rt}>
+                {RELATION_TYPE_ICONS[rt]} {t(RELATION_TYPE_KEYS[rt])}
               </option>
             ))}
           </select>
@@ -143,7 +151,7 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
                 setShowSuggestions(true)
               }}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="タスクタイトルで検索..."
+              placeholder={t('dependency.searchPlaceholder')}
               className="w-full border border-wf-border rounded-md px-2 py-1.5 text-[12px] text-text bg-surface focus:outline-none focus:border-mint"
             />
             {showSuggestions && suggestions.length > 0 && (
@@ -174,16 +182,16 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
             disabled={!selectedTaskId || addDependency.isPending}
             className="w-full py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {addDependency.isPending ? '追加中...' : '追加'}
+            {addDependency.isPending ? t('dependency.adding') : t('common.add')}
           </button>
         </div>
       )}
 
       {/* Dependencies list */}
-      {isLoading && <p className="text-[12px] text-text3">読み込み中...</p>}
+      {isLoading && <p className="text-[12px] text-text3">{t('common.loading')}</p>}
 
       {dependencies && dependencies.length === 0 && !showForm && (
-        <p className="text-[12px] text-text3">依存関係はまだありません</p>
+        <p className="text-[12px] text-text3">{t('dependency.empty')}</p>
       )}
 
       {dependencies && dependencies.length > 0 && (
@@ -191,14 +199,15 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
           {dependencies.map((dep) => {
             const { task, type } = getLinkedTask(dep)
             if (!task) return null
-            const config = RELATION_TYPE_CONFIG[type]
+            const icon = RELATION_TYPE_ICONS[type]
+            const label = t(RELATION_TYPE_KEYS[type])
             return (
               <div
                 key={dep.id}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surf2 transition-colors group"
               >
-                <span className="text-[12px] shrink-0" title={config.label}>
-                  {config.icon}
+                <span className="text-[12px] shrink-0" title={label}>
+                  {icon}
                 </span>
                 <span className="text-[11px] text-text truncate flex-1">
                   {task.title}
@@ -209,7 +218,7 @@ export function TaskDependencies({ taskId }: TaskDependenciesProps) {
                   onClick={() => handleRemove(dep.id)}
                   disabled={removeDependency.isPending}
                   className="text-[14px] text-text3 hover:text-danger transition-colors opacity-0 group-hover:opacity-100 leading-none px-1"
-                  title="削除"
+                  title={t('common.delete')}
                 >
                   ×
                 </button>

@@ -165,12 +165,12 @@ export async function deleteMember(id: string): Promise<boolean> {
 
   if (error) {
     console.error('[deleteMember] Supabase error:', error.message, error.code)
-    throw new Error(`メンバー削除に失敗しました: ${error.message}`)
+    throw new Error(`members.error.deleteFailed: ${error.message}`)
   }
 
   if (!data || data.length === 0) {
     console.error('[deleteMember] No rows updated. RLS may have blocked the operation.')
-    throw new Error('メンバー削除が許可されていません。管理者またはディレクター権限が必要です。')
+    throw new Error('members.error.deleteNotPermitted')
   }
 
   console.log('[deleteMember] Successfully soft-deleted user:', id)
@@ -208,7 +208,7 @@ export async function changePassword(
   })
 
   if (signInError) {
-    return { success: false, error: '現在のパスワードが正しくありません' }
+    return { success: false, error: 'members.error.wrongPassword' }
   }
 
   // Update password
@@ -227,7 +227,7 @@ export async function changePassword(
 export async function forceChangePassword(
   userId: string,
   newPassword: string
-): Promise<{ success: boolean; passwordChanged?: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string }> {
   if (useMock()) {
     const { forceChangeMockPassword } = await import('@/lib/mock/handlers')
     return forceChangeMockPassword(userId, newPassword)
@@ -282,8 +282,9 @@ export async function forceChangePassword(
   )
   return {
     success: false,
-    passwordChanged: true,
-    error: 'パスワードは変更されましたが、システムフラグの更新に失敗しました。管理者に連絡してください。',
+    error: lastDbError instanceof Error
+      ? lastDbError.message
+      : 'members.error.dbUpdateFailed',
   }
 }
 

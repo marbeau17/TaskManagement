@@ -13,6 +13,7 @@ import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
 import { OrgChart } from '@/components/members/OrgChart'
 import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
 import { usePermission } from '@/hooks/usePermission'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Tab type
@@ -66,6 +67,7 @@ function EditMemberModal({
   allMembers: User[]
   onClose: () => void
 }) {
+  const { t } = useI18n()
   const [name, setName] = useState(member.name)
   const [nameShort, setNameShort] = useState(member.name_short ?? '')
   const [role, setRole] = useState<UserRole>(member.role)
@@ -125,35 +127,35 @@ function EditMemberModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
       <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[400px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
-          メンバー編集
+          {t('members.editMember')}
         </h2>
 
         <div className="space-y-[12px]">
           {/* Name */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              名前
+              {t('members.name')}
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-              placeholder="フルネーム"
+              placeholder={t('members.fullNamePlaceholder')}
             />
           </div>
 
           {/* Short name */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              表示名（短縮）
+              {t('members.displayNameShort')}
             </label>
             <input
               type="text"
               value={nameShort}
               onChange={(e) => setNameShort(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-              placeholder="例: 太郎"
+              placeholder={t('members.displayNameShortPlaceholder')}
               maxLength={10}
             />
           </div>
@@ -161,7 +163,7 @@ function EditMemberModal({
           {/* Email (read-only) */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              メール
+              {t('members.email')}
             </label>
             <div className="text-[13px] text-text px-[10px] py-[7px] bg-surf2 rounded-[6px]">
               {member.email}
@@ -171,7 +173,7 @@ function EditMemberModal({
           {/* Role */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              ロール
+              {t('members.role')}
             </label>
             <select
               value={role}
@@ -190,7 +192,7 @@ function EditMemberModal({
                 type="text"
                 value={newCustomRole}
                 onChange={(e) => setNewCustomRole(e.target.value)}
-                placeholder="新しいカスタムロール名"
+                placeholder={t('members.newCustomRolePlaceholder')}
                 className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -205,7 +207,7 @@ function EditMemberModal({
                 disabled={!newCustomRole.trim() || addCustomRoleMutation.isPending}
                 className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap disabled:opacity-50"
               >
-                {addCustomRoleMutation.isPending ? '...' : '+ 追加'}
+                {addCustomRoleMutation.isPending ? '...' : t('members.addRole')}
               </button>
             </div>
           </div>
@@ -213,7 +215,7 @@ function EditMemberModal({
           {/* Weekly capacity */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              週キャパ (h)
+              {t('members.weeklyCapacity')}
             </label>
             <input
               type="number"
@@ -231,14 +233,14 @@ function EditMemberModal({
           {/* Manager */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              上司
+              {t('members.manager')}
             </label>
             <select
               value={managerId}
               onChange={(e) => setManagerId(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
             >
-              <option value="">なし</option>
+              <option value="">{t('members.none')}</option>
               {managerOptions.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
@@ -250,42 +252,42 @@ function EditMemberModal({
           {/* Department */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              部署
+              {t('members.department')}
             </label>
             <input
               type="text"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-              placeholder="例: デザイン部"
+              placeholder={t('members.departmentPlaceholder')}
             />
           </div>
 
           {/* Title */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              役職
+              {t('members.titleField')}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-              placeholder="例: マネージャー"
+              placeholder={t('members.titlePlaceholder')}
             />
           </div>
 
           {/* Level */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              レベル
+              {t('members.level')}
             </label>
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
             >
-              <option value="">未設定</option>
+              <option value="">{t('members.levelUnset')}</option>
               <option value="L1">L1</option>
               <option value="L2">L2</option>
               <option value="L3">L3</option>
@@ -300,14 +302,14 @@ function EditMemberModal({
             onClick={onClose}
             className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="px-[16px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? t('members.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -320,6 +322,7 @@ function EditMemberModal({
 // ---------------------------------------------------------------------------
 
 function RoleManagementPanel() {
+  const { t } = useI18n()
   const { allRoles, customRoles } = useAllRoles()
   const addCustomRoleMutation = useAddCustomRole()
   const deleteCustomRoleMutation = useDeleteCustomRole()
@@ -345,7 +348,7 @@ function RoleManagementPanel() {
   return (
     <div className="max-w-[520px]">
       <p className="text-[12px] text-text2 mb-[12px]">
-        カスタムロールを追加・削除できます。ビルトインロール（管理者・Dir・依頼者・クリエイター）は削除できません。
+        {t('members.roleDescription')}
       </p>
 
       {/* Add new role */}
@@ -354,7 +357,7 @@ function RoleManagementPanel() {
           type="text"
           value={newRoleName}
           onChange={(e) => setNewRoleName(e.target.value)}
-          placeholder="新しいロール名"
+          placeholder={t('members.newRolePlaceholder')}
           className="flex-1 text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -368,16 +371,16 @@ function RoleManagementPanel() {
           disabled={!newRoleName.trim() || addCustomRoleMutation.isPending}
           className="px-[14px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50"
         >
-          {addCustomRoleMutation.isPending ? '追加中...' : '+ 追加'}
+          {addCustomRoleMutation.isPending ? t('members.adding') : t('members.addRole')}
         </button>
       </div>
 
       {/* Role list */}
-      <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
+      <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow">
         <div className="grid grid-cols-[1fr_80px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
-          <div>ロール名</div>
-          <div className="text-center">種別</div>
-          <div className="text-center">操作</div>
+          <div>{t('members.roleName')}</div>
+          <div className="text-center">{t('members.roleType')}</div>
+          <div className="text-center">{t('members.roleActions')}</div>
         </div>
 
         {/* Built-in roles */}
@@ -389,7 +392,7 @@ function RoleManagementPanel() {
             <div className="font-medium">{label}<span className="text-text3 ml-[6px] text-[10px]">({value})</span></div>
             <div className="text-center">
               <span className="text-[10px] px-[8px] py-[2px] rounded-full font-semibold border bg-info-bg text-info border-info-b inline-block">
-                ビルトイン
+                {t('members.builtin')}
               </span>
             </div>
             <div className="text-center text-[11px] text-text3">-</div>
@@ -405,7 +408,7 @@ function RoleManagementPanel() {
             <div className="font-medium">{cr.name}</div>
             <div className="text-center">
               <span className="text-[10px] px-[8px] py-[2px] rounded-full font-semibold border bg-slate-50 text-slate-600 border-slate-200 inline-block">
-                カスタム
+                {t('members.custom')}
               </span>
             </div>
             <div className="text-center">
@@ -414,7 +417,7 @@ function RoleManagementPanel() {
                 disabled={deleteCustomRoleMutation.isPending}
                 className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors disabled:opacity-50"
               >
-                削除
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -422,7 +425,7 @@ function RoleManagementPanel() {
 
         {customRoles.length === 0 && (
           <div className="px-[16px] py-[20px] text-center text-[12px] text-text3 border-t border-border2">
-            カスタムロールはまだありません
+            {t('members.noCustomRoles')}
           </div>
         )}
       </div>
@@ -435,6 +438,7 @@ function RoleManagementPanel() {
 // ---------------------------------------------------------------------------
 
 export default function MembersPage() {
+  const { t } = useI18n()
   const { data: members, isLoading } = useMembers()
   const { can } = usePermission()
   const [activeTab, setActiveTab] = useState<TabId>('list')
@@ -469,20 +473,20 @@ export default function MembersPage() {
   const totalCount = members?.length ?? 0
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: 'list', label: 'メンバー一覧' },
-    { id: 'orgchart', label: '組織図' },
-    { id: 'roles', label: 'ロール管理' },
+    { id: 'list', label: t('members.list') },
+    { id: 'orgchart', label: t('members.orgChart') },
+    { id: 'roles', label: t('members.roleManagement') },
   ]
 
   return (
     <>
-      <Topbar title="メンバー管理">
+      <Topbar title={t('members.title')}>
         {can('members', 'create') && (
           <button
             onClick={() => setInviteOpen(true)}
             className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
           >
-            + メンバー招待
+            {t('members.invite')}
           </button>
         )}
       </Topbar>
@@ -526,9 +530,9 @@ export default function MembersPage() {
             {/* Subtitle with count */}
             <div className="flex items-center justify-between mb-[12px]">
               <p className="text-[12px] text-text2">
-                メンバー数: {activeCount}名{' '}
+                {t('members.memberCount')} {activeCount}{t('members.memberUnit')}{' '}
                 {totalCount !== activeCount && (
-                  <span className="text-text3">（全{totalCount}名）</span>
+                  <span className="text-text3">({t('members.totalPrefix')}{totalCount}{t('members.memberUnit')})</span>
                 )}
               </p>
             </div>
@@ -536,18 +540,18 @@ export default function MembersPage() {
             <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
               {/* Header */}
               <div className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
-                <div>名前</div>
-                <div>メール</div>
-                <div className="text-center">ロール</div>
-                <div className="text-right">週キャパ</div>
-                <div className="text-center">ステータス</div>
-                <div className="text-center">操作</div>
+                <div>{t('members.name')}</div>
+                <div>{t('members.email')}</div>
+                <div className="text-center">{t('members.role')}</div>
+                <div className="text-right">{t('members.weeklyCapacity')}</div>
+                <div className="text-center">{t('members.status')}</div>
+                <div className="text-center">{t('members.actions')}</div>
               </div>
 
               {/* Rows */}
               {isLoading ? (
                 <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-                  読み込み中...
+                  {t('common.loading')}
                 </div>
               ) : (
                 members?.map((member) => (
@@ -592,7 +596,7 @@ export default function MembersPage() {
                           }
                         `}
                       >
-                        {member.is_active ? '有効' : '無効'}
+                        {member.is_active ? t('members.active') : t('members.inactive')}
                       </span>
                     </div>
 
@@ -602,14 +606,14 @@ export default function MembersPage() {
                         onClick={() => setEditingMember(member)}
                         className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
                       >
-                        編集
+                        {t('common.edit')}
                       </button>
                       {can('members', 'delete') && (
                         <button
                           onClick={() => handleDeleteClick(member)}
                           className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
                         >
-                          削除
+                          {t('common.delete')}
                         </button>
                       )}
                     </div>
@@ -619,7 +623,7 @@ export default function MembersPage() {
 
               {!isLoading && members?.length === 0 && (
                 <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-                  メンバーがいません
+                  {t('members.noMembers')}
                 </div>
               )}
             </div>
@@ -630,7 +634,7 @@ export default function MembersPage() {
           <div className="overflow-x-auto">
             {isLoading ? (
               <div className="py-[32px] text-center text-[12px] text-text3">
-                読み込み中...
+                {t('common.loading')}
               </div>
             ) : members ? (
               <OrgChart members={members} />
@@ -654,7 +658,7 @@ export default function MembersPage() {
       <InviteMemberModal
         open={inviteOpen}
         onOpenChange={setInviteOpen}
-        onSuccess={() => showFeedback('success', 'メンバーを招待しました')}
+        onSuccess={() => showFeedback('success', t('members.inviteSuccess'))}
       />
 
       {/* Delete confirmation dialog */}
@@ -662,7 +666,7 @@ export default function MembersPage() {
         member={deletingMember}
         open={deleteDialogOpen}
         onOpenChange={handleDeleteDialogChange}
-        onSuccess={() => showFeedback('success', 'メンバーを削除しました')}
+        onSuccess={() => showFeedback('success', t('members.deleteSuccess'))}
       />
     </>
   )

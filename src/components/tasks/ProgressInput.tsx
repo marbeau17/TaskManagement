@@ -4,19 +4,21 @@ import { useState } from 'react'
 import type { TaskWithRelations, TaskStatus } from '@/types/database'
 import { useUpdateTaskProgress } from '@/hooks/useTasks'
 import { StatusChip } from '@/components/shared'
+import { useI18n } from '@/hooks/useI18n'
 
 interface ProgressInputProps {
   task: TaskWithRelations
 }
 
 const QUICK_PERCENTS = [25, 50, 75, 100] as const
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: 'todo', label: '未着手' },
-  { value: 'in_progress', label: '進行中' },
-  { value: 'done', label: '完了' },
+const STATUS_KEYS: { value: TaskStatus; i18nKey: string }[] = [
+  { value: 'todo', i18nKey: 'progress.statusTodo' },
+  { value: 'in_progress', i18nKey: 'progress.statusInProgress' },
+  { value: 'done', i18nKey: 'progress.statusDone' },
 ]
 
 export function ProgressInput({ task }: ProgressInputProps) {
+  const { t } = useI18n()
   const [progress, setProgress] = useState(task.progress)
   const [status, setStatus] = useState<TaskStatus>(task.status)
   const [actualHours, setActualHours] = useState(task.actual_hours)
@@ -34,10 +36,10 @@ export function ProgressInput({ task }: ProgressInputProps) {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <h3 className="text-[13px] font-bold text-text">
-          {'📈 進捗・工数入力'}
+          {t('progress.title')}
         </h3>
         <span className="text-[9.5px] px-[7px] py-[1px] rounded-full font-bold border inline-block bg-ok-bg text-ok border-ok-b">
-          クリエイター編集可
+          {t('progress.creatorEditable')}
         </span>
       </div>
 
@@ -107,9 +109,9 @@ export function ProgressInput({ task }: ProgressInputProps) {
 
       {/* Status radio */}
       <div className="mb-4">
-        <span className="text-[12px] text-text2 block mb-2">ステータス</span>
+        <span className="text-[12px] text-text2 block mb-2">{t('progress.status')}</span>
         <div className="flex gap-3">
-          {STATUS_OPTIONS.map((opt) => (
+          {STATUS_KEYS.map((opt) => (
             <label
               key={opt.value}
               className="flex items-center gap-1.5 cursor-pointer"
@@ -134,10 +136,10 @@ export function ProgressInput({ task }: ProgressInputProps) {
       {/* Actual hours */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[12px] text-text2">実績工数</span>
+          <span className="text-[12px] text-text2">{t('progress.actualHours')}</span>
           {actualHours > 0 && (
             <span className="text-[9px] px-[6px] py-[1px] rounded-full font-bold bg-gold-bg text-gold border border-gold-b">
-              手入力済み
+              {t('progress.manualEntry')}
             </span>
           )}
         </div>
@@ -157,8 +159,8 @@ export function ProgressInput({ task }: ProgressInputProps) {
         {task.estimated_hours != null && task.estimated_hours > 0 && (
           <div className="mt-3">
             <div className="flex justify-between text-[10px] text-text3 mb-1">
-              <span>実績 {actualHours}h</span>
-              <span>見積 {task.estimated_hours}h</span>
+              <span>{t('progress.actual')} {actualHours}h</span>
+              <span>{t('progress.estimate')} {task.estimated_hours}h</span>
             </div>
             <div className="relative w-full bg-surf2 rounded-full" style={{ height: 8 }}>
               {/* Estimated (background) */}
@@ -191,7 +193,7 @@ export function ProgressInput({ task }: ProgressInputProps) {
         disabled={mutation.isPending}
         className="w-full py-2 rounded-md text-[13px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
       >
-        {mutation.isPending ? '更新中...' : '更新する'}
+        {mutation.isPending ? t('progress.updating') : t('progress.update')}
       </button>
     </div>
   )

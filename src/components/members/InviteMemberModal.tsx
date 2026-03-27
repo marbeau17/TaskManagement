@@ -15,23 +15,29 @@ import {
 import { useAddMember } from '@/hooks/useMembers'
 import { ROLE_LABELS, getRoleLabel } from '@/lib/constants'
 import { useAllRoles, useAddCustomRole } from '@/hooks/useRoles'
+import { useI18n } from '@/hooks/useI18n'
+import { translations } from '@/lib/i18n/translations'
+import type { Locale } from '@/lib/i18n/translations'
 
 // ---------------------------------------------------------------------------
-// Zod schema
+// Zod schema – uses current locale for messages
 // ---------------------------------------------------------------------------
 
-const inviteSchema = z.object({
-  email: z.email('有効なメールアドレスを入力してください'),
-  name: z.string().min(1, '名前は必須です'),
-  name_short: z
-    .string()
-    .min(1, '略称は必須です')
-    .max(1, '略称は1文字で入力してください'),
-  role: z.string().min(1, 'ロールは必須です'),
-  weekly_capacity_hours: z.number().min(0).max(80),
-})
+function createInviteSchema(locale: Locale) {
+  const t = translations[locale]
+  return z.object({
+    email: z.email(t['members.validation.emailRequired']),
+    name: z.string().min(1, t['members.validation.nameRequired']),
+    name_short: z
+      .string()
+      .min(1, t['members.validation.shortNameRequired'])
+      .max(1, t['members.validation.shortNameMax']),
+    role: z.string().min(1, t['members.validation.roleRequired']),
+    weekly_capacity_hours: z.number().min(0).max(80),
+  })
+}
 
-type InviteFormValues = z.infer<typeof inviteSchema>
+type InviteFormValues = z.infer<ReturnType<typeof createInviteSchema>>
 
 // ---------------------------------------------------------------------------
 // Component
@@ -48,6 +54,7 @@ export function InviteMemberModal({
   onOpenChange,
   onSuccess,
 }: InviteMemberModalProps) {
+  const { t, locale } = useI18n()
   const addMember = useAddMember()
   const [newCustomRole, setNewCustomRole] = useState('')
   const { allRoles } = useAllRoles()
@@ -61,7 +68,7 @@ export function InviteMemberModal({
     watch,
     formState: { errors, isSubmitting },
   } = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteSchema),
+    resolver: zodResolver(createInviteSchema(locale)),
     defaultValues: {
       email: '',
       name: '',
@@ -115,17 +122,17 @@ export function InviteMemberModal({
       <DialogContent className="bg-surface border border-border2 sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle className="text-[15px] font-bold text-text">
-            メンバー招待
+            {t('members.inviteTitle')}
           </DialogTitle>
           <DialogDescription className="text-[11px] text-text2">
-            新しいメンバーをワークスペースに招待します
+            {t('members.inviteDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-[12px]">
-          {/* メールアドレス */}
+          {/* Email */}
           <div>
-            <label className={labelClass}>メールアドレス</label>
+            <label className={labelClass}>{t('members.emailAddress')}</label>
             <input
               type="email"
               placeholder="user@example.com"
@@ -137,12 +144,12 @@ export function InviteMemberModal({
             )}
           </div>
 
-          {/* 名前 */}
+          {/* Name */}
           <div>
-            <label className={labelClass}>名前</label>
+            <label className={labelClass}>{t('members.name')}</label>
             <input
               type="text"
-              placeholder="山田 花子"
+              placeholder={t('members.namePlaceholder')}
               className={inputClass}
               {...register('name')}
             />
@@ -151,12 +158,12 @@ export function InviteMemberModal({
             )}
           </div>
 
-          {/* 略称 */}
+          {/* Short name */}
           <div>
-            <label className={labelClass}>略称</label>
+            <label className={labelClass}>{t('members.shortName')}</label>
             <input
               type="text"
-              placeholder="山"
+              placeholder={t('members.shortNamePlaceholder')}
               maxLength={1}
               className={inputClass}
               {...register('name_short')}
@@ -166,9 +173,9 @@ export function InviteMemberModal({
             )}
           </div>
 
-          {/* ロール */}
+          {/* Role */}
           <div>
-            <label className={labelClass}>ロール</label>
+            <label className={labelClass}>{t('members.role')}</label>
             <select
               className={inputClass}
               value={currentRole}
@@ -186,7 +193,7 @@ export function InviteMemberModal({
                 type="text"
                 value={newCustomRole}
                 onChange={(e) => setNewCustomRole(e.target.value)}
-                placeholder="新しいカスタムロール名"
+                placeholder={t('members.newCustomRolePlaceholder')}
                 className={inputClass}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -201,7 +208,7 @@ export function InviteMemberModal({
                 disabled={!newCustomRole.trim() || addCustomRoleMutation.isPending}
                 className="shrink-0 px-[10px] py-[7px] text-[11px] text-mint font-medium bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors whitespace-nowrap disabled:opacity-50"
               >
-                {addCustomRoleMutation.isPending ? '...' : '+ 追加'}
+                {addCustomRoleMutation.isPending ? '...' : t('members.addRole')}
               </button>
             </div>
             {errors.role && (
@@ -209,9 +216,9 @@ export function InviteMemberModal({
             )}
           </div>
 
-          {/* 週キャパシティ */}
+          {/* Weekly capacity */}
           <div>
-            <label className={labelClass}>週キャパシティ (h)</label>
+            <label className={labelClass}>{t('members.weeklyCapacityFull')}</label>
             <input
               type="number"
               min={0}
@@ -229,13 +236,13 @@ export function InviteMemberModal({
 
           {/* Notice */}
           <div className="bg-info-bg border border-info-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-info leading-relaxed">
-            初期パスワード「workflow2026」が設定されます。初回ログイン時にパスワード変更が必要です。
+            {t('members.initialPasswordNotice')}
           </div>
 
           {/* Mutation error */}
           {addMember.isError && (
             <div className="bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-danger">
-              招待に失敗しました。もう一度お試しください。
+              {t('members.inviteFailed')}
             </div>
           )}
 
@@ -245,14 +252,14 @@ export function InviteMemberModal({
               onClick={() => handleClose(false)}
               className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
             >
-              キャンセル
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting || addMember.isPending}
               className="px-[16px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors disabled:opacity-50"
             >
-              {addMember.isPending ? '招待中...' : '招待する'}
+              {addMember.isPending ? t('members.inviting') : t('members.inviteAction')}
             </button>
           </DialogFooter>
         </form>

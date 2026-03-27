@@ -2,9 +2,11 @@
 
 import { KpiCard } from '@/components/shared'
 import { useTaskStats } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
 
 export function KpiCards() {
   const { data: stats, isLoading } = useTaskStats()
+  const { t } = useI18n()
 
   if (isLoading) {
     return (
@@ -18,41 +20,41 @@ export function KpiCards() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
-      {/* 今週のタスク数 */}
+      {/* Tasks this week */}
       <KpiCard
-        label="今週のタスク数"
+        label={t('kpi.thisWeekTasks')}
         value={stats.totalCount}
-        unit="件"
-        subText={`▲ 先週比 +${stats.totalCount}タスク`}
+        unit={t('kpi.unit.count')}
+        subText={`${t('kpi.comparedLastWeek')} +${stats.totalCount}${t('kpi.tasks')}`}
         subColor="#4A9482"
         variant="mint"
       />
 
-      {/* アサイン待ち */}
+      {/* Awaiting assignment */}
       <KpiCard
-        label="アサイン待ち"
+        label={t('kpi.waitingAssign')}
         value={stats.waitingCount}
-        unit="件"
-        subText={stats.waitingCount > 0 ? '⚠ 要対応' : '対応不要'}
+        unit={t('kpi.unit.count')}
+        subText={stats.waitingCount > 0 ? t('kpi.needsAttention') : t('kpi.noAttentionNeeded')}
         subColor={stats.waitingCount > 0 ? '#C8A030' : undefined}
         variant="warning"
       />
 
-      {/* 今週の完了率 */}
+      {/* Completion rate */}
       <KpiCard
-        label="今週の完了率"
+        label={t('kpi.completionRate')}
         value={stats.completionRate}
-        unit="%"
-        subText={`${stats.doneCount} / ${stats.totalCount}件 完了`}
+        unit={t('kpi.unit.percent')}
+        subText={`${stats.doneCount} / ${stats.totalCount} ${t('kpi.completed')}`}
         variant="mint"
       />
 
-      {/* 納期超過 */}
+      {/* Overdue */}
       <KpiCard
-        label="納期超過"
+        label={t('kpi.overdue')}
         value={stats.overdueCount}
-        unit="件"
-        subText={stats.overdueCount > 0 ? '即時対応が必要' : '超過なし'}
+        unit={t('kpi.unit.count')}
+        subText={stats.overdueCount > 0 ? t('kpi.needsImmediateAction') : t('kpi.noOverdue')}
         subColor={stats.overdueCount > 0 ? '#C05050' : undefined}
         variant="danger"
       />

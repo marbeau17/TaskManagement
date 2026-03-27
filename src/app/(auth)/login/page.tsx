@@ -6,15 +6,16 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { APP_NAME } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
-// Zod schema
+// Zod schema – uses i18n keys as messages, translated at render time
 // ---------------------------------------------------------------------------
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'メールアドレスは必須です').email('正しいメールアドレスを入力してください'),
-  password: z.string().min(1, 'パスワードは必須です'),
+  email: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
+  password: z.string().min(1, 'auth.passwordRequired'),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -28,6 +29,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const { login } = useAuth()
+  const { t } = useI18n()
 
   const {
     register,
@@ -49,10 +51,10 @@ export default function LoginPage() {
         if (user) {
           router.push(user.must_change_password ? '/change-password' : '/dashboard')
         } else {
-          setError('ログインに失敗しました。再度お試しください。')
+          setError('auth.loginFailed')
         }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'ログインに失敗しました'
+        const message = err instanceof Error ? err.message : 'auth.loginFailedShort'
         setError(message)
       } finally {
         setLoading(false)
@@ -76,7 +78,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-[20px] font-bold text-text">{APP_NAME}</h1>
           <p className="text-[12px] text-text3 mt-[4px]">
-            タスク管理システム
+            {t('auth.taskManagement')}
           </p>
         </div>
 
@@ -84,7 +86,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-[16px]">
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              メールアドレス
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -94,13 +96,13 @@ export default function LoginPage() {
               required
             />
             {errors.email && (
-              <p className="text-[11px] text-danger mt-[2px]">{errors.email.message}</p>
+              <p className="text-[11px] text-danger mt-[2px]">{t(errors.email.message ?? '')}</p>
             )}
           </div>
 
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              パスワード
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -110,13 +112,13 @@ export default function LoginPage() {
               required
             />
             {errors.password && (
-              <p className="text-[11px] text-danger mt-[2px]">{errors.password.message}</p>
+              <p className="text-[11px] text-danger mt-[2px]">{t(errors.password.message ?? '')}</p>
             )}
           </div>
 
           {error && (
             <div className="text-[12px] text-danger bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[6px]">
-              {error}
+              {t(error)}
             </div>
           )}
 
@@ -125,13 +127,13 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-[10px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50"
           >
-            {loading ? 'ログイン中...' : 'ログイン'}
+            {loading ? t('auth.loggingIn') : t('auth.login')}
           </button>
         </form>
 
         {/* Hint text */}
         <p className="text-[10px] text-text3 text-center mt-[12px]">
-          初期パスワード: workflow2026
+          {t('auth.initialPassword')}
         </p>
 
         {/* Quick login button */}
@@ -141,10 +143,10 @@ export default function LoginPage() {
             onClick={handleDemoLogin}
             className="w-full py-[10px] text-[13px] text-mint bg-surf2 rounded-[6px] hover:bg-border2 transition-colors font-medium border border-border2"
           >
-            ログイン情報を自動入力
+            {t('auth.autoFillLogin')}
           </button>
           <p className="text-[10px] text-text3 text-center mt-[8px]">
-            o.yasuda@meetsc.co.jp / workflow2026 を自動入力します
+            {t('auth.autoFillDescription')}
           </p>
         </div>
       </div>

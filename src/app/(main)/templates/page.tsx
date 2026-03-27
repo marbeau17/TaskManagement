@@ -7,20 +7,8 @@ import {
   useUpdateTemplate,
   useDeleteTemplate,
 } from '@/hooks/useTemplates'
+import { useI18n } from '@/hooks/useI18n'
 import type { TaskTemplate, TemplateField } from '@/types/template'
-
-// ---------------------------------------------------------------------------
-// Field type labels
-// ---------------------------------------------------------------------------
-
-const FIELD_TYPE_OPTIONS: { value: TemplateField['type']; label: string }[] = [
-  { value: 'text', label: 'テキスト' },
-  { value: 'textarea', label: 'テキストエリア' },
-  { value: 'select', label: 'セレクト' },
-  { value: 'number', label: '数値' },
-  { value: 'url', label: 'URL' },
-  { value: 'multiselect', label: 'マルチセレクト' },
-]
 
 // ---------------------------------------------------------------------------
 // Blank field factory
@@ -47,11 +35,21 @@ interface EditorProps {
 }
 
 function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
+  const { t } = useI18n()
   const [name, setName] = useState(initial?.name ?? '')
   const [category, setCategory] = useState(initial?.category ?? '')
   const [fields, setFields] = useState<TemplateField[]>(
     initial?.fields ? initial.fields.map((f) => ({ ...f })) : [blankField()]
   )
+
+  const fieldTypeOptions: { value: TemplateField['type']; labelKey: string }[] = [
+    { value: 'text', labelKey: 'templates.fieldTypeText' },
+    { value: 'textarea', labelKey: 'templates.fieldTypeTextarea' },
+    { value: 'select', labelKey: 'templates.fieldTypeSelect' },
+    { value: 'number', labelKey: 'templates.fieldTypeNumber' },
+    { value: 'url', labelKey: 'templates.fieldTypeUrl' },
+    { value: 'multiselect', labelKey: 'templates.fieldTypeMultiselect' },
+  ]
 
   const addField = () => setFields((prev) => [...prev, blankField()])
 
@@ -97,7 +95,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
     <form onSubmit={handleSubmit} className="bg-surface rounded-xl border border-wf-border shadow-sm">
       <div className="px-6 py-4 border-b border-wf-border">
         <h2 className="text-[15px] font-bold text-text1">
-          {initial ? 'テンプレート編集' : 'テンプレート作成'}
+          {initial ? t('templates.edit') : t('templates.create')}
         </h2>
       </div>
 
@@ -105,13 +103,13 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
         {/* Name */}
         <div>
           <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-            テンプレート名 <span className="text-danger">*</span>
+            {t('templates.name')} <span className="text-danger">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="例: LP制作"
+            placeholder={t('templates.namePlaceholder')}
             className={inputClass}
             required
           />
@@ -120,13 +118,13 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
         {/* Category */}
         <div>
           <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-            カテゴリ <span className="text-danger">*</span>
+            {t('templates.category')} <span className="text-danger">*</span>
           </label>
           <input
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            placeholder="例: Web制作"
+            placeholder={t('templates.categoryPlaceholder')}
             className={inputClass}
             required
           />
@@ -135,7 +133,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
         {/* Fields */}
         <div>
           <label className="block text-[12.5px] font-semibold text-text2 mb-2">
-            フィールド一覧
+            {t('templates.fieldList')}
           </label>
           <div className="space-y-3">
             {fields.map((field, idx) => (
@@ -143,7 +141,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                 key={idx}
                 className="bg-surf2 rounded-lg border border-wf-border p-4 space-y-3"
               >
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2">
                   <span className="text-[11px] text-text3 font-bold w-6 text-center">
                     {idx + 1}
                   </span>
@@ -151,8 +149,8 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                     type="text"
                     value={field.label}
                     onChange={(e) => updateField(idx, { label: e.target.value })}
-                    placeholder="フィールド名"
-                    className={`flex-1 min-w-[120px] ${inputClass}`}
+                    placeholder={t('templates.fieldName')}
+                    className={`flex-1 ${inputClass}`}
                   />
                   <select
                     value={field.type}
@@ -161,9 +159,9 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                     }
                     className={`w-[140px] ${inputClass}`}
                   >
-                    {FIELD_TYPE_OPTIONS.map((opt) => (
+                    {fieldTypeOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </option>
                     ))}
                   </select>
@@ -174,7 +172,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                       onChange={(e) => updateField(idx, { required: e.target.checked })}
                       className="rounded border-wf-border"
                     />
-                    必須
+                    {t('templates.fieldRequired')}
                   </label>
                   <div className="flex gap-1">
                     <button
@@ -182,7 +180,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                       onClick={() => moveField(idx, -1)}
                       disabled={idx === 0}
                       className="px-1.5 py-0.5 rounded text-[11px] text-text3 hover:bg-wf-border disabled:opacity-30 transition-colors"
-                      title="上へ"
+                      title={t('templates.moveUp')}
                     >
                       ↑
                     </button>
@@ -191,7 +189,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                       onClick={() => moveField(idx, 1)}
                       disabled={idx === fields.length - 1}
                       className="px-1.5 py-0.5 rounded text-[11px] text-text3 hover:bg-wf-border disabled:opacity-30 transition-colors"
-                      title="下へ"
+                      title={t('templates.moveDown')}
                     >
                       ↓
                     </button>
@@ -200,7 +198,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                     type="button"
                     onClick={() => removeField(idx)}
                     className="px-2 py-0.5 rounded text-[11px] text-danger hover:bg-danger/10 transition-colors"
-                    title="削除"
+                    title={t('templates.removeField')}
                   >
                     ✕
                   </button>
@@ -210,7 +208,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                 {(field.type === 'select' || field.type === 'multiselect') && (
                   <div>
                     <label className="block text-[11px] text-text3 mb-1">
-                      選択肢（カンマ区切り）
+                      {t('templates.selectOptions')}
                     </label>
                     <input
                       type="text"
@@ -223,7 +221,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                             .filter(Boolean),
                         })
                       }
-                      placeholder="例: オプション1, オプション2, オプション3"
+                      placeholder={t('templates.selectOptionsPlaceholder')}
                       className={inputClass}
                     />
                   </div>
@@ -232,13 +230,13 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                 {/* Placeholder */}
                 <div>
                   <label className="block text-[11px] text-text3 mb-1">
-                    プレースホルダー
+                    {t('templates.placeholder')}
                   </label>
                   <input
                     type="text"
                     value={field.placeholder ?? ''}
                     onChange={(e) => updateField(idx, { placeholder: e.target.value || undefined })}
-                    placeholder="例: 入力例を記載"
+                    placeholder={t('templates.placeholderExample')}
                     className={inputClass}
                   />
                 </div>
@@ -255,7 +253,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
               hover:bg-mint/20 transition-colors
             "
           >
-            ＋ フィールド追加
+            {t('templates.addField')}
           </button>
         </div>
       </div>
@@ -271,7 +269,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
             hover:bg-wf-border transition-colors
           "
         >
-          キャンセル
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
@@ -282,7 +280,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
             disabled:opacity-50 disabled:cursor-not-allowed
           "
         >
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? t('templates.saving') : t('common.save')}
         </button>
       </div>
     </form>
@@ -300,6 +298,7 @@ interface CardProps {
 }
 
 function TemplateCard({ template, onEdit, onDelete }: CardProps) {
+  const { t } = useI18n()
   const [showConfirm, setShowConfirm] = useState(false)
 
   return (
@@ -313,13 +312,13 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
             </span>
             {template.is_default && (
               <span className="inline-block px-2 py-0.5 rounded bg-info-bg text-info text-[11px] font-semibold">
-                デフォルト
+                {t('templates.default')}
               </span>
             )}
           </div>
         </div>
         <span className="text-[12px] text-text3">
-          {template.fields.length} フィールド
+          {template.fields.length} {t('templates.fieldCount')}
         </span>
       </div>
 
@@ -344,24 +343,24 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
             hover:bg-wf-border transition-colors
           "
         >
-          編集
+          {t('common.edit')}
         </button>
         {!template.is_default && (
           <>
             {showConfirm ? (
               <div className="flex items-center gap-1">
-                <span className="text-[11px] text-danger">本当に削除しますか？</span>
+                <span className="text-[11px] text-danger">{t('templates.deleteConfirm')}</span>
                 <button
                   onClick={onDelete}
                   className="px-2 py-1 rounded text-[11px] font-semibold text-white bg-danger hover:bg-danger/80 transition-colors"
                 >
-                  削除
+                  {t('common.delete')}
                 </button>
                 <button
                   onClick={() => setShowConfirm(false)}
                   className="px-2 py-1 rounded text-[11px] text-text3 hover:bg-surf2 transition-colors"
                 >
-                  キャンセル
+                  {t('common.cancel')}
                 </button>
               </div>
             ) : (
@@ -373,7 +372,7 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
                   hover:bg-danger/10 transition-colors
                 "
               >
-                削除
+                {t('common.delete')}
               </button>
             )}
           </>
@@ -388,6 +387,7 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
 // ---------------------------------------------------------------------------
 
 export default function TemplatesPage() {
+  const { t } = useI18n()
   const { data: templates, isLoading } = useTemplates()
   const createMutation = useCreateTemplate()
   const updateMutation = useUpdateTemplate()
@@ -440,7 +440,7 @@ export default function TemplatesPage() {
       <div className="bg-surface border-b border-wf-border shrink-0">
         <div className="max-w-[960px] mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-[16px] font-bold text-text1">
-            テンプレート管理
+            {t('templates.title')}
           </h1>
           {editorMode === 'closed' && (
             <button
@@ -450,7 +450,7 @@ export default function TemplatesPage() {
                 text-white bg-mint hover:bg-mint-d transition-colors
               "
             >
-              ＋ テンプレート作成
+              {t('templates.createNew')}
             </button>
           )}
         </div>
@@ -474,19 +474,19 @@ export default function TemplatesPage() {
           {/* Loading */}
           {isLoading && (
             <div className="text-center py-12 text-[14px] text-text3">
-              読み込み中...
+              {t('common.loading')}
             </div>
           )}
 
           {/* Template cards grid */}
           {!isLoading && templates && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {templates.map((t) => (
+              {templates.map((tmpl) => (
                 <TemplateCard
-                  key={t.id}
-                  template={t}
-                  onEdit={() => handleEdit(t)}
-                  onDelete={() => handleDelete(t.id)}
+                  key={tmpl.id}
+                  template={tmpl}
+                  onEdit={() => handleEdit(tmpl)}
+                  onDelete={() => handleDelete(tmpl.id)}
                 />
               ))}
             </div>
@@ -496,7 +496,7 @@ export default function TemplatesPage() {
           {!isLoading && templates && templates.length === 0 && (
             <div className="text-center py-12">
               <p className="text-[14px] text-text3 mb-4">
-                テンプレートがまだありません
+                {t('templates.empty')}
               </p>
               <button
                 onClick={handleCreate}
@@ -505,7 +505,7 @@ export default function TemplatesPage() {
                   text-white bg-mint hover:bg-mint-d transition-colors
                 "
               >
-                ＋ テンプレート作成
+                {t('templates.createNew')}
               </button>
             </div>
           )}

@@ -6,19 +6,20 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuthStore } from '@/stores/authStore'
+import { useI18n } from '@/hooks/useI18n'
 import { forceChangePassword } from '@/lib/data/members'
 
 // ---------------------------------------------------------------------------
-// Zod schema
+// Zod schema – uses i18n keys as messages, translated at render time
 // ---------------------------------------------------------------------------
 
 const changePasswordSchema = z
   .object({
-    newPassword: z.string().min(8, 'パスワードは8文字以上で入力してください'),
-    confirmPassword: z.string().min(1, 'パスワード確認は必須です'),
+    newPassword: z.string().min(8, 'auth.passwordMinLength'),
+    confirmPassword: z.string().min(1, 'auth.confirmPasswordRequired'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'パスワードが一致しません',
+    message: 'auth.passwordMismatch',
     path: ['confirmPassword'],
   })
 
@@ -31,10 +32,10 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
 export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [warning, setWarning] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const { user, setUser } = useAuthStore()
+  const { t } = useI18n()
 
   // Redirect if no user or password change not required
   useEffect(() => {
@@ -68,7 +69,6 @@ export default function ChangePasswordPage() {
     async (data: ChangePasswordFormValues) => {
       if (!user) return
       setError('')
-      setWarning('')
       setLoading(true)
 
       try {
@@ -76,20 +76,11 @@ export default function ChangePasswordPage() {
         if (result.success) {
           setUser({ ...user, must_change_password: false })
           setSuccess(true)
-        } else if (result.passwordChanged) {
-          // Partial success: password was changed but DB flag update failed.
-          // Update local state so the user isn't stuck on this page, and show warning.
-          setUser({ ...user, must_change_password: false })
-          setWarning(
-            result.error ??
-              'パスワードは変更されましたが、システムフラグの更新に失敗しました。管理者に連絡してください。'
-          )
-          setSuccess(true)
         } else {
-          setError(result.error ?? 'パスワードの変更に失敗しました')
+          setError(result.error ?? 'auth.passwordChangeFailed')
         }
       } catch {
-        setError('パスワードの変更に失敗しました')
+        setError('auth.passwordChangeFailed')
       } finally {
         setLoading(false)
       }
@@ -111,63 +102,56 @@ export default function ChangePasswordPage() {
             <span className="text-white font-bold text-[20px]">✦</span>
           </div>
           <h1 className="text-[20px] font-bold text-text">
-            パスワードの変更が必要です
+            {t('auth.changePasswordRequired')}
           </h1>
           <p className="text-[12px] text-text3 mt-[4px]">
-            セキュリティのため、初期パスワードを変更してください。
+            {t('auth.changePasswordDescription')}
           </p>
         </div>
 
         {success ? (
-          <div className="space-y-[8px]">
-            <div className="bg-ok-bg border border-ok rounded-[6px] px-[10px] py-[8px] text-[12px] text-ok text-center">
-              パスワードが変更されました。ダッシュボードに移動します…
-            </div>
-            {warning && (
-              <div className="bg-warn-bg border border-warn rounded-[6px] px-[10px] py-[8px] text-[12px] text-warn text-center">
-                {warning}
-              </div>
-            )}
+          <div className="bg-ok-bg border border-ok rounded-[6px] px-[10px] py-[8px] text-[12px] text-ok text-center">
+            {t('auth.passwordChanged')}
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-[16px]">
             <div>
               <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                新しいパスワード
+                {t('auth.newPassword')}
               </label>
               <input
                 type="password"
                 {...register('newPassword')}
-                placeholder="8文字以上"
+                placeholder={t('auth.newPasswordPlaceholder')}
                 className="w-full text-[13px] text-text px-[12px] py-[9px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3"
               />
               {errors.newPassword && (
                 <p className="text-[11px] text-danger mt-[2px]">
-                  {errors.newPassword.message}
+                  {t(errors.newPassword.message ?? '')}
                 </p>
               )}
             </div>
 
             <div>
               <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                パスワード確認
+                {t('auth.confirmPassword')}
               </label>
               <input
                 type="password"
                 {...register('confirmPassword')}
-                placeholder="もう一度入力"
+                placeholder={t('auth.confirmPasswordPlaceholder')}
                 className="w-full text-[13px] text-text px-[12px] py-[9px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3"
               />
               {errors.confirmPassword && (
                 <p className="text-[11px] text-danger mt-[2px]">
-                  {errors.confirmPassword.message}
+                  {t(errors.confirmPassword.message ?? '')}
                 </p>
               )}
             </div>
 
             {error && (
               <div className="text-[12px] text-danger bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[6px]">
-                {error}
+                {t(error)}
               </div>
             )}
 
@@ -176,7 +160,7 @@ export default function ChangePasswordPage() {
               disabled={loading}
               className="w-full py-[10px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50"
             >
-              {loading ? '変更中...' : 'パスワードを変更する'}
+              {loading ? t('auth.changing') : t('auth.changePasswordButton')}
             </button>
           </form>
         )}

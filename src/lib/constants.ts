@@ -4,6 +4,7 @@
 
 import type { TaskStatus, BuiltinRole, AvatarColor } from '@/types/database'
 import type { WorkloadStatus } from '@/types/workload'
+import type { Locale } from '@/lib/i18n/translations'
 
 export const APP_NAME = 'WorkFlow'
 
@@ -12,11 +13,26 @@ export const APP_NAME = 'WorkFlow'
 // ---------------------------------------------------------------------------
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
-  waiting: '\u23F3 \u30A2\u30B5\u30A4\u30F3\u5F85\u3061',
-  todo: '\uD83D\uDCCB \u672A\u7740\u624B',
-  in_progress: '\u25B6 \u9032\u884C\u4E2D',
-  done: '\u2713 \u5B8C\u4E86',
-  rejected: '\u21A9 \u5DEE\u3057\u623B\u3057',
+  waiting: '⏳ アサイン待ち',
+  todo: '📋 未着手',
+  in_progress: '▶ 進行中',
+  done: '✓ 完了',
+  rejected: '↩ 差し戻し',
+}
+
+export const STATUS_LABELS_I18N: Record<Locale, Record<TaskStatus, string>> = {
+  ja: STATUS_LABELS,
+  en: {
+    waiting: '⏳ Awaiting',
+    todo: '📋 To Do',
+    in_progress: '▶ In Progress',
+    done: '✓ Done',
+    rejected: '↩ Rejected',
+  },
+}
+
+export function getStatusLabels(locale: Locale = 'ja'): Record<TaskStatus, string> {
+  return STATUS_LABELS_I18N[locale]
 }
 
 export const STATUS_STYLES: Record<
@@ -57,10 +73,24 @@ export const STATUS_STYLES: Record<
 export const BUILTIN_ROLES = ['admin', 'director', 'requester', 'creator'] as const
 
 export const ROLE_LABELS: Record<BuiltinRole, string> = {
-  admin: '\u7BA1\u7406\u8005',
+  admin: '管理者',
   director: 'Dir',
-  requester: '\u4F9D\u983C\u8005',
-  creator: '\u30AF\u30EA\u30A8\u30A4\u30BF\u30FC',
+  requester: '依頼者',
+  creator: 'クリエイター',
+}
+
+export const ROLE_LABELS_I18N: Record<Locale, Record<BuiltinRole, string>> = {
+  ja: ROLE_LABELS,
+  en: {
+    admin: 'Admin',
+    director: 'Director',
+    requester: 'Requester',
+    creator: 'Creator',
+  },
+}
+
+export function getRoleLabels(locale: Locale = 'ja'): Record<BuiltinRole, string> {
+  return ROLE_LABELS_I18N[locale]
 }
 
 export const ROLE_STYLES: Record<
@@ -97,8 +127,8 @@ export const DEFAULT_ROLE_STYLE = {
 }
 
 /** Get label for any role, falling back to the raw role string for custom roles */
-export function getRoleLabel(role: string): string {
-  return (ROLE_LABELS as Record<string, string>)[role] ?? role
+export function getRoleLabel(role: string, locale: Locale = 'ja'): string {
+  return (ROLE_LABELS_I18N[locale] as Record<string, string>)[role] ?? role
 }
 
 /** Get style for any role, falling back to a neutral default for custom roles */
@@ -135,10 +165,24 @@ export const WORKLOAD_THRESHOLDS = {
 // ---------------------------------------------------------------------------
 
 export const WORKLOAD_STATUS_LABELS: Record<WorkloadStatus, string> = {
-  available: '\u4F59\u88D5\u3042\u308A',
-  normal: '\u6B63\u5E38',
-  warning: '\u6CE8\u610F',
-  overloaded: '\u8D85\u904E',
+  available: '余裕あり',
+  normal: '正常',
+  warning: '注意',
+  overloaded: '超過',
+}
+
+export const WORKLOAD_STATUS_LABELS_I18N: Record<Locale, Record<WorkloadStatus, string>> = {
+  ja: WORKLOAD_STATUS_LABELS,
+  en: {
+    available: 'Available',
+    normal: 'Normal',
+    warning: 'Warning',
+    overloaded: 'Overloaded',
+  },
+}
+
+export function getWorkloadStatusLabels(locale: Locale = 'ja'): Record<WorkloadStatus, string> {
+  return WORKLOAD_STATUS_LABELS_I18N[locale]
 }
 
 export const WORKLOAD_STATUS_STYLES: Record<
@@ -172,10 +216,23 @@ export const WORKLOAD_STATUS_STYLES: Record<
 // ---------------------------------------------------------------------------
 
 export const PERIOD_OPTIONS = [
-  { label: '\u4ECA\u9031', value: 'week' as const },
-  { label: '\u4ECA\u6708', value: 'month' as const },
-  { label: '\u5168\u671F\u9593', value: 'all' as const },
+  { label: '今週', value: 'week' as const },
+  { label: '今月', value: 'month' as const },
+  { label: '全期間', value: 'all' as const },
 ]
+
+export const PERIOD_OPTIONS_I18N: Record<Locale, typeof PERIOD_OPTIONS> = {
+  ja: PERIOD_OPTIONS,
+  en: [
+    { label: 'This Week', value: 'week' as const },
+    { label: 'This Month', value: 'month' as const },
+    { label: 'All Time', value: 'all' as const },
+  ],
+}
+
+export function getPeriodOptions(locale: Locale = 'ja') {
+  return PERIOD_OPTIONS_I18N[locale]
+}
 
 // ---------------------------------------------------------------------------
 // Pagination

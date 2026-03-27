@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Avatar, StatusChip, ProgressBar } from '@/components/shared'
 import { useTasks } from '@/hooks/useTasks'
 import { useMembers } from '@/hooks/useMembers'
+import { useI18n } from '@/hooks/useI18n'
 import { formatDate, formatHours } from '@/lib/utils'
 import type { TaskWithRelations, Client, User } from '@/types/database'
 
@@ -24,19 +25,20 @@ interface ClientCardData {
 
 function ClientCard({ data }: { data: ClientCardData }) {
   const { client, tasks, activeTasks, doneTasks, totalEstimated, members, progressPercent } = data
+  const { t } = useI18n()
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] p-[14px] shadow">
       <div className="flex items-center justify-between mb-[8px]">
         <h4 className="text-[13px] font-bold text-text truncate">{client.name}</h4>
         <span className="text-[10px] text-text2 bg-surf2 px-[6px] py-[1px] rounded-full border border-border2">
-          {tasks.length}件
+          {t('client.taskCount').replace('{count}', String(tasks.length))}
         </span>
       </div>
 
       {activeTasks.length > 0 && (
         <span className="text-[9px] bg-info-bg text-info px-[6px] py-[1px] rounded-full border border-info-b font-semibold inline-block mb-[8px]">
-          進行中 {activeTasks.length}件
+          {t('client.inProgress').replace('{count}', String(activeTasks.length))}
         </span>
       )}
 
@@ -46,10 +48,10 @@ function ClientCard({ data }: { data: ClientCardData }) {
 
       <div className="flex items-center justify-between mb-[8px]">
         <span className="text-[10px] text-text2">
-          {doneTasks.length}/{tasks.length}件 完了
+          {t('client.doneCount').replace('{done}', String(doneTasks.length)).replace('{total}', String(tasks.length))}
         </span>
         <span className="text-[10px] text-text3">
-          見積: {formatHours(totalEstimated)}
+          {t('client.estimate').replace('{hours}', formatHours(totalEstimated))}
         </span>
       </div>
 
@@ -80,6 +82,7 @@ function ClientCard({ data }: { data: ClientCardData }) {
 
 function ClientTaskRow({ task }: { task: TaskWithRelations }) {
   const deadline = task.confirmed_deadline ?? task.desired_deadline
+  const { t } = useI18n()
 
   return (
     <Link
@@ -106,7 +109,7 @@ function ClientTaskRow({ task }: { task: TaskWithRelations }) {
             </span>
           </>
         ) : (
-          <span className="text-[11px] text-text3">未アサイン</span>
+          <span className="text-[11px] text-text3">{t('client.unassigned')}</span>
         )}
       </div>
 
@@ -139,8 +142,7 @@ function ClientTaskRow({ task }: { task: TaskWithRelations }) {
 // ---------------------------------------------------------------------------
 
 export function ClientView() {
-  const { data: tasksResult, isLoading: tasksLoading } = useTasks()
-  const tasks = tasksResult?.data
+  const { data: tasks, isLoading: tasksLoading } = useTasks()
   const { data: members, isLoading: membersLoading } = useMembers()
 
   const isLoading = tasksLoading || membersLoading
@@ -204,9 +206,11 @@ export function ClientView() {
     })
   }, [tasks])
 
+  const { t } = useI18n()
+
   if (isLoading) {
     return (
-      <div className="p-[16px] text-[12px] text-text3">読み込み中...</div>
+      <div className="p-[16px] text-[12px] text-text3">{t('common.loading')}</div>
     )
   }
 
@@ -223,13 +227,13 @@ export function ClientView() {
       <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
         {/* Table header */}
         <div className="grid grid-cols-[1fr_1.2fr_100px_80px_80px_70px_90px] items-center gap-[8px] px-[12px] py-[7px] border-b border-border2 bg-surf2">
-          <span className="text-[10px] text-text3 font-semibold">クライアント</span>
-          <span className="text-[10px] text-text3 font-semibold">タスク名</span>
-          <span className="text-[10px] text-text3 font-semibold">担当</span>
-          <span className="text-[10px] text-text3 font-semibold">進捗</span>
-          <span className="text-[10px] text-text3 font-semibold">納期</span>
-          <span className="text-[10px] text-text3 font-semibold">見積</span>
-          <span className="text-[10px] text-text3 font-semibold">ステータス</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerClient')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerTaskName')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerAssignee')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerProgress')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerDeadline')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerEstimate')}</span>
+          <span className="text-[10px] text-text3 font-semibold">{t('client.headerStatus')}</span>
         </div>
 
         {/* Table rows */}
@@ -241,7 +245,7 @@ export function ClientView() {
           </div>
         ) : (
           <div className="px-[12px] py-[16px] text-[12px] text-text3 text-center">
-            タスクがありません
+            {t('client.noTasks')}
           </div>
         )}
       </div>

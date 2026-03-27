@@ -9,20 +9,7 @@ import { useMembers } from '@/hooks/useMembers'
 import { useWorkloadSummaries } from '@/hooks/useWorkload'
 import { Avatar, ProgressBar } from '@/components/shared'
 import { WORKLOAD_THRESHOLDS } from '@/lib/constants'
-
-// ---------------------------------------------------------------------------
-// Zod schema for Step 2
-// ---------------------------------------------------------------------------
-
-const step2Schema = z.object({
-  assigned_to: z.string().min(1, 'クリエイターを選択してください'),
-  confirmed_deadline: z.string().min(1, '確定納期は必須です'),
-  estimated_hours: z
-    .number({ error: '見積時間を入力してください' })
-    .min(0.5, '0.5h以上を入力してください'),
-})
-
-type Step2FormValues = z.infer<typeof step2Schema>
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -61,8 +48,20 @@ export function AssignForm({
   onSkip,
   onSubmit,
 }: AssignFormProps) {
+  const { t } = useI18n()
   const { data: members } = useMembers()
   const { data: workloads } = useWorkloadSummaries()
+
+  // Zod schema for Step 2 (inside component to use t())
+  const step2Schema = useMemo(() => z.object({
+    assigned_to: z.string().min(1, t('assign.validation.selectCreator')),
+    confirmed_deadline: z.string().min(1, t('assign.validation.deadlineRequired')),
+    estimated_hours: z
+      .number({ error: t('assign.validation.enterEstimatedHours') })
+      .min(0.5, t('assign.validation.minHours')),
+  }), [t])
+
+  type Step2FormValues = z.infer<typeof step2Schema>
 
   // Filter to creator-role members only
   const creators = useMemo(() => {
@@ -150,20 +149,20 @@ export function AssignForm({
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         <div className="px-6 py-4 border-b border-wf-border">
           <h2 className="text-[15px] font-bold text-text1">
-            📋 依頼情報サマリー
+            {'📋 '}{t('assign.requestSummary')}
           </h2>
         </div>
         <div className="px-6 py-4 space-y-2 text-[13px]">
-          <SummaryRow label="クライアント" value={step1Data.client_name} />
-          <SummaryRow label="タスク名" value={step1Data.title} />
+          <SummaryRow label={t('assign.client')} value={step1Data.client_name} />
+          <SummaryRow label={t('assign.taskName')} value={step1Data.title} />
           {step1Data.description && (
-            <SummaryRow label="説明" value={step1Data.description} />
+            <SummaryRow label={t('assign.description')} value={step1Data.description} />
           )}
           {step1Data.desired_deadline && (
-            <SummaryRow label="希望納期" value={step1Data.desired_deadline} />
+            <SummaryRow label={t('assign.desiredDeadline')} value={step1Data.desired_deadline} />
           )}
           {step1Data.reference_url && (
-            <SummaryRow label="参考URL" value={step1Data.reference_url} isUrl />
+            <SummaryRow label={t('assign.referenceUrl')} value={step1Data.reference_url} isUrl />
           )}
         </div>
       </div>
@@ -172,7 +171,7 @@ export function AssignForm({
       <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
         <div className="px-6 py-4 border-b border-wf-border">
           <h2 className="text-[15px] font-bold text-text1">
-            🎯 アサイン設定
+            {'🎯 '}{t('assign.settings')}
           </h2>
         </div>
 
@@ -183,7 +182,7 @@ export function AssignForm({
               htmlFor="assigned_to"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              クリエイター <span className="text-danger">*</span>
+              {t('assign.creator')} <span className="text-danger">*</span>
             </label>
             <select
               id="assigned_to"
@@ -195,13 +194,13 @@ export function AssignForm({
               `}
               {...register('assigned_to')}
             >
-              <option value="">選択してください</option>
+              <option value="">{t('assign.selectPlaceholder')}</option>
               {creators.map((c) => {
                 const wl = workloadMap.get(c.id)
                 const rate = wl ? wl.utilization_rate : 0
                 return (
                   <option key={c.id} value={c.id}>
-                    {c.name}（稼働率 {rate}%）
+                    {c.name}({t('assign.utilizationRate')} {rate}%)
                   </option>
                 )
               })}
@@ -216,10 +215,10 @@ export function AssignForm({
           {/* Director (auto-filled) */}
           <div>
             <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-              ディレクター
+              {t('assign.director')}
             </label>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surf2 border border-wf-border text-[13px] text-text2">
-              田中 太郎（自分）
+              {t('assign.directorSelf')}
             </div>
           </div>
 
@@ -229,13 +228,13 @@ export function AssignForm({
               className={`rounded-lg p-4 border ${getUtilBg(workloadPreview.projectedRate)} border-wf-border`}
             >
               <p className="text-[12px] font-semibold text-text2 mb-2">
-                稼働率プレビュー
+                {t('assign.workloadPreview')}
               </p>
 
               <div className="space-y-2">
                 {/* Current */}
                 <div className="flex items-center justify-between text-[12px]">
-                  <span className="text-text3">現在の稼働率</span>
+                  <span className="text-text3">{t('assign.currentUtilization')}</span>
                   <span className={`font-bold ${getUtilColor(workloadPreview.currentRate)}`}>
                     {workloadPreview.currentRate}%
                   </span>
@@ -247,12 +246,12 @@ export function AssignForm({
 
                 {/* Arrow */}
                 <div className="flex items-center justify-center text-text3 text-[12px]">
-                  ↓ +{watchedHours && !isNaN(watchedHours) ? watchedHours : 0}h 追加
+                  ↓ +{watchedHours && !isNaN(watchedHours) ? watchedHours : 0}h {t('assign.added')}
                 </div>
 
                 {/* Projected */}
                 <div className="flex items-center justify-between text-[12px]">
-                  <span className="text-text3">見込み稼働率</span>
+                  <span className="text-text3">{t('assign.projectedUtilization')}</span>
                   <span
                     className={`font-bold ${getUtilColor(workloadPreview.projectedRate)}`}
                   >
@@ -267,13 +266,13 @@ export function AssignForm({
                 {/* Warning / danger */}
                 {workloadPreview.projectedRate >= WORKLOAD_THRESHOLDS.danger && (
                   <p className="text-[11px] text-danger font-semibold mt-1">
-                    ⚠ キャパシティを超過します（{workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h）
+                    {'⚠ '}{t('assign.capacityExceeded')}({workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h)
                   </p>
                 )}
                 {workloadPreview.projectedRate >= WORKLOAD_THRESHOLDS.warning &&
                   workloadPreview.projectedRate < WORKLOAD_THRESHOLDS.danger && (
                     <p className="text-[11px] text-warn font-semibold mt-1">
-                      ⚠ 稼働率が高くなっています（{workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h）
+                      {'⚠ '}{t('assign.highUtilization')}({workloadPreview.projectedHours}h / {workloadPreview.capacityHours}h)
                     </p>
                   )}
               </div>
@@ -286,7 +285,7 @@ export function AssignForm({
               htmlFor="confirmed_deadline"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              確定納期 <span className="text-danger">*</span>
+              {t('assign.confirmedDeadline')} <span className="text-danger">*</span>
             </label>
             <input
               id="confirmed_deadline"
@@ -306,7 +305,7 @@ export function AssignForm({
             )}
             {deadlineWarning && (
               <p className="mt-1 text-[11px] text-warn font-semibold">
-                ⚠ 希望納期（{step1Data.desired_deadline}）より前の日付です
+                {'⚠ '}{t('assign.deadlineWarning')}({step1Data.desired_deadline})
               </p>
             )}
           </div>
@@ -317,7 +316,7 @@ export function AssignForm({
               htmlFor="estimated_hours"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              見積時間（h） <span className="text-danger">*</span>
+              {t('assign.estimatedHours')} <span className="text-danger">*</span>
             </label>
             <Controller
               control={control}
@@ -328,7 +327,7 @@ export function AssignForm({
                   type="number"
                   step={0.5}
                   min={0.5}
-                  placeholder="例: 8"
+                  placeholder={t('assign.estimatedHoursPlaceholder')}
                   className={`
                     w-full rounded-lg border px-3 py-2 text-[13px] text-text1
                     bg-surface placeholder:text-text3
@@ -364,7 +363,7 @@ export function AssignForm({
             hover:bg-wf-border transition-colors
           "
         >
-          ← 前へ
+          {t('assign.back')}
         </button>
 
         <div className="flex items-center gap-3">
@@ -377,7 +376,7 @@ export function AssignForm({
               hover:bg-wf-border transition-colors
             "
           >
-            後で設定する
+            {t('assign.setLater')}
           </button>
           <button
             type="submit"
@@ -387,7 +386,7 @@ export function AssignForm({
               disabled:opacity-50 disabled:cursor-not-allowed
             "
           >
-            アサインしてクリエイターに通知 ✦
+            {t('assign.assignAndNotify')}
           </button>
         </div>
       </div>

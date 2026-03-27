@@ -9,18 +9,19 @@ import { Avatar, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/compo
 import { formatDate } from '@/lib/utils'
 import { isValidTransition } from '@/lib/data/issues'
 import { IssueRelations } from '@/components/issues/IssueRelations'
+import { useI18n } from '@/hooks/useI18n'
 import type { IssueStatus } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
 // Valid transitions map for UI buttons
 // ---------------------------------------------------------------------------
 
-const TRANSITION_LABELS: Record<IssueStatus, string> = {
-  open: 'オープンに戻す',
-  in_progress: '対応開始',
-  resolved: '解決済み',
-  verified: '検証完了',
-  closed: 'クローズ',
+const TRANSITION_KEYS: Record<IssueStatus, string> = {
+  open: 'issues.transitionOpen',
+  in_progress: 'issues.transitionInProgress',
+  resolved: 'issues.transitionResolved',
+  verified: 'issues.transitionVerified',
+  closed: 'issues.transitionClosed',
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +53,7 @@ function CollapsibleSection({ title, children, defaultOpen = false }: { title: s
 // ---------------------------------------------------------------------------
 
 function IssueCommentSection({ issueId, currentUserId }: { issueId: string; currentUserId: string }) {
+  const { t } = useI18n()
   const { data: comments, isLoading } = useIssueComments(issueId)
   const addComment = useAddIssueComment()
   const [body, setBody] = useState('')
@@ -64,11 +66,11 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
 
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
-      <h3 className="text-[13px] font-bold text-text mb-4">コメント</h3>
+      <h3 className="text-[13px] font-bold text-text mb-4">{t('issues.comments')}</h3>
 
       <div className="flex flex-col gap-3 mb-4 max-h-[400px] overflow-y-auto">
-        {isLoading && <p className="text-[12px] text-text3">読み込み中...</p>}
-        {comments && comments.length === 0 && <p className="text-[12px] text-text3">コメントはまだありません</p>}
+        {isLoading && <p className="text-[12px] text-text3">{t('common.loading')}</p>}
+        {comments && comments.length === 0 && <p className="text-[12px] text-text3">{t('issues.noComments')}</p>}
         {comments?.map((comment) => {
           const isOwn = comment.user_id === currentUserId
           return (
@@ -77,7 +79,7 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
                 {comment.user && (
                   <Avatar name_short={comment.user.name_short} color={comment.user.avatar_color} size="sm" />
                 )}
-                <span className="text-[12px] font-semibold text-text">{comment.user?.name ?? '不明'}</span>
+                <span className="text-[12px] font-semibold text-text">{comment.user?.name ?? t('issues.unknown')}</span>
                 <span className="text-[10px] text-text3 ml-auto">{formatDate(comment.created_at)}</span>
               </div>
               <p className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">{comment.body}</p>
@@ -90,7 +92,7 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="コメントを入力..."
+          placeholder={t('issues.commentPlaceholder')}
           rows={3}
           className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-none focus:outline-none focus:border-mint"
         />
@@ -101,7 +103,7 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
             disabled={!body.trim() || addComment.isPending}
             className="px-4 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {addComment.isPending ? '送信中...' : '送信'}
+            {addComment.isPending ? t('issues.sending') : t('issues.send')}
           </button>
         </div>
       </div>
@@ -116,6 +118,7 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
 export default function IssueDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { t } = useI18n()
   const { user } = useAuth()
   const { data: issue, isLoading } = useIssue(params.id)
   const { data: members } = useMembers()
@@ -127,7 +130,7 @@ export default function IssueDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[13px] text-text3">読み込み中...</div>
+        <div className="text-[13px] text-text3">{t('common.loading')}</div>
       </div>
     )
   }
@@ -135,7 +138,7 @@ export default function IssueDetailPage() {
   if (!issue) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[13px] text-text3">課題が見つかりません</div>
+        <div className="text-[13px] text-text3">{t('issues.issueNotFound')}</div>
       </div>
     )
   }
@@ -169,7 +172,7 @@ export default function IssueDetailPage() {
           onClick={() => router.back()}
           className="text-[12px] text-text2 hover:text-mint transition-colors"
         >
-          &larr; 一覧に戻る
+          {t('issues.backToList')}
         </button>
         <span className="text-[16px] font-mono text-mint font-bold tracking-wide">{issue.issue_key}</span>
         <h1 className="text-[15px] font-bold text-text truncate max-w-[400px]">
@@ -196,7 +199,7 @@ export default function IssueDetailPage() {
                     : 'bg-mint text-white hover:bg-mint-d'
               }`}
             >
-              {TRANSITION_LABELS[status]}
+              {t(TRANSITION_KEYS[status])}
             </button>
           )
         })}
@@ -208,9 +211,9 @@ export default function IssueDetailPage() {
         <div className="flex flex-col gap-4">
           {/* Description */}
           <div className="bg-surface rounded-lg border border-wf-border p-5">
-            <h3 className="text-[13px] font-bold text-text mb-3">説明</h3>
+            <h3 className="text-[13px] font-bold text-text mb-3">{t('issues.description')}</h3>
             <div className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">
-              {issue.description || '説明なし'}
+              {issue.description || t('issues.noDescription')}
             </div>
           </div>
 
@@ -218,15 +221,15 @@ export default function IssueDetailPage() {
           {isBugOrIncident && (
             <div className="flex flex-col gap-3">
               {issue.type === 'bug' && (
-                <CollapsibleSection title="再現手順" defaultOpen={!!issue.reproduction_steps}>
-                  {issue.reproduction_steps || '未記入'}
+                <CollapsibleSection title={t('issues.reproductionSteps')} defaultOpen={!!issue.reproduction_steps}>
+                  {issue.reproduction_steps || t('issues.notFilled')}
                 </CollapsibleSection>
               )}
-              <CollapsibleSection title="期待される結果" defaultOpen={!!issue.expected_result}>
-                {issue.expected_result || '未記入'}
+              <CollapsibleSection title={t('issues.expectedResult')} defaultOpen={!!issue.expected_result}>
+                {issue.expected_result || t('issues.notFilled')}
               </CollapsibleSection>
-              <CollapsibleSection title="実際の結果" defaultOpen={!!issue.actual_result}>
-                {issue.actual_result || '未記入'}
+              <CollapsibleSection title={t('issues.actualResult')} defaultOpen={!!issue.actual_result}>
+                {issue.actual_result || t('issues.notFilled')}
               </CollapsibleSection>
             </div>
           )}
@@ -241,25 +244,25 @@ export default function IssueDetailPage() {
           <div className="bg-surface rounded-lg border border-wf-border p-5 space-y-[14px]">
             {/* Status */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">ステータス</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterStatus')}</div>
               <IssueStatusBadge status={issue.status} />
             </div>
 
             {/* Severity */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">重要度</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterSeverity')}</div>
               <SeverityBadge severity={issue.severity} />
             </div>
 
             {/* Priority */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">優先度</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.priority')}</div>
               <div className="text-[12.5px] text-text">{issue.priority}</div>
             </div>
 
             {/* Assignee */}
             <div className="relative">
-              <div className="text-[10.5px] text-text2 mb-[3px]">担当者</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterAssignee')}</div>
               <button
                 onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
                 className="flex items-center gap-[6px] hover:bg-surf2 rounded-[4px] px-[4px] py-[2px] -ml-[4px] transition-colors"
@@ -270,7 +273,7 @@ export default function IssueDetailPage() {
                     <span className="text-[12px] text-text">{issue.assignee.name}</span>
                   </>
                 ) : (
-                  <span className="text-[12px] text-text3">未アサイン (クリックで変更)</span>
+                  <span className="text-[12px] text-text3">{t('issues.unassignedClickToChange')}</span>
                 )}
               </button>
               {showAssigneeDropdown && (
@@ -279,7 +282,7 @@ export default function IssueDetailPage() {
                     onClick={() => handleAssigneeChange(null)}
                     className="w-full text-left px-[10px] py-[6px] text-[12px] text-text3 hover:bg-surf2 transition-colors"
                   >
-                    未アサイン
+                    {t('issues.unassigned')}
                   </button>
                   {(members ?? []).filter((m) => m.is_active).map((m) => (
                     <button
@@ -297,20 +300,20 @@ export default function IssueDetailPage() {
 
             {/* Reporter */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">報告者</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.reporter')}</div>
               {issue.reporter ? (
                 <div className="flex items-center gap-[6px]">
                   <Avatar name_short={issue.reporter.name_short} color={issue.reporter.avatar_color} size="sm" />
                   <span className="text-[12px] text-text">{issue.reporter.name}</span>
                 </div>
               ) : (
-                <span className="text-[12px] text-text3">不明</span>
+                <span className="text-[12px] text-text3">{t('issues.unknown')}</span>
               )}
             </div>
 
             {/* Project */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">プロジェクト</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterProject')}</div>
               {issue.project ? (
                 <button
                   onClick={() => router.push(`/projects/${issue.project!.id}`)}
@@ -326,12 +329,12 @@ export default function IssueDetailPage() {
             {/* Linked task */}
             {issue.task_id && (
               <div>
-                <div className="text-[10.5px] text-text2 mb-[3px]">関連タスク</div>
+                <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.linkedTask')}</div>
                 <button
                   onClick={() => router.push(`/tasks/${issue.task_id}`)}
                   className="text-[12px] text-mint hover:text-mint-d font-medium transition-colors"
                 >
-                  タスクを表示
+                  {t('issues.viewTask')}
                 </button>
               </div>
             )}
@@ -341,7 +344,7 @@ export default function IssueDetailPage() {
               <>
                 {issue.git_branch && (
                   <div>
-                    <div className="text-[10.5px] text-text2 mb-[3px]">Gitブランチ</div>
+                    <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.gitBranch')}</div>
                     <div className="text-[12px] text-text font-mono bg-surf2 px-[6px] py-[2px] rounded-[4px] inline-block">
                       {issue.git_branch}
                     </div>
@@ -366,7 +369,7 @@ export default function IssueDetailPage() {
             {/* Labels */}
             {issue.labels && issue.labels.length > 0 && (
               <div>
-                <div className="text-[10.5px] text-text2 mb-[3px]">ラベル</div>
+                <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.labels')}</div>
                 <div className="flex flex-wrap gap-[4px]">
                   {issue.labels.map((label) => (
                     <span key={label} className="text-[10px] px-[7px] py-[1px] rounded-full bg-surf2 text-text2 border border-border2">
@@ -379,23 +382,23 @@ export default function IssueDetailPage() {
 
             {/* Source */}
             <div>
-              <div className="text-[10.5px] text-text2 mb-[3px]">ソース</div>
-              <div className="text-[12px] text-text">{issue.source === 'customer' ? '顧客' : '社内'}</div>
+              <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterSource')}</div>
+              <div className="text-[12px] text-text">{issue.source === 'customer' ? t('issues.sourceCustomer') : t('issues.sourceInternal')}</div>
             </div>
 
             {/* Dates */}
             <div className="border-t border-border2 pt-[10px] space-y-[6px]">
               <div className="flex justify-between text-[11px]">
-                <span className="text-text2">作成日</span>
+                <span className="text-text2">{t('issues.colCreatedAt')}</span>
                 <span className="text-text">{formatDate(issue.created_at)}</span>
               </div>
               <div className="flex justify-between text-[11px]">
-                <span className="text-text2">更新日</span>
+                <span className="text-text2">{t('issues.updatedAt')}</span>
                 <span className="text-text">{formatDate(issue.updated_at)}</span>
               </div>
               {issue.reopen_count > 0 && (
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-text2">再オープン回数</span>
+                  <span className="text-text2">{t('issues.reopenCount')}</span>
                   <span className="text-danger font-semibold">{issue.reopen_count}</span>
                 </div>
               )}
@@ -408,12 +411,12 @@ export default function IssueDetailPage() {
           {/* Resolution notes */}
           {(issue.status === 'resolved' || issue.status === 'verified' || issue.status === 'closed' || issue.resolution_notes) && (
             <div className="bg-surface rounded-lg border border-wf-border p-5">
-              <h3 className="text-[13px] font-bold text-text mb-3">解決メモ</h3>
+              <h3 className="text-[13px] font-bold text-text mb-3">{t('issues.resolutionNotes')}</h3>
               <textarea
                 value={resolutionNotes || issue.resolution_notes}
                 onChange={(e) => setResolutionNotes(e.target.value)}
                 rows={4}
-                placeholder="解決方法やメモを入力..."
+                placeholder={t('issues.resolutionPlaceholder')}
                 className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-y focus:outline-none focus:border-mint"
               />
               <div className="flex justify-end mt-[8px]">
@@ -422,7 +425,7 @@ export default function IssueDetailPage() {
                   disabled={updateIssue.isPending}
                   className="px-3 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
                 >
-                  保存
+                  {t('common.save')}
                 </button>
               </div>
             </div>

@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import type { TaskWithRelations } from '@/types/database'
 import { STATUS_LABELS } from '@/lib/constants'
 import { useMock } from '@/lib/utils'
+import { t, type Locale } from '@/lib/i18n/translations'
 
 function escapeCsvValue(value: string): string {
   if (
@@ -24,21 +25,21 @@ function formatDate(date: string): string {
   return `${y}/${m}/${day}`
 }
 
-function buildCsv(tasks: TaskWithRelations[]): string {
+function buildCsv(tasks: TaskWithRelations[], locale: Locale): string {
   const headers = [
-    'ID',
-    'クライアント',
-    'タイトル',
-    'ステータス',
-    '進捗(%)',
-    '依頼者',
-    '担当者',
-    'ディレクター',
-    '希望納期',
-    '確定納期',
-    '見積工数',
-    '実績工数',
-    '作成日',
+    t(locale, 'csv.task.id'),
+    t(locale, 'csv.task.client'),
+    t(locale, 'csv.task.title'),
+    t(locale, 'csv.task.status'),
+    t(locale, 'csv.task.progress'),
+    t(locale, 'csv.task.requester'),
+    t(locale, 'csv.task.assignee'),
+    t(locale, 'csv.task.director'),
+    t(locale, 'csv.task.desiredDeadline'),
+    t(locale, 'csv.task.confirmedDeadline'),
+    t(locale, 'csv.task.estimatedHours'),
+    t(locale, 'csv.task.actualHours'),
+    t(locale, 'csv.task.createdAt'),
   ]
 
   const header = headers.map(escapeCsvValue).join(',')
@@ -66,8 +67,11 @@ function buildCsv(tasks: TaskWithRelations[]): string {
   return [header, ...rows].join('\r\n')
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const locale = (request.nextUrl.searchParams.get('locale') as Locale) || 'ja'
+    const validLocale: Locale = locale === 'en' ? 'en' : 'ja'
+
     let tasks: TaskWithRelations[]
 
     if (useMock()) {
@@ -81,7 +85,7 @@ export async function GET() {
       const { data, error } = await supabase
         .from('tasks')
         .select(
-          '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)'
+          '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
         )
         .order('created_at', { ascending: false })
 
@@ -89,7 +93,7 @@ export async function GET() {
       tasks = (data ?? []) as TaskWithRelations[]
     }
 
-    const csv = buildCsv(tasks)
+    const csv = buildCsv(tasks, validLocale)
     const BOM = '\uFEFF'
     const timestamp = new Date()
       .toISOString()

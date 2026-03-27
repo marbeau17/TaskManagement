@@ -8,6 +8,7 @@ import { formatDate, formatHours } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
 import { useSubtasks } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
 
 interface TaskTableProps {
   tasks: TaskWithRelations[]
@@ -15,16 +16,16 @@ interface TaskTableProps {
   onSelectionChange?: (ids: Set<string>) => void
 }
 
-const COLUMNS = [
-  'WBS',
-  'クライアント',
-  'タスク名',
-  '担当クリエイター',
-  '進捗',
-  '確定納期',
-  '見積',
-  '実績',
-  'ステータス',
+const COLUMN_KEYS = [
+  'tasks.col.wbs',
+  'tasks.col.client',
+  'tasks.col.taskName',
+  'tasks.col.assignee',
+  'tasks.col.progress',
+  'tasks.col.deadline',
+  'tasks.col.estimate',
+  'tasks.col.actual',
+  'tasks.col.status',
 ] as const
 
 const PAGE_SIZE = 20
@@ -42,6 +43,7 @@ function SubtaskRows({
   onSelectOne: (id: string) => void
 }) {
   const router = useRouter()
+  const { t } = useI18n()
   const { data: subtasks } = useSubtasks(parentId)
 
   if (!subtasks || subtasks.length === 0) return null
@@ -120,7 +122,7 @@ function SubtaskRows({
                   </span>
                 </div>
               ) : (
-                <span className="text-[11.5px] italic text-warn">未アサイン</span>
+                <span className="text-[11.5px] italic text-warn">{t('tasks.unassigned')}</span>
               )}
             </td>
 
@@ -181,6 +183,7 @@ function SubtaskRows({
 }
 
 export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTableProps) {
+  const { t } = useI18n()
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -265,7 +268,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
       <div className="md:hidden">
         {pagedTasks.length === 0 && (
           <div className="px-[12px] py-[32px] text-center text-text3 text-[13px]">
-            タスクが見つかりませんでした
+            {t('tasks.noTasks')}
           </div>
         )}
         <div className="flex flex-col gap-[8px] p-[12px]">
@@ -316,7 +319,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         size="sm"
                       />
                     ) : (
-                      <span className="text-[11px] italic text-warn">未アサイン</span>
+                      <span className="text-[11px] italic text-warn">{t('tasks.unassigned')}</span>
                     )}
                   </div>
                   {deadline ? (
@@ -361,12 +364,12 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   />
                 </th>
               )}
-              {COLUMNS.map((col) => (
+              {COLUMN_KEYS.map((key) => (
                 <th
-                  key={col}
+                  key={key}
                   className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap"
                 >
-                  {col}
+                  {t(key)}
                 </th>
               ))}
             </tr>
@@ -375,10 +378,10 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
             {pagedTasks.length === 0 && (
               <tr>
                 <td
-                  colSpan={COLUMNS.length + (selectable ? 1 : 0)}
+                  colSpan={COLUMN_KEYS.length + (selectable ? 1 : 0)}
                   className="px-[12px] py-[32px] text-center text-text3 text-[13px]"
                 >
-                  タスクが見つかりませんでした
+                  {t('tasks.noTasks')}
                 </td>
               </tr>
             )}
@@ -483,7 +486,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                           </span>
                         ) : (
                           <span className="text-[11.5px] text-text whitespace-nowrap">
-                            {task.assignees[0]?.user?.name} 他{task.assignees.length - 1}名
+                            {task.assignees[0]?.user?.name} {t('tasks.othersCount').replace('{count}', String(task.assignees.length - 1))}
                           </span>
                         )}
                       </div>
@@ -500,7 +503,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </div>
                     ) : (
                       <span className="text-[11.5px] italic text-warn">
-                        未アサイン
+                        {t('tasks.unassigned')}
                       </span>
                     )}
                   </td>
@@ -555,7 +558,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </span>
                       {task.actual_hours > 0 && (
                         <span className="text-[9px] px-[5px] py-[1px] rounded-full bg-[#FFF8E0] dark:bg-[#3D3520] text-[#C8A030] dark:text-[#E0C050] font-semibold border border-[#F0E0A0] dark:border-[#7A6010] whitespace-nowrap">
-                          手入力済み
+                          {t('tasks.manualEntry')}
                         </span>
                       )}
                     </div>
@@ -596,10 +599,10 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
               disabled:opacity-40 disabled:cursor-not-allowed
             "
           >
-            前へ
+            {t('tasks.prevPage')}
           </button>
           <span className="text-[12px] text-text2">
-            {safePage} / {totalPages} ページ
+            {t('tasks.pageInfo').replace('{current}', String(safePage)).replace('{total}', String(totalPages))}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -611,7 +614,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
               disabled:opacity-40 disabled:cursor-not-allowed
             "
           >
-            次へ
+            {t('tasks.nextPage')}
           </button>
         </div>
       )}

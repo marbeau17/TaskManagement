@@ -1,13 +1,15 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState } from 'react'
 import { useAttachments } from '@/hooks/useTasks'
-import { useUploadAttachment, useDeleteAttachment } from '@/hooks/useAttachments'
-import { validateFile, getFileUrl, FILE_INPUT_ACCEPT } from '@/lib/data/storage'
+import { useUploadAttachment } from '@/hooks/useAttachments'
+import { useI18n } from '@/hooks/useI18n'
 
 interface AttachmentListProps {
   taskId: string
 }
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -17,18 +19,13 @@ function formatFileSize(bytes: number): string {
 
 function getFileIcon(mimeType: string): string {
   if (mimeType.startsWith('image/')) return '\uD83D\uDDBC'
-  if (mimeType === 'application/pdf') return '\uD83D\uDCC4'
-  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '\uD83D\uDCCA'
-  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '\uD83D\uDCCA'
-  if (mimeType.includes('word') || mimeType.includes('document')) return '\uD83D\uDCC3'
-  if (mimeType === 'application/zip' || mimeType === 'application/x-zip-compressed') return '\uD83D\uDDDC'
   return '\uD83D\uDCC4'
 }
 
 export function AttachmentList({ taskId }: AttachmentListProps) {
+  const { t } = useI18n()
   const { data: attachments, isLoading } = useAttachments(taskId)
   const uploadMutation = useUploadAttachment()
-  const deleteMutation = useDeleteAttachment()
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,9 +41,8 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
     // Reset the input so the same file can be selected again
     e.target.value = ''
 
-    const validationError = validateFile(file)
-    if (validationError) {
-      setError(validationError)
+    if (file.size > MAX_FILE_SIZE) {
+      setError(t('attachment.fileTooLarge'))
       return
     }
 
@@ -55,84 +51,39 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
       { taskId, file },
       {
         onError: (err) => {
-          setError(err instanceof Error ? err.message : 'アップロードに失敗しました')
+          setError(err instanceof Error ? err.message : t('attachment.uploadFailed'))
         },
       }
     )
   }
 
-  const handleDownload = useCallback(async (storagePath: string, fileName: string) => {
-    try {
-      const url = await getFileUrl(storagePath)
-      const link = document.createElement('a')
-      link.href = url
-      link.target = '_blank'
-      link.rel = 'noopener noreferrer'
-      link.download = fileName
-      link.click()
-    } catch {
-      setError('ファイルのダウンロードに失敗しました')
-    }
-  }, [])
-
-  const handleDelete = useCallback(
-    (attachmentId: string, storagePath: string, fileName: string) => {
-      if (!window.confirm(`「${fileName}」を削除しますか?`)) return
-
-      setError(null)
-      deleteMutation.mutate(
-        { attachmentId, storagePath, taskId },
-        {
-          onError: (err) => {
-            setError(err instanceof Error ? err.message : '削除に失敗しました')
-          },
-        }
-      )
-    },
-    [deleteMutation, taskId]
-  )
-
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {'📎 添付ファイル'}
+        {t('attachment.title')}
       </h3>
 
       {isLoading && (
-        <p className="text-[12px] text-text3">読み込み中...</p>
+        <p className="text-[12px] text-text3">{t('common.loading')}</p>
       )}
 
       {attachments && attachments.length === 0 && (
-        <p className="text-[12px] text-text3 mb-3">添付ファイルはありません</p>
+        <p className="text-[12px] text-text3 mb-3">{t('attachment.empty')}</p>
       )}
 
       <div className="flex flex-col gap-2 mb-4">
         {attachments?.map((file) => (
           <div
             key={file.id}
-            className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-surf2 transition-colors group"
+            className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-surf2 transition-colors"
           >
             <span className="text-[14px]">{getFileIcon(file.mime_type)}</span>
-            <button
-              type="button"
-              onClick={() => handleDownload(file.storage_path, file.file_name)}
-              className="text-[12px] text-info font-medium truncate flex-1 text-left hover:underline cursor-pointer"
-              title={`ダウンロード: ${file.file_name}`}
-            >
+            <span className="text-[12px] text-info font-medium truncate flex-1">
               {file.file_name}
-            </button>
+            </span>
             <span className="text-[10px] text-text3 shrink-0">
               {formatFileSize(file.file_size)}
             </span>
-            <button
-              type="button"
-              onClick={() => handleDelete(file.id, file.storage_path, file.file_name)}
-              disabled={deleteMutation.isPending}
-              className="text-[12px] text-text3 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 disabled:opacity-50"
-              title="削除"
-            >
-              {'✕'}
-            </button>
           </div>
         ))}
       </div>
@@ -147,7 +98,6 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
         type="file"
         hidden
         ref={fileRef}
-        accept={FILE_INPUT_ACCEPT}
         onChange={handleFileChange}
       />
 
@@ -158,7 +108,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
         disabled={uploadMutation.isPending}
         className="w-full py-2 rounded-md text-[12px] font-bold border border-dashed border-wf-border text-text2 hover:border-mint hover:text-mint transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {uploadMutation.isPending ? 'アップロード中...' : '＋ ファイルを添付'}
+        {uploadMutation.isPending ? t('attachment.uploading') : t('attachment.upload')}
       </button>
     </div>
   )

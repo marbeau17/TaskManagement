@@ -11,14 +11,20 @@ import {
   ClientView,
   RecentActivity,
   ProjectIssueSummary,
-  BurndownChart,
-  EstimateVsActualChart,
 } from '@/components/dashboard'
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
-import { PERIOD_OPTIONS } from '@/lib/constants'
+import { useI18n } from '@/hooks/useI18n'
 
 export default function DashboardPage() {
+  const { t } = useI18n()
+
+  const periodOptions = [
+    { label: t('dashboard.periodWeek'), value: 'week' as const },
+    { label: t('dashboard.periodMonth'), value: 'month' as const },
+    { label: t('dashboard.periodAll'), value: 'all' as const },
+  ]
+
   const {
     dashboardView,
     setDashboardView,
@@ -32,11 +38,11 @@ export default function DashboardPage() {
     <>
       {/* Topbar */}
       <Topbar
-        title="ダッシュボード"
-        subtitle={`今週: ${weekRange.label}`}
+        title={t('dashboard.title')}
+        subtitle={`${t('dashboard.thisWeekLabel')}: ${weekRange.label}`}
       >
         <PeriodToggle
-          options={PERIOD_OPTIONS}
+          options={periodOptions}
           value={period}
           onChange={(v) => setPeriod(v as typeof period)}
         />
@@ -49,7 +55,7 @@ export default function DashboardPage() {
           href="/tasks/new"
           className="bg-mint-dd text-white text-[12px] font-semibold px-[14px] py-[6px] rounded-[8px] hover:bg-mint-d transition-colors whitespace-nowrap"
         >
-          + タスク依頼
+          {t('dashboard.newTaskRequest')}
         </Link>
       </Topbar>
 
@@ -71,7 +77,7 @@ export default function DashboardPage() {
               }
             `}
           >
-            👤 クリエイター別
+            👤 {t('dashboard.creatorView')}
           </button>
           <button
             onClick={() => setDashboardView('client')}
@@ -84,7 +90,7 @@ export default function DashboardPage() {
               }
             `}
           >
-            🏢 クライアント別
+            🏢 {t('dashboard.clientView')}
           </button>
         </div>
 
@@ -103,12 +109,6 @@ export default function DashboardPage() {
         ) : (
           <ClientView />
         )}
-
-        {/* Burndown chart */}
-        <BurndownChart />
-
-        {/* Estimate vs Actual */}
-        <EstimateVsActualChart />
 
         {/* Project issue summary */}
         <ProjectIssueSummary />

@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { useI18n } from '@/hooks/useI18n'
 
 interface ShellProps {
   children: React.ReactNode
@@ -27,6 +28,7 @@ export function Shell({ children }: ShellProps) {
   const pathname = usePathname()
   const activePage = deriveActivePage(pathname)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { t } = useI18n()
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
@@ -63,7 +65,7 @@ export function Shell({ children }: ShellProps) {
           <button
             onClick={() => setMobileOpen(true)}
             className="p-[6px] rounded-[6px] text-text2 hover:bg-surf2 transition-colors"
-            aria-label="メニューを開く"
+            aria-label={t('shell.openMenu')}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

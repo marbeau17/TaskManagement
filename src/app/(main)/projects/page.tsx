@@ -9,42 +9,43 @@ import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
 import { usePermission } from '@/hooks/usePermission'
+import { useI18n } from '@/hooks/useI18n'
 import type { Project, ProjectStatus } from '@/types/project'
 
 // ---------------------------------------------------------------------------
 // Project status styles
 // ---------------------------------------------------------------------------
 
-const PROJECT_STATUS_CONFIG: Record<
+const PROJECT_STATUS_STYLES: Record<
   ProjectStatus,
-  { label: string; bg: string; text: string; border: string }
+  { key: string; bg: string; text: string; border: string }
 > = {
   planning: {
-    label: '\u8A08\u753B\u4E2D',
+    key: 'projects.statusPlanning',
     bg: 'bg-slate-100 dark:bg-slate-800',
     text: 'text-slate-600 dark:text-slate-300',
     border: 'border-slate-300 dark:border-slate-600',
   },
   active: {
-    label: '\u9032\u884C\u4E2D',
+    key: 'projects.statusActive',
     bg: 'bg-emerald-100 dark:bg-emerald-950/40',
     text: 'text-emerald-700 dark:text-emerald-400',
     border: 'border-emerald-300 dark:border-emerald-800',
   },
   on_hold: {
-    label: '\u4FDD\u7559',
+    key: 'projects.statusOnHold',
     bg: 'bg-amber-100 dark:bg-amber-950/40',
     text: 'text-amber-700 dark:text-amber-400',
     border: 'border-amber-300 dark:border-amber-800',
   },
   completed: {
-    label: '\u5B8C\u4E86',
+    key: 'projects.statusCompleted',
     bg: 'bg-blue-100 dark:bg-blue-950/40',
     text: 'text-blue-700 dark:text-blue-400',
     border: 'border-blue-300 dark:border-blue-800',
   },
   archived: {
-    label: '\u30A2\u30FC\u30AB\u30A4\u30D6',
+    key: 'projects.statusArchived',
     bg: 'bg-gray-200 dark:bg-gray-800',
     text: 'text-gray-600 dark:text-gray-400',
     border: 'border-gray-400 dark:border-gray-600',
@@ -52,12 +53,13 @@ const PROJECT_STATUS_CONFIG: Record<
 }
 
 function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
-  const config = PROJECT_STATUS_CONFIG[status]
+  const { t } = useI18n()
+  const config = PROJECT_STATUS_STYLES[status]
   return (
     <span
       className={`${config.bg} ${config.text} ${config.border} text-[10px] px-[8px] py-[1px] rounded-full font-semibold border inline-block whitespace-nowrap`}
     >
-      {config.label}
+      {t(config.key)}
     </span>
   )
 }
@@ -85,6 +87,7 @@ function CreateProjectModal({
   }) => void
   saving: boolean
 }) {
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [keyPrefix, setKeyPrefix] = useState('')
@@ -113,63 +116,63 @@ function CreateProjectModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
       <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[460px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
-          プロジェクト作成
+          {t('projects.createTitle')}
         </h2>
 
         <div className="space-y-[12px]">
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              プロジェクト名 <span className="text-danger">*</span>
+              {t('projects.name')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: Webリニューアルプロジェクト"
+              placeholder={t('projects.namePlaceholder')}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3"
             />
           </div>
 
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              説明
+              {t('projects.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="プロジェクトの概要"
+              placeholder={t('projects.descriptionPlaceholder')}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3 resize-y"
             />
           </div>
 
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              キープレフィックス <span className="text-danger">*</span>
+              {t('projects.keyPrefix')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               value={keyPrefix}
               onChange={(e) => setKeyPrefix(e.target.value.toUpperCase())}
-              placeholder="例: WEB"
+              placeholder={t('projects.keyPrefixPlaceholder')}
               maxLength={10}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3 uppercase"
             />
             <p className="text-[10px] text-text3 mt-[2px]">
-              課題キーに使用されます (例: WEB-1, WEB-2)
+              {t('projects.keyPrefixHint')}
             </p>
           </div>
 
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-              PM (プロジェクトマネージャー)
+              {t('projects.pm')}
             </label>
             <select
               value={pmId}
               onChange={(e) => setPmId(e.target.value)}
               className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
             >
-              <option value="">未設定</option>
+              <option value="">{t('projects.pmNotSet')}</option>
               {directorsAndAdmins.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
@@ -181,7 +184,7 @@ function CreateProjectModal({
           <div className="grid grid-cols-2 gap-[10px]">
             <div>
               <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                開始日
+                {t('projects.startDate')}
               </label>
               <input
                 type="date"
@@ -192,7 +195,7 @@ function CreateProjectModal({
             </div>
             <div>
               <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                終了日
+                {t('projects.endDate')}
               </label>
               <input
                 type="date"
@@ -209,14 +212,14 @@ function CreateProjectModal({
             onClick={onClose}
             className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving || !name.trim() || !keyPrefix.trim()}
             className="px-[16px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {saving ? '作成中...' : '作成'}
+            {saving ? t('projects.creating') : t('projects.createBtn')}
           </button>
         </div>
       </div>
@@ -230,6 +233,7 @@ function CreateProjectModal({
 
 export default function ProjectsPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const { can } = usePermission()
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
@@ -237,8 +241,7 @@ export default function ProjectsPage() {
 
   const { data: projects, isLoading } = useProjects()
   const { data: members } = useMembers()
-  const { data: allTasksResult } = useTasks()
-  const allTasks = allTasksResult?.data
+  const { data: allTasks } = useTasks()
   const { data: allIssues } = useIssues()
   const createProjectMutation = useCreateProject()
 
@@ -306,13 +309,13 @@ export default function ProjectsPage() {
 
   return (
     <>
-      <Topbar title="プロジェクト管理">
+      <Topbar title={t('projects.title')}>
         {can('projects', 'create') && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
           >
-            + プロジェクト作成
+            {t('projects.create')}
           </button>
         )}
       </Topbar>
@@ -325,14 +328,14 @@ export default function ProjectsPage() {
             onSearchChange={setSearch}
             filters={[
               {
-                label: 'ステータス',
+                label: t('projects.status'),
                 value: statusFilter,
                 options: [
-                  { label: '計画中', value: 'planning' },
-                  { label: '進行中', value: 'active' },
-                  { label: '保留', value: 'on_hold' },
-                  { label: '完了', value: 'completed' },
-                  { label: 'アーカイブ', value: 'archived' },
+                  { label: t('projects.statusPlanning'), value: 'planning' },
+                  { label: t('projects.statusActive'), value: 'active' },
+                  { label: t('projects.statusOnHold'), value: 'on_hold' },
+                  { label: t('projects.statusCompleted'), value: 'completed' },
+                  { label: t('projects.statusArchived'), value: 'archived' },
                 ],
                 onChange: setStatusFilter,
               },
@@ -343,14 +346,14 @@ export default function ProjectsPage() {
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-[40px] text-[13px] text-text3">
-            読み込み中...
+            {t('common.loading')}
           </div>
         )}
 
         {/* Empty */}
         {!isLoading && filteredProjects.length === 0 && (
           <div className="text-center py-[40px] text-[13px] text-text3">
-            プロジェクトが見つかりません
+            {t('projects.notFound')}
           </div>
         )}
 
@@ -406,10 +409,10 @@ export default function ProjectsPage() {
                 {/* Stats row */}
                 <div className="flex items-center gap-[16px] mb-[8px]">
                   <span className="text-[11px] text-text2">
-                    タスク <span className="font-semibold text-text">{stats.taskCount}</span>
+                    {t('projects.tasks')} <span className="font-semibold text-text">{stats.taskCount}</span>
                   </span>
                   <span className="text-[11px] text-text2">
-                    課題 <span className="font-semibold text-text">{stats.issueCount}</span>
+                    {t('projects.issues')} <span className="font-semibold text-text">{stats.issueCount}</span>
                   </span>
                   <span className="text-[11px] text-text2 ml-auto">
                     {completionRate}%

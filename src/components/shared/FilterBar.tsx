@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/hooks/useI18n'
+
 interface FilterOption {
   label: string
   value: string
@@ -19,6 +21,8 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ searchValue, onSearchChange, filters }: FilterBarProps) {
+  const { t } = useI18n()
+
   return (
     <div className="flex items-center gap-[10px] flex-wrap">
       {/* Search input */}
@@ -30,7 +34,7 @@ export function FilterBar({ searchValue, onSearchChange, filters }: FilterBarPro
           type="text"
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="検索..."
+          placeholder={t('common.search')}
           className="
             h-[32px] pl-[28px] pr-[10px] rounded-[6px]
             bg-surface border border-wf-border text-text text-[12px]

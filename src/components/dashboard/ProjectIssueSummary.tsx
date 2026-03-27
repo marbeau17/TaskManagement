@@ -4,9 +4,11 @@ import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
+import { useI18n } from '@/hooks/useI18n'
 
 export function ProjectIssueSummary() {
   const router = useRouter()
+  const { t } = useI18n()
   const { data: projects } = useProjects()
   const { data: issues } = useIssues()
 
@@ -40,18 +42,18 @@ export function ProjectIssueSummary() {
   if (!projects || !issues) {
     return (
       <div className="bg-surface border border-border2 rounded-[10px] p-[16px]">
-        <h3 className="text-[13px] font-bold text-text mb-[12px]">プロジェクト課題サマリー</h3>
-        <p className="text-[12px] text-text3">読み込み中...</p>
+        <h3 className="text-[13px] font-bold text-text mb-[12px]">{t('dashboard.projectIssueSummaryTitle')}</h3>
+        <p className="text-[12px] text-text3">{t('common.loading')}</p>
       </div>
     )
   }
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] p-[16px]">
-      <h3 className="text-[13px] font-bold text-text mb-[12px]">プロジェクト課題サマリー</h3>
+      <h3 className="text-[13px] font-bold text-text mb-[12px]">{t('dashboard.projectIssueSummaryTitle')}</h3>
 
       {projectSummaries.length === 0 ? (
-        <p className="text-[12px] text-text3">オープンな課題はありません</p>
+        <p className="text-[12px] text-text3">{t('dashboard.noOpenIssues')}</p>
       ) : (
         <div className="flex flex-col gap-[8px]">
           {projectSummaries.map((summary) => (
@@ -71,17 +73,17 @@ export function ProjectIssueSummary() {
 
               <div className="flex items-center gap-[6px] shrink-0 ml-[8px]">
                 {summary.criticalCount > 0 && (
-                  <span className="text-[10px] font-bold text-white bg-red-500 dark:bg-red-400 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
+                  <span className="text-[10px] font-bold text-white bg-red-500 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
                     {summary.criticalCount}
                   </span>
                 )}
                 {summary.highCount > 0 && (
-                  <span className="text-[10px] font-bold text-white bg-orange-500 dark:bg-orange-400 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
+                  <span className="text-[10px] font-bold text-white bg-orange-500 rounded-full px-[7px] py-[1px] min-w-[20px] text-center">
                     {summary.highCount}
                   </span>
                 )}
                 <span className="text-[11px] text-text2 font-medium">
-                  {summary.totalOpen} 件
+                  {summary.totalOpen} {t('dashboard.issueCount')}
                 </span>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSubtasks, useCreateTask } from '@/hooks/useTasks'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, ProgressBar, StatusChip } from '@/components/shared'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -27,6 +28,7 @@ function AddSubtaskForm({
 }) {
   const [title, setTitle] = useState('')
   const createTask = useCreateTask()
+  const { t } = useI18n()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +52,7 @@ function AddSubtaskForm({
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="サブタスク名を入力..."
+        placeholder={t('subtask.placeholder')}
         autoFocus
         className="
           flex-1 rounded-lg border border-wf-border px-3 py-1.5 text-[12.5px] text-text1
@@ -67,7 +69,7 @@ function AddSubtaskForm({
           disabled:opacity-50 disabled:cursor-not-allowed
         "
       >
-        {createTask.isPending ? '...' : '追加'}
+        {createTask.isPending ? '...' : t('common.add')}
       </button>
       <button
         type="button"
@@ -78,7 +80,7 @@ function AddSubtaskForm({
           hover:bg-wf-border transition-colors
         "
       >
-        キャンセル
+        {t('common.cancel')}
       </button>
     </form>
   )
@@ -92,13 +94,14 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
   const router = useRouter()
   const { data: subtasks, isLoading } = useSubtasks(parentTask.id)
   const [showForm, setShowForm] = useState(false)
+  const { t } = useI18n()
 
   return (
     <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
       {/* Header */}
       <div className="px-6 py-4 border-b border-wf-border flex items-center justify-between">
         <h2 className="text-[14px] font-bold text-text1">
-          サブタスク
+          {t('subtask.title')}
           {subtasks && subtasks.length > 0 && (
             <span className="ml-[6px] text-[12px] font-normal text-text3">
               ({subtasks.length})
@@ -110,12 +113,12 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
       {/* Content */}
       <div className="px-6 py-4">
         {isLoading && (
-          <div className="text-[12px] text-text3 py-[8px]">読み込み中...</div>
+          <div className="text-[12px] text-text3 py-[8px]">{t('common.loading')}</div>
         )}
 
         {!isLoading && subtasks && subtasks.length === 0 && !showForm && (
           <div className="text-[12px] text-text3 py-[8px]">
-            サブタスクはありません
+            {t('subtask.empty')}
           </div>
         )}
 
@@ -193,7 +196,7 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
               hover:text-mint-d transition-colors
             "
           >
-            + サブタスク追加
+            {t('subtask.add')}
           </button>
         )}
       </div>

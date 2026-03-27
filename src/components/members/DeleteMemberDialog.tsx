@@ -12,6 +12,7 @@ import {
 import { useDeleteMember } from '@/hooks/useMembers'
 import { getRoleLabel } from '@/lib/constants'
 import type { User } from '@/types/database'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Component
@@ -30,6 +31,7 @@ export function DeleteMemberDialog({
   onOpenChange,
   onSuccess,
 }: DeleteMemberDialogProps) {
+  const { t } = useI18n()
   const deleteMember = useDeleteMember()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -42,7 +44,7 @@ export function DeleteMemberDialog({
       onSuccess?.()
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : '不明なエラーが発生しました'
+        err instanceof Error ? err.message : t('members.deleteUnknownError')
       setErrorMessage(message)
       console.error('[DeleteMember] Failed to delete member:', err)
     }
@@ -63,10 +65,10 @@ export function DeleteMemberDialog({
       <DialogContent className="bg-surface border border-border2 sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="text-[15px] font-bold text-text">
-            メンバー削除の確認
+            {t('members.deleteTitle')}
           </DialogTitle>
           <DialogDescription className="text-[11px] text-text2">
-            以下のメンバーを削除しようとしています
+            {t('members.deleteDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -82,13 +84,13 @@ export function DeleteMemberDialog({
 
         {/* Warning */}
         <div className="bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-danger leading-relaxed">
-          このメンバーを削除すると、担当タスクの再アサインが必要になります。
+          {t('members.deleteWarning')}
         </div>
 
         {/* Mutation error */}
         {(deleteMember.isError || errorMessage) && (
           <div className="bg-danger-bg border border-danger-b rounded-[6px] px-[10px] py-[8px] text-[11px] text-danger">
-            削除に失敗しました: {errorMessage ?? 'もう一度お試しください。'}
+            {t('members.deleteFailed')} {errorMessage ?? t('members.deleteFailedRetry')}
           </div>
         )}
 
@@ -98,7 +100,7 @@ export function DeleteMemberDialog({
             onClick={() => handleClose(false)}
             className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -106,7 +108,7 @@ export function DeleteMemberDialog({
             disabled={deleteMember.isPending}
             className="px-[16px] py-[7px] text-[12px] text-white bg-danger rounded-[6px] hover:opacity-90 transition-colors disabled:opacity-50 border border-danger-b"
           >
-            {deleteMember.isPending ? '削除中...' : '削除する'}
+            {deleteMember.isPending ? t('members.deleting') : t('members.deleteAction')}
           </button>
         </DialogFooter>
       </DialogContent>

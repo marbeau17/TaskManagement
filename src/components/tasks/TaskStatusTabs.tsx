@@ -2,18 +2,19 @@
 
 import type { TaskStatus, TaskWithRelations } from '@/types/database'
 import { useFilterStore } from '@/stores/filterStore'
+import { useI18n } from '@/hooks/useI18n'
 
 interface TabDef {
   key: TaskStatus | 'all'
-  label: string
+  i18nKey: string
 }
 
 const TABS: TabDef[] = [
-  { key: 'all', label: 'すべて' },
-  { key: 'waiting', label: '⏳ アサイン待ち' },
-  { key: 'todo', label: '📋 未着手' },
-  { key: 'in_progress', label: '▶ 進行中' },
-  { key: 'done', label: '✓ 完了' },
+  { key: 'all', i18nKey: 'tasks.tab.all' },
+  { key: 'waiting', i18nKey: 'tasks.tab.waiting' },
+  { key: 'todo', i18nKey: 'tasks.tab.todo' },
+  { key: 'in_progress', i18nKey: 'tasks.tab.inProgress' },
+  { key: 'done', i18nKey: 'tasks.tab.done' },
 ]
 
 interface TaskStatusTabsProps {
@@ -21,6 +22,7 @@ interface TaskStatusTabsProps {
 }
 
 export function TaskStatusTabs({ tasks }: TaskStatusTabsProps) {
+  const { t } = useI18n()
   const { status, setStatus } = useFilterStore()
 
   const counts: Record<string, number> = {
@@ -49,7 +51,7 @@ export function TaskStatusTabs({ tasks }: TaskStatusTabsProps) {
               }
             `}
           >
-            {tab.label}
+            {t(tab.i18nKey)}
             <span
               className={`
                 ml-[6px] inline-flex items-center justify-center

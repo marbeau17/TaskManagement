@@ -10,7 +10,7 @@ import { useMembers } from '@/hooks/useMembers'
 import { formatDate } from '@/lib/utils'
 import { exportIssuesCsv } from '@/lib/issue-csv-export'
 import { usePermission } from '@/hooks/usePermission'
-import { useDebounce } from '@/hooks/useDebounce'
+import { useI18n } from '@/hooks/useI18n'
 import type { IssueFilters } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -20,8 +20,8 @@ import type { IssueFilters } from '@/types/issue'
 export default function IssuesPage() {
   const router = useRouter()
   const { can } = usePermission()
-  const [searchInput, setSearchInput] = useState('')
-  const search = useDebounce(searchInput, 300)
+  const { t } = useI18n()
+  const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [severityFilter, setSeverityFilter] = useState('')
@@ -55,7 +55,7 @@ export default function IssuesPage() {
 
   return (
     <>
-      <Topbar title="課題管理">
+      <Topbar title={t('issues.title')}>
         <button
           onClick={() => {
             if (issues && issues.length > 0) exportIssuesCsv(issues)
@@ -63,14 +63,14 @@ export default function IssuesPage() {
           disabled={!issues || issues.length === 0}
           className="px-[14px] py-[6px] text-[12px] font-semibold text-text bg-surf2 border border-wf-border rounded-[6px] hover:bg-wf-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          CSV出力
+          {t('issues.csvExport')}
         </button>
         {can('issues', 'create') && (
           <button
             onClick={() => router.push('/issues/new')}
             className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
           >
-            + 課題報告
+            {t('issues.newIssue')}
           </button>
         )}
       </Topbar>
@@ -79,61 +79,61 @@ export default function IssuesPage() {
         {/* Filters */}
         <div className="mb-[16px]">
           <FilterBar
-            searchValue={searchInput}
-            onSearchChange={setSearchInput}
+            searchValue={search}
+            onSearchChange={setSearch}
             filters={[
               {
-                label: 'プロジェクト',
+                label: t('issues.filterProject'),
                 value: projectFilter,
                 options: projectOptions,
                 onChange: setProjectFilter,
               },
               {
-                label: 'タイプ',
+                label: t('issues.filterType'),
                 value: typeFilter,
                 options: [
-                  { label: 'バグ', value: 'bug' },
-                  { label: '改善', value: 'improvement' },
-                  { label: '質問', value: 'question' },
-                  { label: 'インシデント', value: 'incident' },
+                  { label: t('issues.bug'), value: 'bug' },
+                  { label: t('issues.improvement'), value: 'improvement' },
+                  { label: t('issues.question'), value: 'question' },
+                  { label: t('issues.incident'), value: 'incident' },
                 ],
                 onChange: setTypeFilter,
               },
               {
-                label: '重要度',
+                label: t('issues.filterSeverity'),
                 value: severityFilter,
                 options: [
-                  { label: 'Critical', value: 'critical' },
-                  { label: 'High', value: 'high' },
-                  { label: 'Medium', value: 'medium' },
-                  { label: 'Low', value: 'low' },
+                  { label: t('issues.critical'), value: 'critical' },
+                  { label: t('issues.high'), value: 'high' },
+                  { label: t('issues.medium'), value: 'medium' },
+                  { label: t('issues.low'), value: 'low' },
                 ],
                 onChange: setSeverityFilter,
               },
               {
-                label: 'ステータス',
+                label: t('issues.filterStatus'),
                 value: statusFilter,
                 options: [
-                  { label: 'オープン', value: 'open' },
-                  { label: '対応中', value: 'in_progress' },
-                  { label: '解決済', value: 'resolved' },
-                  { label: '検証済', value: 'verified' },
-                  { label: 'クローズ', value: 'closed' },
+                  { label: t('issues.open'), value: 'open' },
+                  { label: t('issues.inProgress'), value: 'in_progress' },
+                  { label: t('issues.resolved'), value: 'resolved' },
+                  { label: t('issues.verified'), value: 'verified' },
+                  { label: t('issues.closed'), value: 'closed' },
                 ],
                 onChange: setStatusFilter,
               },
               {
-                label: '担当者',
+                label: t('issues.filterAssignee'),
                 value: assigneeFilter,
                 options: memberOptions,
                 onChange: setAssigneeFilter,
               },
               {
-                label: 'ソース',
+                label: t('issues.filterSource'),
                 value: sourceFilter,
                 options: [
-                  { label: '社内', value: 'internal' },
-                  { label: '顧客', value: 'customer' },
+                  { label: t('issues.sourceInternal'), value: 'internal' },
+                  { label: t('issues.sourceCustomer'), value: 'customer' },
                 ],
                 onChange: setSourceFilter,
               },
@@ -144,7 +144,7 @@ export default function IssuesPage() {
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-[40px] text-[13px] text-text3">
-            読み込み中...
+            {t('common.loading')}
           </div>
         )}
 
@@ -153,7 +153,7 @@ export default function IssuesPage() {
           <div className="md:hidden flex flex-col gap-[8px]">
             {(!issues || issues.length === 0) && (
               <div className="py-[32px] text-center text-text3 text-[13px]">
-                課題が見つかりませんでした
+                {t('issues.notFound')}
               </div>
             )}
             {issues?.map((issue) => (
@@ -178,7 +178,7 @@ export default function IssuesPage() {
                       <span className="text-[11px] text-text">{issue.assignee.name}</span>
                     </div>
                   ) : (
-                    <span className="text-[11px] text-text3">未アサイン</span>
+                    <span className="text-[11px] text-text3">{t('issues.unassigned')}</span>
                   )}
                 </div>
               </div>
@@ -193,21 +193,21 @@ export default function IssuesPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-wf-border">
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">キー</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">タイプ</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">タイトル</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">重要度</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">ステータス</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">担当者</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">プロジェクト</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">作成日</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colKey')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colType')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colTitle')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colSeverity')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colStatus')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colAssignee')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colProject')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colCreatedAt')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(!issues || issues.length === 0) && (
                     <tr>
                       <td colSpan={8} className="px-[12px] py-[32px] text-center text-text3 text-[13px]">
-                        課題が見つかりませんでした
+                        {t('issues.notFound')}
                       </td>
                     </tr>
                   )}
@@ -239,7 +239,7 @@ export default function IssuesPage() {
                             <span className="text-[11px] text-text whitespace-nowrap">{issue.assignee.name}</span>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-text3">未アサイン</span>
+                          <span className="text-[11px] text-text3">{t('issues.unassigned')}</span>
                         )}
                       </td>
                       <td className="px-[12px] py-[10px] text-[11.5px] text-text whitespace-nowrap">

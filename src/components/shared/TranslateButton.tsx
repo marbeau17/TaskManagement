@@ -9,7 +9,7 @@ interface TranslateButtonProps {
 }
 
 export function TranslateButton({ text, className = '' }: TranslateButtonProps) {
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const [translated, setTranslated] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showResult, setShowResult] = useState(false)
@@ -50,7 +50,7 @@ export function TranslateButton({ text, className = '' }: TranslateButtonProps) 
         onClick={handleTranslate}
         disabled={loading}
         className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[4px] text-[12px] hover:bg-surf2 transition-colors disabled:opacity-50 cursor-pointer"
-        title={locale === 'ja' ? 'Translate to English' : '日本語に翻訳'}
+        title={locale === 'ja' ? t('translate.toEnglish') : t('translate.toJapanese')}
       >
         {loading ? (
           <span className="animate-spin text-[10px]">...</span>

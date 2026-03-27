@@ -6,20 +6,21 @@ import { StepIndicator, StatusChip } from '@/components/shared'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { AssignForm } from '@/components/tasks/AssignForm'
 import { useCreateTask } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
 import type { TaskFormStep1, TaskFormStep2 } from '@/types/task'
 
 // ---------------------------------------------------------------------------
 // Step definitions for StepIndicator
 // ---------------------------------------------------------------------------
 
-function getSteps(currentStep: 1 | 2) {
+function getSteps(currentStep: 1 | 2, t: (key: string) => string) {
   return [
     {
-      label: '依頼情報入力',
+      label: t('tasks.step1Label'),
       status: currentStep === 1 ? 'active' : 'done',
     },
     {
-      label: 'アサイン設定',
+      label: t('tasks.step2Label'),
       status: currentStep === 2 ? 'active' : 'pending',
     },
   ] as const
@@ -30,6 +31,7 @@ function getSteps(currentStep: 1 | 2) {
 // ---------------------------------------------------------------------------
 
 export default function TaskNewPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const createTask = useCreateTask()
 
@@ -81,7 +83,7 @@ export default function TaskNewPage() {
     }
   }, [step1Data, createTask, router])
 
-  const steps = getSteps(currentStep)
+  const steps = getSteps(currentStep, t)
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -90,7 +92,7 @@ export default function TaskNewPage() {
         <div className="max-w-[780px] mx-auto px-3 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <h1 className="text-[16px] font-bold text-text1">
-              タスク依頼 — STEP {currentStep}
+              {t('tasks.stepTitle').replace('{step}', String(currentStep))}
             </h1>
             <StatusChip status="waiting" size="sm" />
           </div>
@@ -109,7 +111,7 @@ export default function TaskNewPage() {
                   disabled:opacity-50 disabled:cursor-not-allowed
                 "
               >
-                下書き保存
+                {t('tasks.draftSave')}
               </button>
             )}
           </div>
@@ -121,7 +123,7 @@ export default function TaskNewPage() {
       <div className="max-w-[780px] mx-auto px-3 md:px-6 py-6 md:py-8">
         {/* Notice bar */}
         <div className="mb-6 px-4 py-3 rounded-lg bg-info-bg border border-info-b text-[12.5px] text-info">
-          📝 依頼情報を入力して送信すると、管理者・ディレクターにアサイン依頼の通知が届きます。
+          {t('tasks.noticeBar')}
         </div>
 
         {/* Step content */}
@@ -146,7 +148,7 @@ export default function TaskNewPage() {
         {createTask.isPending && (
           <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
             <div className="bg-surface rounded-xl px-8 py-5 shadow-lg text-[14px] font-semibold text-text1">
-              タスクを作成中...
+              {t('tasks.creating')}
             </div>
           </div>
         )}
@@ -154,7 +156,7 @@ export default function TaskNewPage() {
         {/* Error message */}
         {createTask.isError && (
           <div className="mt-4 px-4 py-3 rounded-lg bg-danger-bg border border-danger-b text-[12.5px] text-danger">
-            タスクの作成に失敗しました。もう一度お試しください。
+            {t('tasks.createError')}
           </div>
         )}
       </div>

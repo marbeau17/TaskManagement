@@ -2,9 +2,10 @@
 
 import type { User } from '@/types/database'
 import { Avatar } from '@/components/shared/Avatar'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
-// OrgNode – recursive tree node
+// OrgNode -- recursive tree node
 // ---------------------------------------------------------------------------
 
 function OrgNode({ user, allUsers }: { user: User; allUsers: User[] }) {
@@ -82,10 +83,11 @@ function OrgNode({ user, allUsers }: { user: User; allUsers: User[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// OrgChart – main component
+// OrgChart -- main component
 // ---------------------------------------------------------------------------
 
 export function OrgChart({ members }: { members: User[] }) {
+  const { t } = useI18n()
   const activeMembers = members.filter((m) => m.is_active)
 
   // Find root nodes (members with no manager or whose manager is not in the list)
@@ -97,7 +99,7 @@ export function OrgChart({ members }: { members: User[] }) {
   if (roots.length === 0) {
     return (
       <div className="flex items-center justify-center py-[40px] text-[12px] text-text3">
-        組織図データがありません。メンバーに上司を設定してください。
+        {t('members.orgChartEmpty')}
       </div>
     )
   }

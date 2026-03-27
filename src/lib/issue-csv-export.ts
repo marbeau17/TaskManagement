@@ -3,24 +3,26 @@
 // =============================================================================
 
 import type { Issue } from '@/types/issue'
+import { t, type Locale } from '@/lib/i18n/translations'
 
 /**
  * Exports an array of issues as a UTF-8 CSV file with BOM for Excel compatibility.
  * Triggers an automatic download in the browser.
+ * @param locale - The locale to use for column headers (defaults to 'ja')
  */
-export function exportIssuesCsv(issues: Issue[]): void {
+export function exportIssuesCsv(issues: Issue[], locale: Locale = 'ja'): void {
   const headers = [
-    'issue_key',
-    'type',
-    'severity',
-    'status',
-    'title',
-    'assignee',
-    'project',
-    'reporter',
-    'source',
-    'created_at',
-    'resolved_at',
+    t(locale, 'csv.issue.issueKey'),
+    t(locale, 'csv.issue.type'),
+    t(locale, 'csv.issue.severity'),
+    t(locale, 'csv.issue.status'),
+    t(locale, 'csv.issue.title'),
+    t(locale, 'csv.issue.assignee'),
+    t(locale, 'csv.issue.project'),
+    t(locale, 'csv.issue.reporter'),
+    t(locale, 'csv.issue.source'),
+    t(locale, 'csv.issue.createdAt'),
+    t(locale, 'csv.issue.resolvedAt'),
   ]
 
   const rows = issues.map((issue) => [

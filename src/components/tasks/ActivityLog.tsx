@@ -1,21 +1,22 @@
 'use client'
 
 import { useActivityLogs } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
 import type { ActivityAction } from '@/types/database'
 
 interface ActivityLogProps {
   taskId: string
 }
 
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  created: 'タスクを作成',
-  assigned: 'アサインを設定',
-  progress_updated: '進捗を更新',
-  status_changed: 'ステータスを変更',
-  hours_updated: '工数を更新',
-  comment_added: 'コメントを追加',
-  deadline_changed: '納期を変更',
-  rejected: '差し戻し',
+const ACTION_LABEL_KEYS: Record<ActivityAction, string> = {
+  created: 'activity.created',
+  assigned: 'activity.assigned',
+  progress_updated: 'activity.progressUpdated',
+  status_changed: 'activity.statusChanged',
+  hours_updated: 'activity.hoursUpdated',
+  comment_added: 'activity.commentAdded',
+  deadline_changed: 'activity.deadlineChanged',
+  rejected: 'activity.rejected',
 }
 
 function formatDate(dateStr: string): string {
@@ -24,6 +25,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function ActivityLog({ taskId }: ActivityLogProps) {
+  const { t } = useI18n()
   const { data: logs, isLoading } = useActivityLogs(taskId)
 
   const sorted = logs
@@ -36,15 +38,15 @@ export function ActivityLog({ taskId }: ActivityLogProps) {
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {'📝 更新履歴'}
+        {'📝 '}{t('activity.title')}
       </h3>
 
       {isLoading && (
-        <p className="text-[12px] text-text3">読み込み中...</p>
+        <p className="text-[12px] text-text3">{t('common.loading')}</p>
       )}
 
       {sorted.length === 0 && !isLoading && (
-        <p className="text-[12px] text-text3">更新履歴はありません</p>
+        <p className="text-[12px] text-text3">{t('activity.noHistory')}</p>
       )}
 
       <div className="flex flex-col gap-0">
@@ -65,12 +67,14 @@ export function ActivityLog({ taskId }: ActivityLogProps) {
               <span className="text-text3">{formatDate(log.created_at)}</span>
               <span className="text-text3 mx-1">|</span>
               <span className="text-text2">
-                {log.user?.name ?? '不明'}が
+                {log.user?.name ?? t('activity.unknownUser')}
               </span>
               <span className="text-text font-bold mx-0.5">
-                {ACTION_LABELS[log.action]}
+                {t(ACTION_LABEL_KEYS[log.action])}
               </span>
-              <span className="text-text2">を行った</span>
+              {t('activity.suffix') && (
+                <span className="text-text2">{t('activity.suffix')}</span>
+              )}
             </div>
           </div>
         ))}

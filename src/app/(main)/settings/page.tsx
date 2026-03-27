@@ -126,7 +126,7 @@ export default function SettingsPage() {
               </h2>
               <div>
                 <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                  {t('settings.general') === 'General' ? 'Organization Name' : '組織名'}
+                  {t('settings.orgName')}
                 </label>
                 <input
                   type="text"
@@ -145,10 +145,7 @@ export default function SettingsPage() {
                 {t('settings.theme')}
               </h2>
               <p className="text-[11px] text-text2 mb-[10px]">
-                {t('settings.theme') === 'Theme'
-                  ? 'Select the display theme. Choosing System follows your OS preference.'
-                  : 'アプリの表示テーマを選択します。システムを選ぶとOSの設定に従います。'
-                }
+                {t('settings.themeDescription')}
               </p>
               <ThemeToggle />
             </div>
@@ -161,10 +158,7 @@ export default function SettingsPage() {
                 {t('settings.language')}
               </h2>
               <p className="text-[11px] text-text2 mb-[10px]">
-                {t('settings.language') === 'Language'
-                  ? 'Select your preferred display language.'
-                  : 'UIの表示言語を選択します。'
-                }
+                {t('settings.languageDescription')}
               </p>
               <LanguageToggle />
               <label className="flex items-center gap-[8px] mt-[14px] cursor-pointer">
@@ -175,10 +169,7 @@ export default function SettingsPage() {
                   className="w-[16px] h-[16px] rounded border-border2 text-mint focus:ring-mint accent-[#6FB5A3]"
                 />
                 <span className="text-[12px] text-text">
-                  {t('settings.language') === 'Language'
-                    ? 'Auto-detect language from browser'
-                    : 'ブラウザの言語設定から自動検出する'
-                  }
+                  {t('settings.autoDetectLanguage')}
                 </span>
               </label>
             </div>
@@ -193,7 +184,7 @@ export default function SettingsPage() {
               <div className="space-y-[12px]">
                 <div>
                   <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                    {t('settings.workload') === 'Workload' ? 'Warning Threshold (%)' : '警告しきい値 (%)'}
+                    {t('settings.warningThreshold')}
                   </label>
                   <input
                     type="number"
@@ -204,15 +195,12 @@ export default function SettingsPage() {
                     max={100}
                   />
                   <p className="text-[10px] text-text3 mt-[2px]">
-                    {t('settings.workload') === 'Workload'
-                      ? 'Shows a warning when workload exceeds this value'
-                      : '稼働率がこの値を超えると注意表示になります'
-                    }
+                    {t('settings.warningThresholdHelp')}
                   </p>
                 </div>
                 <div>
                   <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                    {t('settings.workload') === 'Workload' ? 'Danger Threshold (%)' : '超過しきい値 (%)'}
+                    {t('settings.dangerThreshold')}
                   </label>
                   <input
                     type="number"
@@ -223,10 +211,7 @@ export default function SettingsPage() {
                     max={200}
                   />
                   <p className="text-[10px] text-text3 mt-[2px]">
-                    {t('settings.workload') === 'Workload'
-                      ? 'Shows overloaded when workload exceeds this value'
-                      : '稼働率がこの値を超えると超過表示になります'
-                    }
+                    {t('settings.dangerThresholdHelp')}
                   </p>
                 </div>
               </div>
@@ -242,27 +227,27 @@ export default function SettingsPage() {
               <div className="space-y-[10px]">
                 {[
                   {
-                    label: t('settings.notification') === 'Notifications' ? 'When a new task is created' : '新規タスク作成時',
+                    label: t('settings.notifyNewTask'),
                     checked: notifyNewTask,
                     onChange: setNotifyNewTask,
                   },
                   {
-                    label: t('settings.notification') === 'Notifications' ? 'When a task is assigned' : 'タスクがアサインされた時',
+                    label: t('settings.notifyAssigned'),
                     checked: notifyAssigned,
                     onChange: setNotifyAssigned,
                   },
                   {
-                    label: t('settings.notification') === 'Notifications' ? 'When deadline is approaching (3 days)' : '納期が近づいた時 (3日前)',
+                    label: t('settings.notifyDeadline'),
                     checked: notifyDeadline,
                     onChange: setNotifyDeadline,
                   },
                   {
-                    label: t('settings.notification') === 'Notifications' ? 'When a comment is added' : 'コメントが追加された時',
+                    label: t('settings.notifyComment'),
                     checked: notifyComment,
                     onChange: setNotifyComment,
                   },
                   {
-                    label: t('settings.notification') === 'Notifications' ? 'When workload is exceeded' : '稼働超過時',
+                    label: t('settings.notifyOverload'),
                     checked: notifyOverload,
                     onChange: setNotifyOverload,
                   },
@@ -291,15 +276,12 @@ export default function SettingsPage() {
                 {t('settings.ai')}
               </h2>
               <p className="text-[11px] text-text2 mb-[10px]">
-                {t('settings.ai') === 'AI Settings'
-                  ? 'Configure the Gemini API key for AI translation features.'
-                  : 'AI翻訳機能で使用するGemini APIキーを設定します。'
-                }
+                {t('settings.aiDescription')}
               </p>
               <div className="space-y-[12px]">
                 <div>
                   <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                    Gemini API Key
+                    {t('settings.geminiApiKey')}
                   </label>
                   <input
                     type="password"
@@ -309,10 +291,7 @@ export default function SettingsPage() {
                     className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint font-mono"
                   />
                   <p className="text-[10px] text-text3 mt-[2px]">
-                    {t('settings.ai') === 'AI Settings'
-                      ? 'Set GEMINI_API_KEY in your .env file or enter it here.'
-                      : '.envファイルにGEMINI_API_KEYを設定するか、ここに入力してください。'
-                    }
+                    {t('settings.geminiApiKeyHelp')}
                   </p>
                 </div>
                 <div className="flex items-center gap-[8px]">
@@ -321,10 +300,7 @@ export default function SettingsPage() {
                     disabled={aiTesting}
                     className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50 cursor-pointer"
                   >
-                    {aiTesting
-                      ? (t('common.loading'))
-                      : (t('settings.ai') === 'AI Settings' ? 'Test Connection' : '接続テスト')
-                    }
+                    {aiTesting ? t('common.loading') : t('settings.testConnection')}
                   </button>
                   {aiTestResult && (
                     <span className={`text-[11px] font-medium ${aiTestResult.startsWith('OK') ? 'text-ok' : 'text-red-500'}`}>
@@ -348,7 +324,7 @@ export default function SettingsPage() {
           </button>
           {saved && (
             <span className="text-[12px] text-ok font-medium">
-              {t('common.save') === 'Save' ? 'Settings saved' : '設定を保存しました'}
+              {t('settings.saved')}
             </span>
           )}
         </div>

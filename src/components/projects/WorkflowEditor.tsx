@@ -33,6 +33,7 @@ function ColorPicker({
   color: string
   onChange: (c: string) => void
 }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -53,7 +54,7 @@ function ColorPicker({
         onClick={() => setOpen(!open)}
         className="w-[24px] h-[24px] rounded-[4px] border border-border2 shrink-0 cursor-pointer"
         style={{ backgroundColor: color }}
-        aria-label="色を選択"
+        aria-label={t('workflow.selectColor')}
       />
       {open && (
         <div className="absolute z-20 top-[30px] left-0 bg-surface border border-border2 rounded-[8px] shadow-lg p-[8px] grid grid-cols-6 gap-[4px] w-[176px]">

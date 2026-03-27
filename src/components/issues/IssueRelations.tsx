@@ -4,17 +4,18 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useIssueRelations, useAddIssueRelation, useRemoveIssueRelation } from '@/hooks/useRelations'
 import { useIssues } from '@/hooks/useIssues'
 import { IssueStatusBadge } from '@/components/shared'
+import { useI18n } from '@/hooks/useI18n'
 import type { RelationType, IssueRelation } from '@/types/relation'
 
 // ---------------------------------------------------------------------------
 // Relation type config
 // ---------------------------------------------------------------------------
 
-const RELATION_TYPE_CONFIG: Record<RelationType, { label: string; icon: string }> = {
-  blocks: { label: 'ブロック', icon: '\u26D4' },
-  is_blocked_by: { label: 'ブロックされている', icon: '\u23F3' },
-  relates_to: { label: '関連', icon: '\uD83D\uDD17' },
-  duplicates: { label: '重複', icon: '\uD83D\uDCC4' },
+const RELATION_TYPE_KEYS: Record<RelationType, { labelKey: string; icon: string }> = {
+  blocks: { labelKey: 'issues.relationBlocks', icon: '\u26D4' },
+  is_blocked_by: { labelKey: 'issues.relationBlockedBy', icon: '\u23F3' },
+  relates_to: { labelKey: 'issues.relationRelatesTo', icon: '\uD83D\uDD17' },
+  duplicates: { labelKey: 'issues.relationDuplicates', icon: '\uD83D\uDCC4' },
 }
 
 const RELATION_TYPES: RelationType[] = ['blocks', 'is_blocked_by', 'relates_to', 'duplicates']
@@ -28,6 +29,7 @@ interface IssueRelationsProps {
 }
 
 export function IssueRelations({ issueId }: IssueRelationsProps) {
+  const { t } = useI18n()
   const { data: relations, isLoading } = useIssueRelations(issueId)
   const addRelation = useAddIssueRelation()
   const removeRelation = useRemoveIssueRelation()
@@ -108,13 +110,13 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13px] font-bold text-text">関連課題</h3>
+        <h3 className="text-[13px] font-bold text-text">{t('issues.relatedIssues')}</h3>
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
           className="text-[12px] font-bold text-mint hover:text-mint-d transition-colors"
         >
-          {showForm ? 'キャンセル' : '+ 関連追加'}
+          {showForm ? t('common.cancel') : t('issues.addRelation')}
         </button>
       </div>
 
@@ -127,9 +129,9 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
             onChange={(e) => setRelationType(e.target.value as RelationType)}
             className="w-full border border-wf-border rounded-md px-2 py-1.5 text-[12px] text-text bg-surface focus:outline-none focus:border-mint"
           >
-            {RELATION_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {RELATION_TYPE_CONFIG[t].icon} {RELATION_TYPE_CONFIG[t].label}
+            {RELATION_TYPES.map((rt) => (
+              <option key={rt} value={rt}>
+                {RELATION_TYPE_KEYS[rt].icon} {t(RELATION_TYPE_KEYS[rt].labelKey)}
               </option>
             ))}
           </select>
@@ -146,7 +148,7 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
                 setShowSuggestions(true)
               }}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="課題キーまたはタイトルで検索..."
+              placeholder={t('issues.searchIssuePlaceholder')}
               className="w-full border border-wf-border rounded-md px-2 py-1.5 text-[12px] text-text bg-surface focus:outline-none focus:border-mint"
             />
             {showSuggestions && suggestions.length > 0 && (
@@ -180,16 +182,16 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
             disabled={!selectedIssueId || addRelation.isPending}
             className="w-full py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {addRelation.isPending ? '追加中...' : '追加'}
+            {addRelation.isPending ? t('issues.adding') : t('common.add')}
           </button>
         </div>
       )}
 
       {/* Relations list */}
-      {isLoading && <p className="text-[12px] text-text3">読み込み中...</p>}
+      {isLoading && <p className="text-[12px] text-text3">{t('common.loading')}</p>}
 
       {relations && relations.length === 0 && !showForm && (
-        <p className="text-[12px] text-text3">関連課題はまだありません</p>
+        <p className="text-[12px] text-text3">{t('issues.noRelatedIssues')}</p>
       )}
 
       {relations && relations.length > 0 && (
@@ -197,13 +199,13 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
           {relations.map((relation) => {
             const { issue, type } = getLinkedIssue(relation)
             if (!issue) return null
-            const config = RELATION_TYPE_CONFIG[type]
+            const config = RELATION_TYPE_KEYS[type]
             return (
               <div
                 key={relation.id}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surf2 transition-colors group"
               >
-                <span className="text-[12px] shrink-0" title={config.label}>
+                <span className="text-[12px] shrink-0" title={t(config.labelKey)}>
                   {config.icon}
                 </span>
                 <span className="text-[11px] font-mono text-mint font-semibold shrink-0">
@@ -218,7 +220,7 @@ export function IssueRelations({ issueId }: IssueRelationsProps) {
                   onClick={() => handleRemove(relation.id)}
                   disabled={removeRelation.isPending}
                   className="text-[14px] text-text3 hover:text-danger transition-colors opacity-0 group-hover:opacity-100 leading-none px-1"
-                  title="削除"
+                  title={t('common.delete')}
                 >
                   ×
                 </button>

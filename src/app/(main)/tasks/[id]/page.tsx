@@ -13,7 +13,7 @@ import { ActivityLog } from '@/components/tasks/ActivityLog'
 import { AttachmentList } from '@/components/tasks/AttachmentList'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
-import { WatcherButton } from '@/components/tasks/WatcherButton'
+import { useI18n } from '@/hooks/useI18n'
 
 export default function TaskDetailPage() {
   const params = useParams<{ id: string }>()
@@ -21,6 +21,7 @@ export default function TaskDetailPage() {
   const { user } = useAuth()
   const { data: task, isLoading } = useTask(params.id)
   const updateProgress = useUpdateTaskProgress()
+  const { t } = useI18n()
 
   const handleReject = () => {
     if (!task) return
@@ -49,7 +50,7 @@ export default function TaskDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[13px] text-text3">読み込み中...</div>
+        <div className="text-[13px] text-text3">{t('taskDetail.loading')}</div>
       </div>
     )
   }
@@ -57,7 +58,7 @@ export default function TaskDetailPage() {
   if (!task) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[13px] text-text3">タスクが見つかりません</div>
+        <div className="text-[13px] text-text3">{t('taskDetail.notFound')}</div>
       </div>
     )
   }
@@ -71,7 +72,7 @@ export default function TaskDetailPage() {
           onClick={() => router.back()}
           className="text-[12px] text-text2 hover:text-mint transition-colors"
         >
-          ← 一覧に戻る
+          {t('taskDetail.backToList')}
         </button>
 
         {task.parent_task_id && (
@@ -79,7 +80,7 @@ export default function TaskDetailPage() {
             href={`/tasks/${task.parent_task_id}`}
             className="text-[11px] text-mint hover:text-mint-d transition-colors font-semibold"
           >
-            ← 親タスク
+            {t('taskDetail.parentTask')}
           </Link>
         )}
 
@@ -94,7 +95,6 @@ export default function TaskDetailPage() {
         </h1>
 
         <StatusChip status={task.status} />
-        <WatcherButton taskId={task.id} />
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -111,7 +111,7 @@ export default function TaskDetailPage() {
           disabled={updateProgress.isPending}
           className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-danger-b text-danger bg-danger-bg hover:bg-danger hover:text-white transition-colors disabled:opacity-50"
         >
-          差し戻し
+          {t('taskDetail.reject')}
         </button>
 
         <button
@@ -120,7 +120,7 @@ export default function TaskDetailPage() {
           disabled={updateProgress.isPending}
           className="px-3 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
         >
-          ✓ 完了にする
+          {t('taskDetail.markDone')}
         </button>
       </div>
 

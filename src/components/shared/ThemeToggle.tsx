@@ -1,15 +1,17 @@
 'use client'
 
 import { useTheme } from '@/hooks/useTheme'
+import { useI18n } from '@/hooks/useI18n'
 
 const THEME_OPTIONS = [
-  { value: 'light' as const, label: 'ライト', icon: '\u2600\uFE0F' },
-  { value: 'dark' as const, label: 'ダーク', icon: '\uD83C\uDF19' },
-  { value: 'system' as const, label: 'システム', icon: '\uD83D\uDCBB' },
+  { value: 'light' as const, labelKey: 'settings.light', icon: '\u2600\uFE0F' },
+  { value: 'dark' as const, labelKey: 'settings.dark', icon: '\uD83C\uDF19' },
+  { value: 'system' as const, labelKey: 'settings.system', icon: '\uD83D\uDCBB' },
 ]
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const { t } = useI18n()
 
   return (
     <div className="flex items-center bg-surf2 rounded-[7px] p-[3px] gap-[2px]">
@@ -27,7 +29,7 @@ export function ThemeToggle() {
           `}
         >
           <span className="mr-[3px]">{opt.icon}</span>
-          {opt.label}
+          {t(opt.labelKey)}
         </button>
       ))}
     </div>

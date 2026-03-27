@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FilterBar } from '@/components/shared'
 import { useFilterStore } from '@/stores/filterStore'
+import { useI18n } from '@/hooks/useI18n'
 import { useMembers } from '@/hooks/useMembers'
 import { getClients } from '@/lib/data/clients'
 
 export function TaskFilters() {
+  const { t } = useI18n()
   const {
     search,
     client_id,
@@ -54,19 +56,19 @@ export function TaskFilters() {
       onSearchChange={setSearchInput}
       filters={[
         {
-          label: 'クライアント: すべて',
+          label: t('tasks.filter.client'),
           value: client_id ?? '',
           options: clientOptions,
           onChange: (v) => setClientId(v || undefined),
         },
         {
-          label: '担当: すべて',
+          label: t('tasks.filter.assignee'),
           value: assigned_to ?? '',
           options: memberOptions,
           onChange: (v) => setAssignedTo(v || undefined),
         },
         {
-          label: '依頼者: すべて',
+          label: t('tasks.filter.requester'),
           value: requested_by ?? '',
           options: memberOptions,
           onChange: (v) => setRequestedBy(v || undefined),

@@ -7,6 +7,7 @@ import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
 import { useCreateIssue } from '@/hooks/useIssues'
+import { useI18n } from '@/hooks/useI18n'
 import type { IssueType, IssueSeverity, CreateIssueData } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
@@ -16,6 +17,7 @@ import type { IssueType, IssueSeverity, CreateIssueData } from '@/types/issue'
 export default function NewIssuePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useI18n()
   const initialProjectId = searchParams.get('project_id') ?? ''
 
   const { data: projects } = useProjects()
@@ -38,10 +40,9 @@ export default function NewIssuePage() {
   const [labelsInput, setLabelsInput] = useState('')
 
   // Fetch tasks belonging to the selected project
-  const { data: projectTasksResult } = useTasks(
+  const { data: projectTasks } = useTasks(
     projectId ? { project_id: projectId } : undefined
   )
-  const projectTasks = projectTasksResult?.data
 
   const filteredTasks = useMemo(() => {
     if (!projectTasks) return []
@@ -98,27 +99,27 @@ export default function NewIssuePage() {
 
   return (
     <>
-      <Topbar title="課題報告" />
+      <Topbar title={t('issues.reportTitle')} />
 
       <div className="flex-1 overflow-auto p-[20px]">
         <div className="max-w-[680px] mx-auto space-y-6">
           {/* Project selector */}
           <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
             <div className="px-6 py-4 border-b border-wf-border">
-              <h2 className="text-[15px] font-bold text-text">基本情報</h2>
+              <h2 className="text-[15px] font-bold text-text">{t('issues.basicInfo')}</h2>
             </div>
             <div className="px-6 py-5 space-y-5">
               {/* Project */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  プロジェクト <span className="text-danger">*</span>
+                  {t('issues.project')} <span className="text-danger">*</span>
                 </label>
                 <select
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 >
-                  <option value="">選択してください</option>
+                  <option value="">{t('issues.selectPlaceholder')}</option>
                   {(projects ?? []).map((p) => (
                     <option key={p.id} value={p.id}>
                       [{p.key_prefix}] {p.name}
@@ -130,14 +131,14 @@ export default function NewIssuePage() {
               {/* Issue type */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  課題タイプ
+                  {t('issues.issueType')}
                 </label>
                 <div className="flex gap-[8px]">
                   {([
-                    { value: 'bug' as const, label: 'バグ', icon: '\uD83D\uDC1B' },
-                    { value: 'improvement' as const, label: '改善', icon: '\uD83D\uDCA1' },
-                    { value: 'question' as const, label: '質問', icon: '\u2753' },
-                    { value: 'incident' as const, label: 'インシデント', icon: '\uD83D\uDD25' },
+                    { value: 'bug' as const, labelKey: 'issues.bug', icon: '\uD83D\uDC1B' },
+                    { value: 'improvement' as const, labelKey: 'issues.improvement', icon: '\uD83D\uDCA1' },
+                    { value: 'question' as const, labelKey: 'issues.question', icon: '\u2753' },
+                    { value: 'incident' as const, labelKey: 'issues.incident', icon: '\uD83D\uDD25' },
                   ]).map((opt) => (
                     <button
                       key={opt.value}
@@ -150,7 +151,7 @@ export default function NewIssuePage() {
                       }`}
                     >
                       <span>{opt.icon}</span>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -159,13 +160,13 @@ export default function NewIssuePage() {
               {/* Title */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  タイトル <span className="text-danger">*</span>
+                  {t('issues.titleLabel')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="課題のタイトルを入力"
+                  placeholder={t('issues.titlePlaceholder')}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 />
               </div>
@@ -173,30 +174,30 @@ export default function NewIssuePage() {
               {/* Severity */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  重要度
+                  {t('issues.severityLabel')}
                 </label>
                 <select
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value as IssueSeverity)}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 >
-                  <option value="critical">Critical</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
+                  <option value="critical">{t('issues.critical')}</option>
+                  <option value="high">{t('issues.high')}</option>
+                  <option value="medium">{t('issues.medium')}</option>
+                  <option value="low">{t('issues.low')}</option>
                 </select>
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  説明
+                  {t('issues.descriptionLabel')}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  placeholder="課題の詳細を入力"
+                  placeholder={t('issues.descriptionPlaceholder')}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 resize-y focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 />
               </div>
@@ -208,7 +209,7 @@ export default function NewIssuePage() {
             <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
               <div className="px-6 py-4 border-b border-wf-border">
                 <h2 className="text-[15px] font-bold text-text">
-                  {showBugFields ? 'バグ詳細' : 'インシデント詳細'}
+                  {showBugFields ? t('issues.bugDetails') : t('issues.incidentDetails')}
                 </h2>
               </div>
               <div className="px-6 py-5 space-y-5">
@@ -216,7 +217,7 @@ export default function NewIssuePage() {
                 {showBugFields && (
                   <div>
                     <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                      再現手順
+                      {t('issues.reproductionStepsLabel')}
                     </label>
                     <textarea
                       value={reproductionSteps}
@@ -232,13 +233,13 @@ export default function NewIssuePage() {
                 {showBugFields && (
                   <div>
                     <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                      期待される結果
+                      {t('issues.expectedResultLabel')}
                     </label>
                     <textarea
                       value={expectedResult}
                       onChange={(e) => setExpectedResult(e.target.value)}
                       rows={2}
-                      placeholder="正常に動作した場合の結果"
+                      placeholder={t('issues.expectedResultPlaceholder')}
                       className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 resize-y focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                     />
                   </div>
@@ -247,13 +248,13 @@ export default function NewIssuePage() {
                 {/* Actual result */}
                 <div>
                   <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                    実際の結果
+                    {t('issues.actualResultLabel')}
                   </label>
                   <textarea
                     value={actualResult}
                     onChange={(e) => setActualResult(e.target.value)}
                     rows={2}
-                    placeholder="実際に発生した問題"
+                    placeholder={t('issues.actualResultPlaceholder')}
                     className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 resize-y focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                   />
                 </div>
@@ -261,7 +262,7 @@ export default function NewIssuePage() {
                 {/* Environment */}
                 <div>
                   <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                    環境情報
+                    {t('issues.environmentLabel')}
                   </label>
                   <textarea
                     value={environment}
@@ -270,7 +271,7 @@ export default function NewIssuePage() {
                     placeholder="OS: macOS 14.0&#10;Browser: Chrome 120&#10;Node: 20.x"
                     className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 resize-y focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint font-mono"
                   />
-                  <p className="text-[10px] text-text3 mt-1">「キー: 値」の形式で1行ずつ入力してください</p>
+                  <p className="text-[10px] text-text3 mt-1">{t('issues.environmentHint')}</p>
                 </div>
               </div>
             </div>
@@ -279,20 +280,20 @@ export default function NewIssuePage() {
           {/* Additional options */}
           <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
             <div className="px-6 py-4 border-b border-wf-border">
-              <h2 className="text-[15px] font-bold text-text">追加オプション</h2>
+              <h2 className="text-[15px] font-bold text-text">{t('issues.additionalOptions')}</h2>
             </div>
             <div className="px-6 py-5 space-y-5">
               {/* Assignee */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  担当者
+                  {t('issues.assigneeLabel')}
                 </label>
                 <select
                   value={assigneeId}
                   onChange={(e) => setAssigneeId(e.target.value)}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 >
-                  <option value="">未アサイン</option>
+                  <option value="">{t('issues.unassigned')}</option>
                   {activeMembers.map((m) => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
@@ -303,13 +304,13 @@ export default function NewIssuePage() {
               {projectId && (
                 <div>
                   <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                    関連タスク
+                    {t('issues.relatedTask')}
                   </label>
                   <input
                     type="text"
                     value={taskSearch}
                     onChange={(e) => setTaskSearch(e.target.value)}
-                    placeholder="タスク名で検索..."
+                    placeholder={t('issues.taskSearchPlaceholder')}
                     className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint mb-1.5"
                   />
                   <select
@@ -317,7 +318,7 @@ export default function NewIssuePage() {
                     onChange={(e) => setTaskId(e.target.value)}
                     className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                   >
-                    <option value="">なし</option>
+                    <option value="">{t('issues.none')}</option>
                     {filteredTasks.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.title}
@@ -325,7 +326,7 @@ export default function NewIssuePage() {
                     ))}
                   </select>
                   {projectTasks && projectTasks.length === 0 && (
-                    <p className="text-[10px] text-text3 mt-1">このプロジェクトにはタスクがありません</p>
+                    <p className="text-[10px] text-text3 mt-1">{t('issues.noTasksInProject')}</p>
                   )}
                 </div>
               )}
@@ -333,7 +334,7 @@ export default function NewIssuePage() {
               {/* Source */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  ソース
+                  {t('issues.sourceLabel')}
                 </label>
                 <div className="flex gap-[8px]">
                   <button
@@ -345,7 +346,7 @@ export default function NewIssuePage() {
                         : 'border-border2 text-text2 hover:border-text3'
                     }`}
                   >
-                    社内
+                    {t('issues.sourceInternal')}
                   </button>
                   <button
                     type="button"
@@ -356,7 +357,7 @@ export default function NewIssuePage() {
                         : 'border-border2 text-text2 hover:border-text3'
                     }`}
                   >
-                    顧客
+                    {t('issues.sourceCustomer')}
                   </button>
                 </div>
               </div>
@@ -364,13 +365,13 @@ export default function NewIssuePage() {
               {/* Labels */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
-                  ラベル
+                  {t('issues.labelsLabel')}
                 </label>
                 <input
                   type="text"
                   value={labelsInput}
                   onChange={(e) => setLabelsInput(e.target.value)}
-                  placeholder="カンマ区切り (例: UI, API, 緊急)"
+                  placeholder={t('issues.labelsPlaceholder')}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 />
               </div>
@@ -384,7 +385,7 @@ export default function NewIssuePage() {
               onClick={() => router.back()}
               className="px-5 py-2 rounded-lg text-[13px] font-semibold text-text2 bg-surf2 border border-wf-border hover:bg-wf-border transition-colors"
             >
-              キャンセル
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -392,7 +393,7 @@ export default function NewIssuePage() {
               disabled={createIssue.isPending || !projectId || !title.trim()}
               className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {createIssue.isPending ? '登録中...' : '課題を登録'}
+              {createIssue.isPending ? t('issues.submitting') : t('issues.submit')}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useI18n } from '@/hooks/useI18n'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -9,6 +10,38 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
+}
+
+function ErrorFallback({ error, onReload }: { error: Error | null; onReload: () => void }) {
+  const { t } = useI18n()
+
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-wf-bg">
+      <div className="flex flex-col items-center gap-[16px] max-w-[400px] text-center px-[20px]">
+        <div className="text-[40px]">!</div>
+        <h2 className="text-[16px] font-bold text-text">
+          {t('error.title')}
+        </h2>
+        <p className="text-[13px] text-text2 leading-relaxed">
+          {t('error.description')}
+        </p>
+        {error && (
+          <p className="text-[11px] text-text3 bg-surf2 rounded-[6px] px-[12px] py-[8px] w-full break-all">
+            {error.message}
+          </p>
+        )}
+        <button
+          onClick={onReload}
+          className="
+            h-[36px] px-[20px] rounded-[7px] text-[13px] font-bold
+            bg-mint text-white hover:bg-mint-d transition-colors
+          "
+        >
+          {t('error.reload')}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -33,31 +66,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex h-screen w-full items-center justify-center bg-wf-bg">
-          <div className="flex flex-col items-center gap-[16px] max-w-[400px] text-center px-[20px]">
-            <div className="text-[40px]">!</div>
-            <h2 className="text-[16px] font-bold text-text">
-              エラーが発生しました
-            </h2>
-            <p className="text-[13px] text-text2 leading-relaxed">
-              予期しないエラーが発生しました。ページを再読み込みしてください。
-            </p>
-            {this.state.error && (
-              <p className="text-[11px] text-text3 bg-surf2 rounded-[6px] px-[12px] py-[8px] w-full break-all">
-                {this.state.error.message}
-              </p>
-            )}
-            <button
-              onClick={this.handleReload}
-              className="
-                h-[36px] px-[20px] rounded-[7px] text-[13px] font-bold
-                bg-mint text-white hover:bg-mint-d transition-colors
-              "
-            >
-              再読み込み
-            </button>
-          </div>
-        </div>
+        <ErrorFallback error={this.state.error} onReload={this.handleReload} />
       )
     }
 

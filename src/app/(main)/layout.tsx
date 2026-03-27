@@ -6,6 +6,7 @@ import { Providers } from '@/app/providers'
 import { Shell } from '@/components/layout/Shell'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { useMock } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
 
 export default function MainLayout({
   children,
@@ -13,6 +14,7 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const { t } = useI18n()
   const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
@@ -37,8 +39,7 @@ export default function MainLayout({
         .eq('id', user.id)
         .single()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((profile as any)?.must_change_password) {
+      if (profile?.must_change_password) {
         router.replace('/change-password')
         return
       }
@@ -51,7 +52,7 @@ export default function MainLayout({
   if (!authChecked) {
     return (
       <div className="flex h-screen items-center justify-center bg-wf-bg">
-        <div className="text-text3 text-[13px]">認証を確認中...</div>
+        <div className="text-text3 text-[13px]">{t('auth.checking')}</div>
       </div>
     )
   }

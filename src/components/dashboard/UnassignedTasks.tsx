@@ -4,13 +4,14 @@ import { useMemo } from 'react'
 import Link from 'next/link'
 import { useTasks } from '@/hooks/useTasks'
 import { formatDate } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
 import type { TaskWithRelations } from '@/types/database'
 
-function UnassignedItem({ task }: { task: TaskWithRelations }) {
-  const clientName = task.client?.name ?? '不明'
+function UnassignedItem({ task, t }: { task: TaskWithRelations; t: (key: string) => string }) {
+  const clientName = task.client?.name ?? t('dashboard.unknown')
   const deadline = task.desired_deadline
     ? formatDate(task.desired_deadline)
-    : '未設定'
+    : t('dashboard.notSet')
 
   return (
     <Link
@@ -23,7 +24,7 @@ function UnassignedItem({ task }: { task: TaskWithRelations }) {
           {clientName}
         </span>
         <span className="text-[10px] text-text3">
-          希望: {deadline}
+          {t('dashboard.desiredDeadline')}: {deadline}
         </span>
       </div>
     </Link>
@@ -31,8 +32,8 @@ function UnassignedItem({ task }: { task: TaskWithRelations }) {
 }
 
 export function UnassignedTasks() {
-  const { data: tasksResult, isLoading } = useTasks()
-  const tasks = tasksResult?.data
+  const { data: tasks, isLoading } = useTasks()
+  const { t } = useI18n()
 
   const unassigned = useMemo(() => {
     if (!tasks) return []
@@ -42,7 +43,7 @@ export function UnassignedTasks() {
   if (isLoading) {
     return (
       <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow">
-        <div className="text-[12px] text-text3">読み込み中...</div>
+        <div className="text-[12px] text-text3">{t('common.loading')}</div>
       </div>
     )
   }
@@ -51,7 +52,7 @@ export function UnassignedTasks() {
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       {/* Header */}
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center gap-[6px]">
-        <h3 className="text-[13px] font-bold text-text">⏳ アサイン待ち</h3>
+        <h3 className="text-[13px] font-bold text-text">⏳ {t('dashboard.unassignedTitle')}</h3>
         <span className="text-[10px] bg-warn-bg text-warn px-[6px] py-[1px] rounded-full font-bold border border-warn-b">
           {unassigned.length}
         </span>
@@ -61,12 +62,12 @@ export function UnassignedTasks() {
       {unassigned.length > 0 ? (
         <div className="max-h-[200px] overflow-y-auto">
           {unassigned.map((task) => (
-            <UnassignedItem key={task.id} task={task} />
+            <UnassignedItem key={task.id} task={task} t={t} />
           ))}
         </div>
       ) : (
         <div className="px-[12px] py-[16px] text-[12px] text-text3 text-center">
-          アサイン待ちのタスクはありません
+          {t('dashboard.noUnassignedTasks')}
         </div>
       )}
 
@@ -76,7 +77,7 @@ export function UnassignedTasks() {
           href="/tasks?status=waiting"
           className="text-[11px] text-mint-d font-semibold hover:text-mint-dd transition-colors"
         >
-          アサインする →
+          {t('dashboard.assignAction')}
         </Link>
       </div>
     </div>

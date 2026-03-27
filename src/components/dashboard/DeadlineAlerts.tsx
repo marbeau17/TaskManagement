@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { useTasks } from '@/hooks/useTasks'
+import { useI18n } from '@/hooks/useI18n'
 import { daysUntilDeadline, isOverdue } from '@/lib/date-utils'
 import { formatDate } from '@/lib/utils'
 import type { TaskWithRelations } from '@/types/database'
@@ -23,12 +24,13 @@ function getAlertLevel(deadline: string): AlertLevel {
   return 'ok'
 }
 
-function getDeadlineLabel(deadline: string, level: AlertLevel): string {
+function getDeadlineLabel(deadline: string, level: AlertLevel, t: (key: string) => string): string {
   if (level === 'overdue') {
     const d = new Date(deadline)
-    return `${(d.getMonth() + 1)}/${d.getDate()}超過`
+    const dateStr = `${(d.getMonth() + 1)}/${d.getDate()}`
+    return t('deadline.overdue').replace('{date}', dateStr)
   }
-  if (level === 'today') return '本日'
+  if (level === 'today') return t('deadline.today')
   return formatDate(deadline).slice(5) // M/DD format
 }
 
@@ -57,7 +59,8 @@ const LEVEL_STYLES: Record<AlertLevel, { dot: string; tag: string; tagText: stri
 
 function AlertItem({ row }: { row: AlertRow }) {
   const style = LEVEL_STYLES[row.level]
-  const assigneeName = row.task.assigned_user?.name ?? '未アサイン'
+  const { t } = useI18n()
+  const assigneeName = row.task.assigned_user?.name ?? t('client.unassigned')
 
   return (
     <div className="flex items-center gap-[8px] px-[12px] py-[7px] border-b border-border2 last:border-b-0">
@@ -83,32 +86,32 @@ function AlertItem({ row }: { row: AlertRow }) {
 }
 
 export function DeadlineAlerts() {
-  const { data: tasksResult, isLoading } = useTasks()
-  const tasks = tasksResult?.data
+  const { data: tasks, isLoading } = useTasks()
+  const { t } = useI18n()
 
   const alertRows = useMemo<AlertRow[]>(() => {
     if (!tasks) return []
 
     return tasks
-      .filter((t) => {
-        if (t.status === 'done') return false
-        const deadline = t.confirmed_deadline ?? t.desired_deadline
+      .filter((tk) => {
+        if (tk.status === 'done') return false
+        const deadline = tk.confirmed_deadline ?? tk.desired_deadline
         return !!deadline
       })
       .map((task) => {
         const deadline = (task.confirmed_deadline ?? task.desired_deadline)!
         const level = getAlertLevel(deadline)
-        const deadlineLabel = getDeadlineLabel(deadline, level)
+        const deadlineLabel = getDeadlineLabel(deadline, level, t)
         const daysLeft = daysUntilDeadline(deadline)
         return { task, level, deadlineLabel, daysLeft }
       })
       .sort((a, b) => a.daysLeft - b.daysLeft)
-  }, [tasks])
+  }, [tasks, t])
 
   if (isLoading) {
     return (
       <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow">
-        <div className="text-[12px] text-text3">読み込み中...</div>
+        <div className="text-[12px] text-text3">{t('common.loading')}</div>
       </div>
     )
   }
@@ -117,7 +120,7 @@ export function DeadlineAlerts() {
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       {/* Header */}
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center gap-[6px]">
-        <h3 className="text-[13px] font-bold text-text">🔔 納期アラート</h3>
+        <h3 className="text-[13px] font-bold text-text">{t('deadline.title')}</h3>
         {alertRows.filter((r) => r.level === 'overdue' || r.level === 'today').length > 0 && (
           <span className="text-[10px] bg-danger-bg text-danger px-[6px] py-[1px] rounded-full font-bold border border-danger-b">
             {alertRows.filter((r) => r.level === 'overdue' || r.level === 'today').length}
@@ -134,7 +137,7 @@ export function DeadlineAlerts() {
         </div>
       ) : (
         <div className="px-[12px] py-[16px] text-[12px] text-text3 text-center">
-          アラートはありません
+          {t('deadline.noAlerts')}
         </div>
       )}
     </div>

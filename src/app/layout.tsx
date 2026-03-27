@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { ThemeApplier } from "@/components/theme/ThemeApplier";
+import { translations } from "@/lib/i18n/translations";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
@@ -9,9 +10,11 @@ const notoSansJP = Noto_Sans_JP({
   variable: '--font-noto-sans-jp',
 })
 
+const defaultLocale = 'ja'
+
 export const metadata: Metadata = {
-  title: 'WorkFlow — タスク管理',
-  description: 'クリエイターチームのタスク管理・稼働管理・納期管理ツール',
+  title: translations[defaultLocale]['app.title'],
+  description: translations[defaultLocale]['app.description'],
 }
 
 export default function RootLayout({

@@ -2,6 +2,7 @@
 
 import type { TaskWithRelations } from '@/types/database'
 import { useTemplates } from '@/hooks/useTemplates'
+import { useI18n } from '@/hooks/useI18n'
 
 interface TaskDetailInfoProps {
   task: TaskWithRelations & {
@@ -22,6 +23,7 @@ function isOverdue(dateStr: string | null): boolean {
 }
 
 export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
+  const { t } = useI18n()
   const { data: templates } = useTemplates()
   const deadline = task.confirmed_deadline ?? task.desired_deadline
   const overdue = task.status !== 'done' && isOverdue(deadline)
@@ -34,12 +36,12 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {'📋 依頼情報'}
+        {t('taskDetailInfo.title')}
       </h3>
 
       {/* Client name */}
       <div className="mb-3">
-        <span className="text-[12px] text-text2 block mb-1">クライアント</span>
+        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.client')}</span>
         <span className="text-[13px] font-bold text-text">
           {'🏢 '}{task.client.name}
         </span>
@@ -47,14 +49,14 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
 
       {/* Task name */}
       <div className="mb-3">
-        <span className="text-[12px] text-text2 block mb-1">タスク名</span>
+        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.taskName')}</span>
         <span className="text-[13px] font-bold text-text">{task.title}</span>
       </div>
 
       {/* Description */}
       {task.description && (
         <div className="mb-4">
-          <span className="text-[12px] text-text2 block mb-1">説明</span>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.description')}</span>
           <div
             className="bg-surf2 rounded-md p-3 text-[12.5px] text-text whitespace-pre-wrap"
             style={{ lineHeight: 1.8 }}
@@ -67,13 +69,13 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
       {/* Deadlines */}
       <div className="flex gap-6">
         <div>
-          <span className="text-[12px] text-text2 block mb-1">希望納期</span>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.desiredDeadline')}</span>
           <span className="text-[13px] text-text">
             {formatDate(task.desired_deadline)}
           </span>
         </div>
         <div>
-          <span className="text-[12px] text-text2 block mb-1">確定納期</span>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.confirmedDeadline')}</span>
           <span
             className={`text-[13px] font-semibold ${overdue ? 'text-danger' : 'text-text'}`}
           >
@@ -87,7 +89,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
       {template && task.template_data && Object.keys(task.template_data).length > 0 && (
         <div className="mt-4 pt-4 border-t border-wf-border">
           <h4 className="text-[12px] font-bold text-text2 mb-3">
-            📑 {template.name} — 追加情報
+            📑 {template.name} — {t('taskDetailInfo.additionalInfo')}
           </h4>
           <div className="grid grid-cols-2 gap-3">
             {template.fields.map((field) => {

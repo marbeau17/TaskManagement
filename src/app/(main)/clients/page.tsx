@@ -8,6 +8,7 @@ import {
   useUpdateClient,
   useDeleteClient,
 } from '@/hooks/useClients'
+import { useI18n } from '@/hooks/useI18n'
 import type { Client } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -19,11 +20,13 @@ function ClientModal({
   onClose,
   onSave,
   saving,
+  t,
 }: {
   client: Client | null // null = create mode
   onClose: () => void
   onSave: (name: string) => void
   saving: boolean
+  t: (key: string) => string
 }) {
   const [name, setName] = useState(client?.name ?? '')
 
@@ -31,19 +34,19 @@ function ClientModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
       <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[380px]">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
-          {client ? 'クライアント編集' : 'クライアント追加'}
+          {client ? t('clients.editTitle') : t('clients.addTitle')}
         </h2>
 
         <div>
           <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-            クライアント名
+            {t('clients.name')}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-            placeholder="例: 株式会社サンプル"
+            placeholder={t('clients.namePlaceholder')}
             autoFocus
           />
         </div>
@@ -53,14 +56,14 @@ function ClientModal({
             onClick={onClose}
             className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => onSave(name.trim())}
             disabled={saving || !name.trim()}
             className="px-[16px] py-[7px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? t('clients.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -78,21 +81,23 @@ function DeleteConfirmDialog({
   onConfirm,
   deleting,
   error,
+  t,
 }: {
   client: Client
   onClose: () => void
   onConfirm: () => void
   deleting: boolean
   error?: string
+  t: (key: string) => string
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 md:p-0">
       <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[16px] md:p-[24px] w-full max-w-[380px]">
         <h2 className="text-[15px] font-bold text-text mb-[8px]">
-          クライアント削除
+          {t('clients.deleteTitle')}
         </h2>
         <p className="text-[12px] text-text2 mb-[20px]">
-          「{client.name}」を削除しますか？この操作は元に戻せません。
+          {t('clients.deleteConfirm').replace('{{name}}', client.name)}
         </p>
 
         {error && (
@@ -106,14 +111,14 @@ function DeleteConfirmDialog({
             onClick={onClose}
             className="px-[16px] py-[7px] text-[12px] text-text2 bg-surf2 rounded-[6px] hover:bg-border2 transition-colors"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
             disabled={deleting}
             className="px-[16px] py-[7px] text-[12px] text-white bg-danger rounded-[6px] hover:opacity-90 transition-colors disabled:opacity-50"
           >
-            {deleting ? '削除中...' : '削除'}
+            {deleting ? t('clients.deleting') : t('common.delete')}
           </button>
         </div>
       </div>
@@ -126,6 +131,7 @@ function DeleteConfirmDialog({
 // ---------------------------------------------------------------------------
 
 export default function ClientsPage() {
+  const { t } = useI18n()
   const { data: clients, isLoading } = useClients()
   const createMutation = useCreateClient()
   const updateMutation = useUpdateClient()
@@ -167,21 +173,21 @@ export default function ClientsPage() {
     } catch (e: any) {
       const msg = e?.message || String(e)
       if (msg.includes('foreign key') || msg.includes('violates') || msg.includes('referenced')) {
-        setDeleteError('このクライアントにはタスクが紐づいているため削除できません。先にタスクを別のクライアントに移動してください。')
+        setDeleteError(t('clients.deleteFkError'))
       } else {
-        setDeleteError('削除に失敗しました: ' + msg)
+        setDeleteError(t('clients.deleteFailedPrefix') + msg)
       }
     }
   }
 
   return (
     <>
-      <Topbar title="クライアント管理">
+      <Topbar title={t('clients.title')}>
         <button
           onClick={handleCreate}
           className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
         >
-          + クライアント追加
+          {t('clients.add')}
         </button>
       </Topbar>
 
@@ -189,22 +195,22 @@ export default function ClientsPage() {
         {/* Count */}
         <div className="flex items-center justify-between mb-[12px]">
           <p className="text-[12px] text-text2">
-            クライアント数: {clients?.length ?? 0}件
+            {t('clients.count').replace('{{count}}', String(clients?.length ?? 0))}
           </p>
         </div>
 
         <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
           {/* Header */}
           <div className="min-w-[400px] grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
-            <div>名前</div>
-            <div className="text-center">作成日</div>
-            <div className="text-center">操作</div>
+            <div>{t('clients.headerName')}</div>
+            <div className="text-center">{t('clients.headerCreatedAt')}</div>
+            <div className="text-center">{t('clients.headerActions')}</div>
           </div>
 
           {/* Rows */}
           {isLoading ? (
             <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-              読み込み中...
+              {t('common.loading')}
             </div>
           ) : (
             clients?.map((client) => (
@@ -229,13 +235,13 @@ export default function ClientsPage() {
                     onClick={() => handleEdit(client)}
                     className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
                   >
-                    編集
+                    {t('common.edit')}
                   </button>
                   <button
                     onClick={() => setDeletingClient(client)}
                     className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
                   >
-                    削除
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -244,7 +250,7 @@ export default function ClientsPage() {
 
           {!isLoading && clients?.length === 0 && (
             <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
-              クライアントがありません
+              {t('clients.empty')}
             </div>
           )}
         </div>
@@ -260,6 +266,7 @@ export default function ClientsPage() {
           }}
           onSave={handleModalSave}
           saving={createMutation.isPending || updateMutation.isPending}
+          t={t}
         />
       )}
 
@@ -271,6 +278,7 @@ export default function ClientsPage() {
           onConfirm={handleDeleteConfirm}
           deleting={deleteMutation.isPending}
           error={deleteError}
+          t={t}
         />
       )}
     </>
