@@ -12,7 +12,7 @@ const MOCK_DIRECTOR: User = {
   email: 'o.yasuda@meetsc.co.jp',
   name: '安田 修',
   name_short: '安',
-  role: 'director',
+  role: 'admin',
   avatar_color: 'av-b',
   weekly_capacity_hours: 40,
   is_active: true,

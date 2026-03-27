@@ -57,7 +57,7 @@ export const mockUsers: MockUserWithPassword[] = [
     id: 'u2',
     name: '安田 修',
     name_short: '安',
-    role: 'director',
+    role: 'admin',
     avatar_color: 'av-b',
     email: 'o.yasuda@meetsc.co.jp',
     weekly_capacity_hours: 40,
