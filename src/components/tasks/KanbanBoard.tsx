@@ -8,6 +8,7 @@ import { STATUS_LABELS, STATUS_STYLES } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
+import { useI18n } from '@/hooks/useI18n'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,6 +56,7 @@ function TaskCard({
   onDragStart: (e: React.DragEvent, taskId: string) => void
 }) {
   const router = useRouter()
+  const { t } = useI18n()
   const deadline = task.confirmed_deadline ?? task.desired_deadline
   const taskOverdue = deadline && task.status !== 'done' && isOverdue(deadline)
   const taskDueToday = deadline && task.status !== 'done' && isToday(new Date(deadline))
@@ -127,7 +129,7 @@ function TaskCard({
             />
           ) : (
             <span className="text-[9px] italic text-warn">
-              未アサイン
+              {t('kanban.unassigned')}
             </span>
           )}
         </div>
@@ -171,6 +173,7 @@ function KanbanColumn({
   onDrop: (e: React.DragEvent, status: TaskStatus) => void
   isDragOver: boolean
 }) {
+  const { t } = useI18n()
   const colors = COLUMN_COLORS[status]
   const statusStyle = STATUS_STYLES[status]
 
@@ -215,7 +218,7 @@ function KanbanColumn({
         {tasks.length === 0 && (
           <div className="flex-1 flex items-center justify-center py-[20px]">
             <span className="text-[11px] text-text3 italic">
-              タスクなし
+              {t('kanban.noTasks')}
             </span>
           </div>
         )}

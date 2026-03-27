@@ -17,6 +17,7 @@ import {
 import { ja } from 'date-fns/locale'
 import type { TaskWithRelations } from '@/types/database'
 import { GanttRow } from './GanttRow'
+import { useI18n } from '@/hooks/useI18n'
 
 type ZoomLevel = 'day' | 'week' | 'month'
 
@@ -31,13 +32,16 @@ const COLUMN_WIDTH: Record<ZoomLevel, number> = {
   month: 12,  // per day within a month column
 }
 
-const ZOOM_LABELS: Record<ZoomLevel, string> = {
-  day: '日',
-  week: '週',
-  month: '月',
+const ZOOM_LEVEL_KEYS: Record<ZoomLevel, string> = {
+  day: 'gantt.zoomDay',
+  week: 'gantt.zoomWeek',
+  month: 'gantt.zoomMonth',
 }
 
+const ZOOM_LEVELS: ZoomLevel[] = ['day', 'week', 'month']
+
 export function GanttChart({ tasks }: GanttChartProps) {
+  const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState<ZoomLevel>('week')
 
@@ -181,9 +185,9 @@ export function GanttChart({ tasks }: GanttChartProps) {
       {/* Toolbar */}
       <div className="flex items-center gap-[8px] px-[12px] py-[8px] border-b border-wf-border bg-surface">
         <span className="text-[11px] font-semibold text-text2 mr-[4px]">
-          ズーム:
+          {t('gantt.zoom')}
         </span>
-        {(Object.keys(ZOOM_LABELS) as ZoomLevel[]).map((level) => (
+        {ZOOM_LEVELS.map((level) => (
           <button
             key={level}
             onClick={() => {
@@ -200,11 +204,11 @@ export function GanttChart({ tasks }: GanttChartProps) {
               }
             `}
           >
-            {ZOOM_LABELS[level]}
+            {t(ZOOM_LEVEL_KEYS[level])}
           </button>
         ))}
         <span className="ml-auto text-[10px] text-text3">
-          {rootTasks.length} タスク
+          {rootTasks.length} {t('gantt.taskCount')}
         </span>
       </div>
 
@@ -233,7 +237,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
             <div className="flex">
               <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border px-[10px] py-[4px]">
                 <span className="text-[10px] font-semibold text-text2">
-                  タスク名
+                  {t('gantt.taskName')}
                 </span>
               </div>
               {headerRows.bottom.map((col, i) => (
@@ -283,7 +287,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
             {/* Rows */}
             {rootTasks.length === 0 ? (
               <div className="px-[20px] py-[40px] text-center text-text3 text-[13px]">
-                表示できるタスクがありません
+                {t('gantt.empty')}
               </div>
             ) : (
               rootTasks.map((task) => (

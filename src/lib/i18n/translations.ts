@@ -502,6 +502,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'notifications.markAllRead': 'すべて既読にする',
     'notifications.mention': 'メンションされました',
     'notifications.minutesAgo': '{n}分前',
+    'notifications.monthsAgo': '{n}ヶ月前',
     'notifications.statusChanged': 'ステータスが変更されました',
     'notifications.taskAssigned': 'タスクがアサインされました',
     'notifications.title': '通知',
@@ -1366,6 +1367,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'notifications.markAllRead': 'Mark all as read',
     'notifications.mention': 'You were mentioned',
     'notifications.minutesAgo': '{n}m ago',
+    'notifications.monthsAgo': '{n}mo ago',
     'notifications.statusChanged': 'Status changed',
     'notifications.taskAssigned': 'Task assigned',
     'notifications.title': 'Notifications',
@@ -1421,8 +1423,21 @@ export const translations: Record<Locale, Record<string, string>> = {
     'projectMembers.searchPlaceholder': 'Search by name...',
     'projectMembers.title': 'Members',
     'projectMembers.totalHours': 'Total Allocated Hours',
+    'projectTemplates.blankProject': 'Blank Project',
     'projectTemplates.create': 'Create Template',
+    'projectTemplates.createFromTemplate': 'Create from Template',
+    'projectTemplates.creating': 'Creating...',
+    'projectTemplates.delete': 'Delete Template',
+    'projectTemplates.deleteConfirm': 'Are you sure you want to delete this template?',
+    'projectTemplates.description': 'Description',
+    'projectTemplates.milestones': 'Milestones',
+    'projectTemplates.noTemplates': 'No templates available',
     'projectTemplates.saveAsTemplate': 'Save as Template',
+    'projectTemplates.saved': 'Template saved successfully',
+    'projectTemplates.saving': 'Saving...',
+    'projectTemplates.selectTemplate': 'Select Template',
+    'projectTemplates.tasks': 'Tasks',
+    'projectTemplates.templateName': 'Template Name',
     'projectTemplates.title': 'Project Templates',
     'projects.actionColumn': 'Actions',
     'projects.addIssue': '+ Report Issue',
@@ -1730,11 +1745,9 @@ export const translations: Record<Locale, Record<string, string>> = {
 export type TranslationKey = keyof typeof translations.ja
 
 /**
- * Simple translation function for non-React contexts (API routes, utility files).
- * For React components, use the useI18n() hook instead.
+ * Simple translation function for non-React contexts.
+ * For React components, use useI18n() hook instead.
  */
 export function t(locale: Locale, key: string): string {
   return translations[locale]?.[key] ?? translations.ja[key] ?? key
 }
-
-export type TranslationKey = keyof typeof translations.ja
