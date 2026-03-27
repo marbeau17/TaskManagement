@@ -403,7 +403,6 @@ export interface Database {
           },
         ]
       }
-    }
       task_watchers: {
         Row: { id: string; task_id: string; user_id: string; created_at: string }
         Insert: { id?: string; task_id: string; user_id: string; created_at?: string }

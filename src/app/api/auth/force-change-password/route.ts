@@ -20,12 +20,7 @@ export async function POST(request: Request) {
 
     const result = await forceChangePassword(userId, newPassword)
 
-    if (!result.success && result.passwordChanged) {
-      // Partial success: auth password changed but DB flag update failed
-      return Response.json(result, { status: 207 })
-    }
-
-    return Response.json(result)
+    return Response.json(result, { status: result.success ? 200 : 400 })
   } catch (err) {
     console.error('[force-change-password] Unhandled error:', err)
     return Response.json(

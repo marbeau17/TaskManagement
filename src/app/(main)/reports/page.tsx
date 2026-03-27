@@ -53,8 +53,7 @@ function computeAvgCompletionDays(tasks: TaskWithRelations[]): number | null {
 
 export default function ReportsPage() {
   const { t } = useI18n()
-  const { data: allTasksResult, isLoading } = useTasks()
-  const allTasks = allTasksResult?.data
+  const { data: allTasks, isLoading } = useTasks()
   const [dateRange, setDateRange] = useState<DateRange>('month')
 
   const filteredTasks = useMemo(() => {

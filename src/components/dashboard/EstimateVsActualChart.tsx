@@ -169,8 +169,7 @@ function VarianceIndicators({
 // ---------------------------------------------------------------------------
 
 export function EstimateVsActualChart() {
-  const { data: result, isLoading } = useTasks()
-  const tasks = result?.data
+  const { data: tasks, isLoading } = useTasks()
   const { t } = useI18n()
   const [viewMode, setViewMode] = useState<ViewMode>('client')
 

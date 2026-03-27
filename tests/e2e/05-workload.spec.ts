@@ -9,9 +9,9 @@ test.describe('TC-05: Workload Page', () => {
   })
 
   test('displays page title', async ({ page }) => {
-    // Title is rendered inside Topbar's h1 element
-    const title = page.locator('h1').filter({ hasText: '稼働管理' }).or(
-      page.locator('header').filter({ hasText: '稼働管理' })
+    // i18n: JP "👤 クリエイター稼働状況" / EN "👤 Creator Workload"
+    const title = page.locator('h1').filter({ hasText: /稼働|Workload/ }).or(
+      page.locator('header').filter({ hasText: /稼働|Workload/ })
     ).first()
     await expect(title).toBeVisible({ timeout: 15000 })
   })
@@ -26,9 +26,9 @@ test.describe('TC-05: Workload Page', () => {
       const count = await buttons.count()
       expect(count).toBeGreaterThan(0)
     } else {
-      const weekBtn = page.locator('button:has-text("今週")')
-      const monthBtn = page.locator('button:has-text("今月")')
-      const allBtn = page.locator('button:has-text("全期間")')
+      const weekBtn = page.locator('button').filter({ hasText: /今週|This Week/ })
+      const monthBtn = page.locator('button').filter({ hasText: /今月|This Month/ })
+      const allBtn = page.locator('button').filter({ hasText: /全期間|All Time/ })
       const hasWeek = await weekBtn.isVisible().catch(() => false)
       const hasMonth = await monthBtn.isVisible().catch(() => false)
       const hasAll = await allBtn.isVisible().catch(() => false)
@@ -56,7 +56,7 @@ test.describe('TC-05: Workload Page', () => {
     const buttons = page.locator('button')
     const allButtons = await buttons.allTextContents()
     // Find period-related buttons
-    const periodTexts = ['今週', '今月', '全期間']
+    const periodTexts = ['今週', '今月', '全期間', 'This Week', 'This Month', 'All Time']
     for (const text of periodTexts) {
       const btn = page.locator('button', { hasText: text })
       const isVisible = await btn.isVisible().catch(() => false)

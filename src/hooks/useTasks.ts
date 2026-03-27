@@ -38,6 +38,7 @@ export function useTasks(filters?: TaskFilters, pagination?: PaginationParams) {
   return useQuery({
     queryKey: ['tasks', filters, pagination],
     queryFn: () => getTasks(filters, pagination),
+    select: (result) => result.data,
   })
 }
 
@@ -230,8 +231,7 @@ export function useAttachments(taskId: string) {
 // ---------------------------------------------------------------------------
 
 export function useTaskStats() {
-  const { data: result, ...rest } = useTasks()
-  const tasks = result?.data
+  const { data: tasks, ...rest } = useTasks()
 
   const stats = useMemo(() => {
     if (!tasks) {

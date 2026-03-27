@@ -75,8 +75,7 @@ function buildBurndownData(
 }
 
 export function BurndownChart() {
-  const { data: result, isLoading } = useTasks()
-  const tasks = result?.data
+  const { data: tasks, isLoading } = useTasks()
   const { t } = useI18n()
 
   const burndownData = useMemo(() => {

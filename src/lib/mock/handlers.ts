@@ -14,7 +14,7 @@ import type {
   ProjectMember,
 } from '@/types/database'
 import type { TaskFilters, TaskFormStep1, TaskFormStep2, TaskProgressUpdate } from '@/types/task'
-import type { WorkloadSummary, WorkloadKpiData } from '@/types/workload'
+import type { WorkloadSummary, WorkloadKpiData, ResourceLoadData } from '@/types/workload'
 import type { InviteMemberForm } from '@/types/member'
 import type { TaskTemplate, TemplateField } from '@/types/template'
 import type { Project, ProjectFilters } from '@/types/project'
@@ -1057,4 +1057,44 @@ export function deleteMockTemplate(id: string): boolean {
   if (index === -1) return false
   templates = templates.filter((t) => t.id !== id)
   return true
+}
+
+// ---------------------------------------------------------------------------
+// Resource Load Data — computed from tasks and users
+// ---------------------------------------------------------------------------
+
+export function getMockResourceLoadData(): ResourceLoadData {
+  const activeUsers = users.filter((u) => u.is_active)
+  const clientMap = new Map<string, string>()
+  clients.forEach((c) => clientMap.set(c.id, c.name))
+
+  const allClientNames = [...new Set(clients.map((c) => c.name))]
+
+  const entries = activeUsers.map((user) => {
+    const userTasks = tasks.filter(
+      (t) => t.assigned_to === user.id && t.status !== 'done'
+    )
+    const clientHours: Record<string, number> = {}
+    let totalAssigned = 0
+    for (const t of userTasks) {
+      const cName = clientMap.get(t.client_id) ?? 'Unknown'
+      const hrs = t.estimated_hours ?? 0
+      clientHours[cName] = (clientHours[cName] ?? 0) + hrs
+      totalAssigned += hrs
+    }
+    return {
+      user_id: user.id,
+      user_name: user.name,
+      user_name_short: user.name_short,
+      capacity_hours: user.weekly_capacity_hours,
+      total_assigned_hours: totalAssigned,
+      utilization_rate:
+        user.weekly_capacity_hours > 0
+          ? Math.round((totalAssigned / user.weekly_capacity_hours) * 100)
+          : 0,
+      client_hours: clientHours,
+    }
+  })
+
+  return { entries, client_names: allClientNames }
 }
