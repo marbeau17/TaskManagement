@@ -19,7 +19,7 @@ export default async function MainLayout({
 }) {
   // In mock mode, skip all auth checks
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const isMock = !supabaseUrl || supabaseUrl === '' || supabaseUrl.includes('placeholder')
+  const isMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || !supabaseUrl || supabaseUrl === '' || supabaseUrl.includes('placeholder')
 
   if (!isMock) {
     const { createServerSupabaseClient } = await import('@/lib/supabase/server')

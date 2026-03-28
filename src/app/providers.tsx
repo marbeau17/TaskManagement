@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
+import { useTheme } from '@/hooks/useTheme'
+
+/** Ensures dark/light theme is applied inside the Providers tree */
+function ThemeInit() {
+  useTheme()
+  return null
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -42,6 +49,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeInit />
+      {children}
+    </QueryClientProvider>
   )
 }
