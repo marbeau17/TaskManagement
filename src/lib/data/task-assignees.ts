@@ -89,20 +89,23 @@ export async function addTaskAssignee(
     } = await supabase.auth.getUser()
 
     if (task) {
-      const { sendTaskAssignmentEmail } = await import('@/lib/email/task-assignment')
-      sendTaskAssignmentEmail({
-        taskId,
-        taskTitle: task.title,
-        clientName: task.client?.name ?? '',
-        confirmedDeadline: task.confirmed_deadline ?? null,
-        estimatedHours: task.estimated_hours ?? null,
-        directorName: task.director?.name ?? '',
-        description: task.description ?? null,
-        assigneeEmail: data.user.email,
-        assigneeName: data.user.name,
-        assignerId: authUser?.id ?? '',
-        assigneeId: userId,
-      }).catch((err: unknown) => {
+      fetch('/api/email/notify-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId,
+          taskTitle: task.title,
+          clientName: task.client?.name ?? '',
+          confirmedDeadline: task.confirmed_deadline ?? null,
+          estimatedHours: task.estimated_hours ?? null,
+          directorName: task.director?.name ?? '',
+          description: task.description ?? null,
+          assigneeEmail: data.user.email,
+          assigneeName: data.user.name,
+          assignerId: authUser?.id ?? '',
+          assigneeId: userId,
+        }),
+      }).catch((err) => {
         console.error('[addTaskAssignee] Email notification failed:', err)
       })
     }

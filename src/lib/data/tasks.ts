@@ -336,7 +336,7 @@ export async function assignTask(
 
   if (error) throw error
 
-  // Send email notification to the assignee (fire-and-forget)
+  // Send email notification via API route (fire-and-forget, avoids nodemailer in client bundle)
   if (process.env.NEXT_PUBLIC_USE_MOCK !== 'true' && data.assigned_to) {
     const { data: assignee } = await supabase
       .from('users')
@@ -351,20 +351,23 @@ export async function assignTask(
     const task = await getTaskById(id)
 
     if (assignee?.email && task) {
-      const { sendTaskAssignmentEmail } = await import('@/lib/email/task-assignment')
-      sendTaskAssignmentEmail({
-        taskId: id,
-        taskTitle: task.title,
-        clientName: task.client?.name ?? '',
-        confirmedDeadline: data.confirmed_deadline ?? null,
-        estimatedHours: data.estimated_hours ?? null,
-        directorName: director?.name ?? '',
-        description: task.description ?? null,
-        assigneeEmail: assignee.email,
-        assigneeName: assignee.name,
-        assignerId: authUser?.id ?? '',
-        assigneeId: assignee.id,
-      }).catch((err: unknown) => {
+      fetch('/api/email/notify-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: id,
+          taskTitle: task.title,
+          clientName: task.client?.name ?? '',
+          confirmedDeadline: data.confirmed_deadline ?? null,
+          estimatedHours: data.estimated_hours ?? null,
+          directorName: director?.name ?? '',
+          description: task.description ?? null,
+          assigneeEmail: assignee.email,
+          assigneeName: assignee.name,
+          assignerId: authUser?.id ?? '',
+          assigneeId: assignee.id,
+        }),
+      }).catch((err) => {
         console.error('[assignTask] Email notification failed:', err)
       })
     }
