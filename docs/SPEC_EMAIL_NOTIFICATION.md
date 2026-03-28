@@ -42,6 +42,28 @@ SMTP_FROM_EMAIL=client.report.meetsc@gmail.com
 Vercelダッシュボードで以下を設定:
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL`
 
+### 2.4 Vercel環境変数設定手順
+
+1. Vercelダッシュボード → Settings → Environment Variables に移動
+2. 以下の変数を追加（Production環境）:
+
+| 変数名 | 値 |
+|--------|-----|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `587` |
+| `SMTP_USER` | `client.report.meetsc@gmail.com` |
+| `SMTP_PASSWORD` | `(Gmail App Password)` |
+| `SMTP_FROM_NAME` | `WorkFlow Task Management` |
+| `SMTP_FROM_EMAIL` | `client.report.meetsc@gmail.com` |
+
+3. 設定後、再デプロイが必要（Settings → Deployments → Redeploy）
+
+### 2.5 Gmail App Password 取得方法
+
+1. Google Account → Security → 2-Step Verification を有効化
+2. Security → App passwords で新しいパスワードを生成
+3. 生成された16文字のパスワードを `SMTP_PASSWORD` に設定
+
 ---
 
 ## 3. 機能仕様

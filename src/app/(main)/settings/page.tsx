@@ -5,13 +5,15 @@ import { Topbar } from '@/components/layout'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { LanguageToggle } from '@/components/shared/LanguageToggle'
 import { useI18n } from '@/hooks/useI18n'
+import { useAuth } from '@/hooks/useAuth'
 import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
 
-type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'ai'
+type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai'
 
 export default function SettingsPage() {
   const { t } = useI18n()
+  const { user } = useAuth()
   const { can } = usePermission()
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
 
@@ -37,6 +39,11 @@ export default function SettingsPage() {
   const [aiTestResult, setAiTestResult] = useState<string | null>(null)
   const [aiTesting, setAiTesting] = useState(false)
 
+  // Email settings
+  const [emailSmtpConfigured, setEmailSmtpConfigured] = useState<boolean | null>(null)
+  const [emailTestResult, setEmailTestResult] = useState<string | null>(null)
+  const [emailTesting, setEmailTesting] = useState(false)
+
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -45,6 +52,14 @@ export default function SettingsPage() {
     getSetting('gemini_api_key').then((val) => {
       if (val) setGeminiApiKey(val)
     })
+  }, [])
+
+  // Check SMTP configuration status on mount
+  useEffect(() => {
+    fetch('/api/email/status')
+      .then((res) => res.json())
+      .then((data) => setEmailSmtpConfigured(data.configured ?? false))
+      .catch(() => setEmailSmtpConfigured(false))
   }, [])
 
   const handleSave = async () => {
@@ -85,12 +100,35 @@ export default function SettingsPage() {
     }
   }
 
+  const handleTestEmail = async () => {
+    setEmailTesting(true)
+    setEmailTestResult(null)
+    try {
+      const res = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user?.email }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setEmailTestResult(t('settings.emailTestSuccess'))
+      } else {
+        setEmailTestResult(`${t('settings.emailTestError')}: ${data.error || 'Unknown error'}`)
+      }
+    } catch {
+      setEmailTestResult(`${t('settings.emailTestError')}: Connection failed`)
+    } finally {
+      setEmailTesting(false)
+    }
+  }
+
   const tabs: { id: SettingsTab; labelKey: string }[] = [
     { id: 'general', labelKey: 'settings.general' },
     { id: 'theme', labelKey: 'settings.theme' },
     { id: 'language', labelKey: 'settings.language' },
     { id: 'workload', labelKey: 'settings.workload' },
     { id: 'notification', labelKey: 'settings.notification' },
+    { id: 'email', labelKey: 'settings.email' },
     { id: 'ai', labelKey: 'settings.ai' },
   ]
 
@@ -267,6 +305,46 @@ export default function SettingsPage() {
                     <span className="text-[12px] text-text">{item.label}</span>
                   </label>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Email Settings */}
+          {activeTab === 'email' && (
+            <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
+              <h2 className="text-[14px] font-bold text-text mb-[12px]">
+                {t('settings.emailNotification')}
+              </h2>
+              <p className="text-[11px] text-text2 mb-[10px]">
+                {t('settings.emailDescription')}
+              </p>
+              <div className="space-y-[12px]">
+                <div className="flex items-center gap-[8px]">
+                  <span className="text-[11px] text-text2 font-medium">
+                    SMTP:
+                  </span>
+                  {emailSmtpConfigured === null ? (
+                    <span className="text-[11px] text-text3">{t('common.loading')}</span>
+                  ) : emailSmtpConfigured ? (
+                    <span className="text-[11px] text-ok font-medium">{t('settings.emailSmtpConfigured')}</span>
+                  ) : (
+                    <span className="text-[11px] text-red-500 font-medium">{t('settings.emailSmtpNotConfigured')}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-[8px]">
+                  <button
+                    onClick={handleTestEmail}
+                    disabled={emailTesting}
+                    className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50 cursor-pointer"
+                  >
+                    {emailTesting ? t('common.loading') : t('settings.emailTestSend')}
+                  </button>
+                  {emailTestResult && (
+                    <span className={`text-[11px] font-medium ${emailTestResult.startsWith(t('settings.emailTestSuccess')) ? 'text-ok' : 'text-red-500'}`}>
+                      {emailTestResult}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
