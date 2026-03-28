@@ -43,6 +43,14 @@ export default function SettingsPage() {
   const [emailSmtpConfigured, setEmailSmtpConfigured] = useState<boolean | null>(null)
   const [emailTestResult, setEmailTestResult] = useState<string | null>(null)
   const [emailTesting, setEmailTesting] = useState(false)
+  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com')
+  const [smtpPort, setSmtpPort] = useState('587')
+  const [smtpUser, setSmtpUser] = useState('')
+  const [smtpPassword, setSmtpPassword] = useState('')
+  const [smtpFromName, setSmtpFromName] = useState('WorkFlow Task Management')
+  const [smtpFromEmail, setSmtpFromEmail] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailSaved, setEmailSaved] = useState(false)
 
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -54,12 +62,24 @@ export default function SettingsPage() {
     })
   }, [])
 
-  // Check SMTP configuration status on mount
+  // Load SMTP settings from database on mount
   useEffect(() => {
-    fetch('/api/email/status')
-      .then((res) => res.json())
-      .then((data) => setEmailSmtpConfigured(data.configured ?? false))
-      .catch(() => setEmailSmtpConfigured(false))
+    Promise.all([
+      getSetting('smtp_host'),
+      getSetting('smtp_port'),
+      getSetting('smtp_user'),
+      getSetting('smtp_password'),
+      getSetting('smtp_from_name'),
+      getSetting('smtp_from_email'),
+    ]).then(([host, port, user, pass, fromName, fromEmail]) => {
+      if (host) setSmtpHost(host)
+      if (port) setSmtpPort(port)
+      if (user) setSmtpUser(user)
+      if (pass) setSmtpPassword(pass)
+      if (fromName) setSmtpFromName(fromName)
+      if (fromEmail) setSmtpFromEmail(fromEmail)
+      setEmailSmtpConfigured(!!(user && pass))
+    }).catch(() => setEmailSmtpConfigured(false))
   }, [])
 
   const handleSave = async () => {
@@ -312,38 +332,109 @@ export default function SettingsPage() {
           {/* Email Settings */}
           {activeTab === 'email' && (
             <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
-              <h2 className="text-[14px] font-bold text-text mb-[12px]">
-                {t('settings.emailNotification')}
+              <h2 className="text-[14px] font-bold text-text mb-[4px]">
+                {t('email.title')}
               </h2>
-              <p className="text-[11px] text-text2 mb-[10px]">
-                {t('settings.emailDescription')}
+              <p className="text-[11px] text-text2 mb-[16px]">
+                {t('email.description')}
               </p>
               <div className="space-y-[12px]">
-                <div className="flex items-center gap-[8px]">
-                  <span className="text-[11px] text-text2 font-medium">
-                    SMTP:
-                  </span>
-                  {emailSmtpConfigured === null ? (
-                    <span className="text-[11px] text-text3">{t('common.loading')}</span>
-                  ) : emailSmtpConfigured ? (
-                    <span className="text-[11px] text-ok font-medium">{t('settings.emailSmtpConfigured')}</span>
-                  ) : (
-                    <span className="text-[11px] text-red-500 font-medium">{t('settings.emailSmtpNotConfigured')}</span>
-                  )}
+                {/* SMTP Host */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">SMTP Host</label>
+                  <input type="text" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="smtp.gmail.com" />
                 </div>
-                <div className="flex items-center gap-[8px]">
+                {/* SMTP Port */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">SMTP Port</label>
+                  <input type="text" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="587" />
+                </div>
+                {/* SMTP User */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">{t('email.smtpUser')}</label>
+                  <input type="email" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="your-email@gmail.com" />
+                </div>
+                {/* SMTP Password */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">{t('email.smtpPassword')}</label>
+                  <input type="password" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="Gmail App Password" />
+                  <p className="text-[10px] text-text3 mt-[2px]">{t('email.smtpPasswordHelp')}</p>
+                </div>
+                {/* From Name */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">{t('email.fromName')}</label>
+                  <input type="text" value={smtpFromName} onChange={(e) => setSmtpFromName(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="WorkFlow Task Management" />
+                </div>
+                {/* From Email */}
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">{t('email.fromEmail')}</label>
+                  <input type="email" value={smtpFromEmail} onChange={(e) => setSmtpFromEmail(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="your-email@gmail.com" />
+                </div>
+                {/* Save + Status */}
+                <div className="flex items-center gap-[8px] pt-[8px]">
                   <button
-                    onClick={handleTestEmail}
-                    disabled={emailTesting}
-                    className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50 cursor-pointer"
+                    onClick={async () => {
+                      setEmailSaving(true)
+                      setEmailSaved(false)
+                      try {
+                        await Promise.all([
+                          setSetting('smtp_host', smtpHost),
+                          setSetting('smtp_port', smtpPort),
+                          setSetting('smtp_user', smtpUser),
+                          setSetting('smtp_password', smtpPassword),
+                          setSetting('smtp_from_name', smtpFromName),
+                          setSetting('smtp_from_email', smtpFromEmail),
+                        ])
+                        setEmailSmtpConfigured(!!(smtpUser && smtpPassword))
+                        setEmailSaved(true)
+                        setTimeout(() => setEmailSaved(false), 3000)
+                      } catch (err) {
+                        console.error('Failed to save email settings:', err)
+                      } finally {
+                        setEmailSaving(false)
+                      }
+                    }}
+                    disabled={emailSaving || !can('settings', 'update')}
+                    className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium disabled:opacity-50"
                   >
-                    {emailTesting ? t('common.loading') : t('settings.emailTestSend')}
+                    {emailSaving ? t('common.saving') : t('common.save')}
                   </button>
-                  {emailTestResult && (
-                    <span className={`text-[11px] font-medium ${emailTestResult.startsWith(t('settings.emailTestSuccess')) ? 'text-ok' : 'text-red-500'}`}>
-                      {emailTestResult}
+                  {emailSaved && <span className="text-[11px] text-ok font-medium">{t('settings.saved')}</span>}
+                  {emailSmtpConfigured !== null && (
+                    <span className={`text-[11px] font-medium ml-auto ${emailSmtpConfigured ? 'text-ok' : 'text-text3'}`}>
+                      {emailSmtpConfigured ? t('email.configured') : t('email.notConfigured')}
                     </span>
                   )}
+                </div>
+                {/* Divider */}
+                <div className="border-t border-border2 pt-[12px] mt-[4px]">
+                  <h3 className="text-[12px] font-bold text-text mb-[8px]">{t('email.testSend')}</h3>
+                  <div className="flex items-center gap-[8px]">
+                    <button
+                      onClick={handleTestEmail}
+                      disabled={emailTesting || !smtpUser}
+                      className="px-[14px] py-[6px] text-[12px] text-white bg-info rounded-[6px] hover:opacity-90 transition-colors font-medium disabled:opacity-50"
+                    >
+                      {emailTesting ? t('email.testSending') : t('email.testSend')}
+                    </button>
+                    {emailTestResult && (
+                      <span className={`text-[11px] font-medium ${emailTestResult.includes('Success') || emailTestResult.includes('成功') || emailTestResult.includes('送信しました') ? 'text-ok' : 'text-red-500'}`}>
+                        {emailTestResult}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

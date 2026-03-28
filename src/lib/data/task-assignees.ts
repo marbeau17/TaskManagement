@@ -78,6 +78,36 @@ export async function addTaskAssignee(
     .single()
 
   if (error) throw error
+
+  // Send email notification to the new assignee (fire-and-forget)
+  if (process.env.NEXT_PUBLIC_USE_MOCK !== 'true' && data?.user?.email) {
+    const { getTaskById } = await import('@/lib/data/tasks')
+    const task = await getTaskById(taskId)
+
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser()
+
+    if (task) {
+      const { sendTaskAssignmentEmail } = await import('@/lib/email/task-assignment')
+      sendTaskAssignmentEmail({
+        taskId,
+        taskTitle: task.title,
+        clientName: task.client?.name ?? '',
+        confirmedDeadline: task.confirmed_deadline ?? null,
+        estimatedHours: task.estimated_hours ?? null,
+        directorName: task.director?.name ?? '',
+        description: task.description ?? null,
+        assigneeEmail: data.user.email,
+        assigneeName: data.user.name,
+        assignerId: authUser?.id ?? '',
+        assigneeId: userId,
+      }).catch((err: unknown) => {
+        console.error('[addTaskAssignee] Email notification failed:', err)
+      })
+    }
+  }
+
   return data as TaskAssignee
 }
 
