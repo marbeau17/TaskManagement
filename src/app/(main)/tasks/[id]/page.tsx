@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useTask, useUpdateTaskProgress } from '@/hooks/useTasks'
+import { useTask, useUpdateTaskProgress, useCloneTask } from '@/hooks/useTasks'
 import { useAuth } from '@/hooks/useAuth'
 import { StatusChip } from '@/components/shared'
 import { TaskDetailInfo } from '@/components/tasks/TaskDetailInfo'
@@ -13,6 +13,8 @@ import { ActivityLog } from '@/components/tasks/ActivityLog'
 import { AttachmentList } from '@/components/tasks/AttachmentList'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
+import { TimeLogSection } from '@/components/tasks/TimeLogSection'
+import { WatcherButton } from '@/components/tasks/WatcherButton'
 import { useI18n } from '@/hooks/useI18n'
 
 export default function TaskDetailPage() {
@@ -21,6 +23,7 @@ export default function TaskDetailPage() {
   const { user } = useAuth()
   const { data: task, isLoading } = useTask(params.id)
   const updateProgress = useUpdateTaskProgress()
+  const cloneTask = useCloneTask()
   const { t } = useI18n()
 
   const handleReject = () => {
@@ -43,6 +46,15 @@ export default function TaskDetailPage() {
         progress: 100,
         status: 'done',
         actual_hours: task.actual_hours,
+      },
+    })
+  }
+
+  const handleClone = () => {
+    if (!task) return
+    cloneTask.mutate(task.id, {
+      onSuccess: (newTask) => {
+        router.push(`/tasks/${newTask.id}`)
       },
     })
   }
@@ -96,6 +108,8 @@ export default function TaskDetailPage() {
 
         <StatusChip status={task.status} />
 
+        <WatcherButton taskId={task.id} />
+
         {/* Spacer */}
         <div className="flex-1" />
 
@@ -104,6 +118,15 @@ export default function TaskDetailPage() {
             {task.assigned_user.name}
           </span>
         )}
+
+        <button
+          type="button"
+          onClick={handleClone}
+          disabled={cloneTask.isPending}
+          className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-wf-border text-text2 bg-surface hover:bg-surf2 transition-colors disabled:opacity-50"
+        >
+          {cloneTask.isPending ? t('tasks.cloning') : t('tasks.clone')}
+        </button>
 
         <button
           type="button"
@@ -140,6 +163,7 @@ export default function TaskDetailPage() {
           <TaskDependencies taskId={task.id} />
           <ActivityLog taskId={task.id} />
           <AttachmentList taskId={task.id} />
+          <TimeLogSection taskId={task.id} currentUserId={user?.id ?? ''} />
         </div>
       </div>
     </div>

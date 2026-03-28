@@ -81,7 +81,7 @@ function MilestoneFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[440px]">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-full max-w-[440px]">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           {isEdit ? t('milestones.edit') : t('milestones.add')}
         </h2>
@@ -169,7 +169,7 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[380px]">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-full max-w-[380px]">
         <h2 className="text-[15px] font-bold text-text mb-[8px]">{t('milestones.delete')}</h2>
         <p className="text-[12px] text-text2 mb-[20px]">
           {t('milestones.deleteConfirm').replace('{name}', milestone.title)}

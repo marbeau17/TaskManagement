@@ -1,6 +1,7 @@
 'use client'
 
 import type { TemplateField } from '@/types/template'
+import { useI18n } from '@/hooks/useI18n'
 
 interface Props {
   field: TemplateField
@@ -15,6 +16,7 @@ const inputClass = `
 `
 
 export function TemplateFieldRenderer({ field, value, onChange }: Props) {
+  const { t } = useI18n()
   const label = (
     <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
       {field.label}
@@ -60,7 +62,7 @@ export function TemplateFieldRenderer({ field, value, onChange }: Props) {
             onChange={(e) => onChange(e.target.value)}
             className={inputClass}
           >
-            <option value="">選択してください</option>
+            <option value="">{t('templates.selectPlaceholder')}</option>
             {(field.options ?? []).map((opt) => (
               <option key={opt} value={opt}>
                 {opt}

@@ -121,6 +121,17 @@
   --bar-danger: #C05050;
   --bar-warning: #C8A030;
   --bar-ok: #4A9482;
+
+  /* Chart colors */
+  --bar-blue: #5B7FD6;
+  --bar-slate: #94A3B8;
+
+  /* Status colors */
+  --status-waiting: #C8A030;
+  --status-todo: #94A3B8;
+  --status-in-progress: #3B82F6;
+  --status-done: #6FB5A3;
+  --status-rejected: #C05050;
 }
 
 .dark {
@@ -155,6 +166,17 @@
   --bar-danger: #E07070;
   --bar-warning: #E0C050;
   --bar-ok: #6FB5A3;
+
+  /* Chart colors for dark mode */
+  --bar-blue: #7A9BE8;
+  --bar-slate: #B0BEC5;
+
+  /* Status colors for dark mode */
+  --status-waiting: #E0C050;
+  --status-todo: #B0BEC5;
+  --status-in-progress: #60A5FA;
+  --status-done: #6FB5A3;
+  --status-rejected: #E07070;
 
   /* KPI card / chart dark overrides */
   --color-info: #7AAAD8;

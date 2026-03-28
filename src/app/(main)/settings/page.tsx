@@ -5,12 +5,14 @@ import { Topbar } from '@/components/layout'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { LanguageToggle } from '@/components/shared/LanguageToggle'
 import { useI18n } from '@/hooks/useI18n'
+import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
 
 type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'ai'
 
 export default function SettingsPage() {
   const { t } = useI18n()
+  const { can } = usePermission()
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
 
   // Organization settings
@@ -314,20 +316,22 @@ export default function SettingsPage() {
         </div>
 
         {/* Save button */}
-        <div className="flex items-center gap-[12px] mt-[16px]">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-[20px] py-[8px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium cursor-pointer disabled:opacity-50"
-          >
-            {saving ? t('common.loading') : t('common.save')}
-          </button>
-          {saved && (
-            <span className="text-[12px] text-ok font-medium">
-              {t('settings.saved')}
-            </span>
-          )}
-        </div>
+        {can('settings', 'update') && (
+          <div className="flex items-center gap-[12px] mt-[16px]">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-[20px] py-[8px] text-[13px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium cursor-pointer disabled:opacity-50"
+            >
+              {saving ? t('common.loading') : t('common.save')}
+            </button>
+            {saved && (
+              <span className="text-[12px] text-ok font-medium">
+                {t('settings.saved')}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

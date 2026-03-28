@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { Topbar } from '@/components/layout'
 import { PeriodToggle, NotificationBell } from '@/components/shared'
 import {
@@ -12,6 +13,22 @@ import {
   RecentActivity,
   ProjectIssueSummary,
 } from '@/components/dashboard'
+
+const BurndownChart = dynamic(
+  () => import('@/components/dashboard/BurndownChart').then(mod => mod.BurndownChart),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surf2 rounded-lg h-[300px]" />,
+  }
+)
+
+const EstimateVsActualChart = dynamic(
+  () => import('@/components/dashboard/EstimateVsActualChart').then(mod => mod.EstimateVsActualChart),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surf2 rounded-lg h-[300px]" />,
+  }
+)
 import { useUiStore } from '@/stores/uiStore'
 import { getWeekRange } from '@/lib/date-utils'
 import { useI18n } from '@/hooks/useI18n'
@@ -109,6 +126,12 @@ export default function DashboardPage() {
         ) : (
           <ClientView />
         )}
+
+        {/* Burndown chart */}
+        <BurndownChart />
+
+        {/* Estimate vs Actual chart */}
+        <EstimateVsActualChart />
 
         {/* Project issue summary */}
         <ProjectIssueSummary />

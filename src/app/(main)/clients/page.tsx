@@ -9,6 +9,7 @@ import {
   useDeleteClient,
 } from '@/hooks/useClients'
 import { useI18n } from '@/hooks/useI18n'
+import { usePermission } from '@/hooks/usePermission'
 import type { Client } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -132,6 +133,7 @@ function DeleteConfirmDialog({
 
 export default function ClientsPage() {
   const { t } = useI18n()
+  const { can } = usePermission()
   const { data: clients, isLoading } = useClients()
   const createMutation = useCreateClient()
   const updateMutation = useUpdateClient()
@@ -183,12 +185,14 @@ export default function ClientsPage() {
   return (
     <>
       <Topbar title={t('clients.title')}>
-        <button
-          onClick={handleCreate}
-          className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
-        >
-          {t('clients.add')}
-        </button>
+        {can('clients', 'create') && (
+          <button
+            onClick={handleCreate}
+            className="px-[14px] py-[6px] text-[12px] text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors font-medium"
+          >
+            {t('clients.add')}
+          </button>
+        )}
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[12px] md:p-[20px]">
@@ -231,18 +235,22 @@ export default function ClientsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center justify-center gap-[8px]">
-                  <button
-                    onClick={() => handleEdit(client)}
-                    className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
-                  >
-                    {t('common.edit')}
-                  </button>
-                  <button
-                    onClick={() => setDeletingClient(client)}
-                    className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
-                  >
-                    {t('common.delete')}
-                  </button>
+                  {can('clients', 'update') && (
+                    <button
+                      onClick={() => handleEdit(client)}
+                      className="text-[11px] text-mint hover:text-mint-d font-medium transition-colors"
+                    >
+                      {t('common.edit')}
+                    </button>
+                  )}
+                  {can('clients', 'delete') && (
+                    <button
+                      onClick={() => setDeletingClient(client)}
+                      className="text-[11px] text-danger hover:opacity-80 font-medium transition-colors"
+                    >
+                      {t('common.delete')}
+                    </button>
+                  )}
                 </div>
               </div>
             ))

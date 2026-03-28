@@ -155,8 +155,6 @@ export async function deleteMember(id: string): Promise<boolean> {
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  console.log('[deleteMember] Soft-deleting user:', id)
-
   const { data, error } = await supabase
     .from('users')
     .update({ is_active: false })
@@ -173,7 +171,6 @@ export async function deleteMember(id: string): Promise<boolean> {
     throw new Error('members.error.deleteNotPermitted')
   }
 
-  console.log('[deleteMember] Successfully soft-deleted user:', id)
   return true
 }
 

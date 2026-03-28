@@ -95,7 +95,7 @@ export function ClientTaskChart({ tasks }: ClientTaskChartProps) {
             />
             <Bar
               dataKey={t('reports.tasks')}
-              fill="#8060B0"
+              fill="var(--color-purple, #8060B0)"
               radius={[0, 4, 4, 0]}
               maxBarSize={28}
             />

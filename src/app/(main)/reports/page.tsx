@@ -1,13 +1,33 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Topbar } from '@/components/layout'
 import { KpiCard } from '@/components/shared'
-import {
-  CompletionRateChart,
-  StatusDistributionChart,
-  ClientTaskChart,
-} from '@/components/reports'
+
+const CompletionRateChart = dynamic(
+  () => import('@/components/reports/CompletionRateChart').then(mod => mod.CompletionRateChart),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surf2 rounded-lg h-[300px]" />,
+  }
+)
+
+const StatusDistributionChart = dynamic(
+  () => import('@/components/reports/StatusDistributionChart').then(mod => mod.StatusDistributionChart),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surf2 rounded-lg h-[300px]" />,
+  }
+)
+
+const ClientTaskChart = dynamic(
+  () => import('@/components/reports/ClientTaskChart').then(mod => mod.ClientTaskChart),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surf2 rounded-lg h-[300px]" />,
+  }
+)
 import { useTasks } from '@/hooks/useTasks'
 import { useI18n } from '@/hooks/useI18n'
 import type { TaskWithRelations } from '@/types/database'

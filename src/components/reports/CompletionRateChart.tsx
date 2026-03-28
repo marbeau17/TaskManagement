@@ -143,13 +143,13 @@ export function CompletionRateChart({ tasks, dateRange }: CompletionRateChartPro
             />
             <Bar
               dataKey={t('reports.total')}
-              fill="#94A3B8"
+              fill="var(--bar-slate, #94A3B8)"
               radius={[4, 4, 0, 0]}
               maxBarSize={40}
             />
             <Bar
               dataKey={t('reports.completed')}
-              fill="#6FB5A3"
+              fill="var(--color-mint, #6FB5A3)"
               radius={[4, 4, 0, 0]}
               maxBarSize={40}
             />

@@ -8,6 +8,7 @@ import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
+import { useDebounce } from '@/hooks/useDebounce'
 import { usePermission } from '@/hooks/usePermission'
 import { useI18n } from '@/hooks/useI18n'
 import type { Project, ProjectStatus } from '@/types/project'
@@ -236,7 +237,8 @@ export default function ProjectsPage() {
   const { t } = useI18n()
   const { can } = usePermission()
   const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const search = useDebounce(searchInput, 300)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   const { data: projects, isLoading } = useProjects()
@@ -324,8 +326,8 @@ export default function ProjectsPage() {
         {/* Filters */}
         <div className="mb-[16px]">
           <FilterBar
-            searchValue={search}
-            onSearchChange={setSearch}
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
             filters={[
               {
                 label: t('projects.status'),

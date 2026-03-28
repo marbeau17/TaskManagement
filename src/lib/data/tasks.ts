@@ -378,6 +378,25 @@ export async function bulkAssignTasks(taskIds: string[], userId: string): Promis
 }
 
 // ---------------------------------------------------------------------------
+// cloneTask
+// ---------------------------------------------------------------------------
+
+export async function cloneTask(taskId: string): Promise<Task> {
+  const original = await getTaskById(taskId)
+  if (!original) throw new Error('Task not found')
+
+  const newTask: TaskFormStep1 = {
+    client_name: original.client?.name || '',
+    title: `Copy of ${original.title}`,
+    description: original.description || '',
+    desired_deadline: original.desired_deadline || '',
+    reference_url: original.reference_url || '',
+  }
+
+  return createTask(newTask)
+}
+
+// ---------------------------------------------------------------------------
 // bulkDeleteTasks
 // ---------------------------------------------------------------------------
 

@@ -29,10 +29,10 @@ interface ChartDataItem {
 // Colors
 // ---------------------------------------------------------------------------
 
-const COLOR_ESTIMATE = '#6FB5A3' // mint
-const COLOR_ACTUAL = '#5B7FD6'   // contrasting blue
-const COLOR_OVER = '#C05050'
-const COLOR_UNDER = '#4A9482'
+const COLOR_ESTIMATE = 'var(--color-mint, #6FB5A3)'
+const COLOR_ACTUAL = 'var(--bar-blue, #5B7FD6)'
+const COLOR_OVER = 'var(--bar-danger, #C05050)'
+const COLOR_UNDER = 'var(--bar-ok, #4A9482)'
 
 // ---------------------------------------------------------------------------
 // Data computation

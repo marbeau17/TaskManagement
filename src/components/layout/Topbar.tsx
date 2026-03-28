@@ -1,5 +1,7 @@
 'use client'
 
+import { GlobalSearch } from '@/components/shared/GlobalSearch'
+
 interface TopbarProps {
   title: string
   subtitle?: string
@@ -17,11 +19,10 @@ export function Topbar({ title, subtitle, children, className }: TopbarProps) {
         )}
       </div>
       {/* Right side content */}
-      {children && (
-        <div className="ml-auto flex items-center gap-[6px] md:gap-[10px] flex-wrap">
-          {children}
-        </div>
-      )}
+      <div className="ml-auto flex items-center gap-[6px] md:gap-[10px] flex-wrap">
+        <GlobalSearch />
+        {children}
+      </div>
     </header>
   )
 }

@@ -16,6 +16,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Avatar, ProgressBar, KpiCard } from '@/components/shared'
 import { IssueStatusBadge, SeverityBadge, IssueTypeBadge } from '@/components/shared'
 import { TaskTable } from '@/components/tasks/TaskTable'
+import { CustomFieldManager } from '@/components/projects/CustomFieldManager'
+import { WorkflowEditor } from '@/components/projects/WorkflowEditor'
 import { formatDate } from '@/lib/utils'
 import { useI18n } from '@/hooks/useI18n'
 import type { ProjectStatus } from '@/types/project'
@@ -60,7 +62,7 @@ function AddMemberModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[400px]">
+      <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-full max-w-[400px]">
         <h2 className="text-[15px] font-bold text-text mb-[16px]">
           {t('projects.addMemberTitle')} - {projectName}
         </h2>
@@ -111,7 +113,7 @@ function AddMemberModal({
 // Tabs
 // ---------------------------------------------------------------------------
 
-const TAB_IDS = ['overview', 'tasks', 'issues', 'members'] as const
+const TAB_IDS = ['overview', 'tasks', 'issues', 'members', 'workflow', 'customFields'] as const
 type TabId = (typeof TAB_IDS)[number]
 
 const TAB_KEYS: Record<TabId, string> = {
@@ -119,6 +121,8 @@ const TAB_KEYS: Record<TabId, string> = {
   tasks: 'projects.tabTasks',
   issues: 'projects.tabIssues',
   members: 'projects.tabMembers',
+  workflow: 'projects.tabWorkflow',
+  customFields: 'projects.tabCustomFields',
 }
 
 // ---------------------------------------------------------------------------
@@ -405,6 +409,12 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
+        {/* ============ Workflow tab ============ */}
+        {activeTab === 'workflow' && <WorkflowEditor projectId={project.id} />}
+
+        {/* ============ Custom Fields tab ============ */}
+        {activeTab === 'customFields' && <CustomFieldManager projectId={project.id} />}
+
         {/* ============ Members tab ============ */}
         {activeTab === 'members' && (
           <div className="space-y-[16px]">
@@ -476,7 +486,7 @@ export default function ProjectDetailPage() {
       {/* Remove confirmation */}
       {removingMember && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-[380px]">
+          <div className="bg-surface rounded-[12px] shadow-xl border border-border2 p-[24px] w-full max-w-[380px]">
             <h2 className="text-[15px] font-bold text-text mb-[8px]">{t('projects.removeMemberTitle')}</h2>
             <p className="text-[12px] text-text2 mb-[20px]">
               {removingMember.member?.name ?? t('projects.memberLabel')}{t('projects.removeMemberConfirm')}

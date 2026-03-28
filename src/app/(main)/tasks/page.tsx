@@ -1,20 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { List, Columns3, GanttChartSquare } from 'lucide-react'
 import { Topbar } from '@/components/layout'
 import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { TaskFilters } from '@/components/tasks/TaskFilters'
 import { TaskStatusTabs } from '@/components/tasks/TaskStatusTabs'
 import { TaskTable } from '@/components/tasks/TaskTable'
+import { KanbanBoard } from '@/components/tasks/KanbanBoard'
+import { GanttChart } from '@/components/tasks/GanttChart'
 import { BulkActionBar } from '@/components/tasks/BulkActionBar'
-import { useTasks } from '@/hooks/useTasks'
+import { useTasks, useUpdateTaskProgress } from '@/hooks/useTasks'
 import { useI18n } from '@/hooks/useI18n'
 import { useFilterStore } from '@/stores/filterStore'
 import { usePermission } from '@/hooks/usePermission'
 import { exportTasksCsv } from '@/lib/csv-export'
 import { PERIOD_OPTIONS } from '@/lib/constants'
 import type { TaskFilters as TaskFiltersType } from '@/types/task'
+import type { TaskStatus } from '@/types/database'
 
 export default function TasksPage() {
   const {
@@ -28,6 +32,7 @@ export default function TasksPage() {
   } = useFilterStore()
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'gantt'>('list')
 
   // Build filters for the query (excluding status, which we filter client-side
   // so the status tabs can show counts for all statuses)
@@ -46,6 +51,23 @@ export default function TasksPage() {
   const { can } = usePermission()
   const { data: allTasks, isLoading } = useTasks(queryFilters)
   const tasks = allTasks ?? []
+  const updateProgress = useUpdateTaskProgress()
+
+  const handleStatusChange = useCallback(
+    (taskId: string, newStatus: TaskStatus) => {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return
+      updateProgress.mutate({
+        taskId,
+        update: {
+          progress: newStatus === 'done' ? 100 : task.progress,
+          status: newStatus,
+          actual_hours: task.actual_hours ?? 0,
+        },
+      })
+    },
+    [tasks, updateProgress]
+  )
 
   // Filter by status client-side so tabs can show counts for all statuses
   const filteredTasks = useMemo(() => {
@@ -70,6 +92,52 @@ export default function TasksPage() {
           value={period ?? 'all'}
           onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
         />
+
+        {/* View toggle */}
+        <div className="flex items-center rounded-[7px] border border-wf-border overflow-hidden">
+          <button
+            onClick={() => setViewMode('list')}
+            title={t('tasks.listView') ?? 'List'}
+            className={`
+              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              inline-flex items-center gap-[4px]
+              ${viewMode === 'list'
+                ? 'bg-mint text-white'
+                : 'text-text2 hover:bg-surf2'}
+            `}
+          >
+            <List size={14} />
+            {t('tasks.listView') ?? 'List'}
+          </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            title={t('tasks.kanbanView') ?? 'Kanban'}
+            className={`
+              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              inline-flex items-center gap-[4px] border-l border-wf-border
+              ${viewMode === 'kanban'
+                ? 'bg-mint text-white'
+                : 'text-text2 hover:bg-surf2'}
+            `}
+          >
+            <Columns3 size={14} />
+            {t('tasks.kanbanView') ?? 'Kanban'}
+          </button>
+          <button
+            onClick={() => setViewMode('gantt')}
+            title={t('tasks.ganttView') ?? 'Gantt'}
+            className={`
+              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              inline-flex items-center gap-[4px] border-l border-wf-border
+              ${viewMode === 'gantt'
+                ? 'bg-mint text-white'
+                : 'text-text2 hover:bg-surf2'}
+            `}
+          >
+            <GanttChartSquare size={14} />
+            {t('tasks.ganttView') ?? 'Gantt'}
+          </button>
+        </div>
 
         {can('tasks', 'create') && (
           <button
@@ -113,18 +181,37 @@ export default function TasksPage() {
           onClearSelection={() => setSelectedIds(new Set())}
         />
 
-        {/* Task table card */}
-        <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden">
-          {isLoading ? (
+        {/* Task view */}
+        {viewMode === 'gantt' ? (
+          isLoading ? (
             <TableSkeleton rows={8} columns={8} />
           ) : (
-            <TaskTable
+            <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden flex-1 min-h-[400px]">
+              <GanttChart tasks={filteredTasks} />
+            </div>
+          )
+        ) : viewMode === 'kanban' ? (
+          isLoading ? (
+            <TableSkeleton rows={8} columns={5} />
+          ) : (
+            <KanbanBoard
               tasks={filteredTasks}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
+              onStatusChange={handleStatusChange}
             />
-          )}
-        </div>
+          )
+        ) : (
+          <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm overflow-hidden">
+            {isLoading ? (
+              <TableSkeleton rows={8} columns={8} />
+            ) : (
+              <TaskTable
+                tasks={filteredTasks}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+              />
+            )}
+          </div>
+        )}
       </div>
     </>
   )

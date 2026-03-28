@@ -8,6 +8,7 @@ import {
   useDeleteTemplate,
 } from '@/hooks/useTemplates'
 import { useI18n } from '@/hooks/useI18n'
+import { usePermission } from '@/hooks/usePermission'
 import type { TaskTemplate, TemplateField } from '@/types/template'
 
 // ---------------------------------------------------------------------------
@@ -295,9 +296,11 @@ interface CardProps {
   template: TaskTemplate
   onEdit: () => void
   onDelete: () => void
+  canEdit: boolean
+  canDelete: boolean
 }
 
-function TemplateCard({ template, onEdit, onDelete }: CardProps) {
+function TemplateCard({ template, onEdit, onDelete, canEdit, canDelete }: CardProps) {
   const { t } = useI18n()
   const [showConfirm, setShowConfirm] = useState(false)
 
@@ -335,17 +338,19 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
       </div>
 
       <div className="mt-auto flex items-center gap-2">
-        <button
-          onClick={onEdit}
-          className="
-            px-3 py-1.5 rounded-lg text-[12px] font-semibold
-            text-text2 bg-surf2 border border-wf-border
-            hover:bg-wf-border transition-colors
-          "
-        >
-          {t('common.edit')}
-        </button>
-        {!template.is_default && (
+        {canEdit && (
+          <button
+            onClick={onEdit}
+            className="
+              px-3 py-1.5 rounded-lg text-[12px] font-semibold
+              text-text2 bg-surf2 border border-wf-border
+              hover:bg-wf-border transition-colors
+            "
+          >
+            {t('common.edit')}
+          </button>
+        )}
+        {canDelete && !template.is_default && (
           <>
             {showConfirm ? (
               <div className="flex items-center gap-1">
@@ -388,6 +393,7 @@ function TemplateCard({ template, onEdit, onDelete }: CardProps) {
 
 export default function TemplatesPage() {
   const { t } = useI18n()
+  const { can } = usePermission()
   const { data: templates, isLoading } = useTemplates()
   const createMutation = useCreateTemplate()
   const updateMutation = useUpdateTemplate()
@@ -442,7 +448,7 @@ export default function TemplatesPage() {
           <h1 className="text-[16px] font-bold text-text1">
             {t('templates.title')}
           </h1>
-          {editorMode === 'closed' && (
+          {editorMode === 'closed' && can('templates', 'create') && (
             <button
               onClick={handleCreate}
               className="
@@ -487,6 +493,8 @@ export default function TemplatesPage() {
                   template={tmpl}
                   onEdit={() => handleEdit(tmpl)}
                   onDelete={() => handleDelete(tmpl.id)}
+                  canEdit={can('templates', 'update')}
+                  canDelete={can('templates', 'delete')}
                 />
               ))}
             </div>

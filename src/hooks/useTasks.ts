@@ -16,6 +16,7 @@ import {
   getRecentActivityLogs,
   getAttachments,
   getWaitingTaskCount,
+  cloneTask,
   bulkAssignTasks,
   bulkDeleteTasks,
 } from '@/lib/data/tasks'
@@ -163,6 +164,14 @@ export function useBulkDeleteTasks() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (taskIds: string[]) => bulkDeleteTasks(taskIds),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+  })
+}
+
+export function useCloneTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: string) => cloneTask(taskId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
   })
 }

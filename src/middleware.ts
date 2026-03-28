@@ -1,16 +1,18 @@
 // =============================================================================
-// Next.js Middleware – Authentication guard
+// Next.js Middleware – Defense-in-depth authentication layer
 //
-// MIGRATION NOTE (Next.js 16+):
-// The middleware API is deprecated starting in Next.js 16. When migrating,
-// replace this file with the new `instrumentation.ts` hooks or use the
-// built-in `next.config.ts` `rewrites`/`redirects` for simple cases.
-// For auth guards, consider using a Server Component layout wrapper or
-// the new `unstable_after` / route handler approach.
-// See: https://nextjs.org/docs/app/building-your-application/upgrading
+// MIGRATION STATUS (Next.js 16):
+// Primary auth checks (login redirect, must_change_password enforcement) have
+// been moved to the (main)/layout.tsx Server Component. This middleware now
+// serves as a defense-in-depth layer that:
+//   1. Refreshes Supabase session cookies on every request
+//   2. Catches unauthenticated requests before they reach server components
 //
-// This middleware still works in Next.js 16 via the compatibility layer,
-// so no immediate migration is required.
+// The middleware runs via the Next.js 16 compatibility layer. A deprecation
+// warning will appear at build time; this is expected and can be ignored.
+//
+// TODO: Remove this file entirely once Next.js provides a first-class
+// replacement for cookie-refresh in middleware (e.g. instrumentation hooks).
 // =============================================================================
 
 import { NextResponse } from 'next/server'

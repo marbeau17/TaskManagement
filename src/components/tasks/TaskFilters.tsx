@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FilterBar } from '@/components/shared'
 import { useFilterStore } from '@/stores/filterStore'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useI18n } from '@/hooks/useI18n'
 import { useMembers } from '@/hooks/useMembers'
 import { getClients } from '@/lib/data/clients'
@@ -23,16 +24,17 @@ export function TaskFilters() {
 
   // Debounce search input by 300ms
   const [searchInput, setSearchInput] = useState(search ?? '')
+  const debouncedSearch = useDebounce(searchInput, 300)
 
   // Keep local input in sync if store search is reset externally
   useEffect(() => {
     setSearchInput(search ?? '')
   }, [search])
 
+  // Push debounced value into the filter store
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 300)
-    return () => clearTimeout(timer)
-  }, [searchInput, setSearch])
+    setSearch(debouncedSearch)
+  }, [debouncedSearch, setSearch])
 
   const { data: members } = useMembers()
   const { data: clients } = useQuery({

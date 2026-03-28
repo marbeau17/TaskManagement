@@ -90,8 +90,78 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
+      {/* ====== Mobile card view ====== */}
+      <div className="md:hidden">
+        {sorted.length === 0 && (
+          <div className="px-[12px] py-[32px] text-center text-[12px] text-text3">
+            {t('workload.noMembers')}
+          </div>
+        )}
+        <div className="flex flex-col gap-[8px] p-[12px]">
+          {sorted.map((s) => {
+            const isOverloaded = s.status === 'overloaded'
+            return (
+              <div
+                key={s.user.id}
+                className={`
+                  rounded-[8px] border border-border2 p-[12px]
+                  ${isOverloaded ? 'bg-red-50 dark:bg-red-950/30' : 'bg-surface'}
+                `}
+              >
+                {/* Top row: avatar + name + role */}
+                <div className="flex items-center justify-between mb-[8px]">
+                  <div className="flex items-center gap-[8px] min-w-0">
+                    <Avatar
+                      name_short={s.user.name_short}
+                      color={s.user.avatar_color}
+                      size="sm"
+                    />
+                    <span className="text-[13px] font-bold text-text truncate">
+                      {s.user.name}
+                    </span>
+                  </div>
+                  <RoleChip role={s.user.role} />
+                </div>
+
+                {/* Workload bar + percentage */}
+                <div className="flex items-center gap-[8px] mb-[8px]">
+                  <div className="flex-1">
+                    <WorkloadBar rate={s.utilization_rate} />
+                  </div>
+                  <span
+                    className={`text-[12px] font-bold min-w-[40px] text-right ${
+                      s.utilization_rate >= 100
+                        ? 'text-red-600 dark:text-red-400'
+                        : s.utilization_rate >= 80
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {s.utilization_rate}%
+                  </span>
+                </div>
+
+                {/* Bottom row: hours, task count, status */}
+                <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-[12px] text-text2">
+                    <span>
+                      {s.actual_hours.toFixed(1)}h / {s.estimated_hours.toFixed(1)}h
+                    </span>
+                    <span>
+                      {t('workload.taskCount')}: {s.task_count}
+                    </span>
+                  </div>
+                  <StatusChipWorkload status={s.status} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ====== Desktop grid view ====== */}
       {/* Header */}
-      <div className="min-w-[700px] grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+      <div className="hidden md:grid min-w-[700px] grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
         <div>{t('workload.member')}</div>
         <div className="text-center">{t('workload.role')}</div>
         <div>{t('workload.bar')}</div>
@@ -109,7 +179,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
           <div
             key={s.user.id}
             className={`
-              min-w-[700px] grid grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
+              hidden md:grid min-w-[700px] grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px]
               border-b border-border2 last:border-b-0 items-center text-[12px] text-text
               ${isOverloaded ? 'bg-red-50 dark:bg-red-950/30' : 'hover:bg-surf2/50'}
               transition-colors
@@ -170,7 +240,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
       })}
 
       {sorted.length === 0 && (
-        <div className="px-[16px] py-[32px] text-center text-[12px] text-text3">
+        <div className="hidden md:block px-[16px] py-[32px] text-center text-[12px] text-text3">
           {t('workload.noMembers')}
         </div>
       )}

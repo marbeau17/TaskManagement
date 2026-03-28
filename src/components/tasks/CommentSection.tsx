@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useComments, useAddComment } from '@/hooks/useTasks'
 import { Avatar, MentionInput, MentionText } from '@/components/shared'
 import { useMock } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
 
 interface CommentSectionProps {
   taskId: string
@@ -19,6 +20,7 @@ function formatDateTime(dateStr: string): string {
 }
 
 export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
+  const { t } = useI18n()
   const queryClient = useQueryClient()
   const { data: comments, isLoading } = useComments(taskId)
   const addComment = useAddComment()
@@ -74,16 +76,16 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {'💬 コメント'}
+        {`💬 ${t('comment.title')}`}
       </h3>
 
       {/* Comment list */}
       <div className="flex flex-col gap-3 mb-4 max-h-[400px] overflow-y-auto">
         {isLoading && (
-          <p className="text-[12px] text-text3">読み込み中...</p>
+          <p className="text-[12px] text-text3">{t('comment.loading')}</p>
         )}
         {comments && comments.length === 0 && (
-          <p className="text-[12px] text-text3">コメントはまだありません</p>
+          <p className="text-[12px] text-text3">{t('comment.empty')}</p>
         )}
         {comments?.map((comment) => {
           const isOwn = comment.user_id === currentUserId
@@ -101,7 +103,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
                   />
                 )}
                 <span className="text-[12px] font-semibold text-text">
-                  {comment.user?.name ?? '不明'}
+                  {comment.user?.name ?? t('comment.unknownUser')}
                 </span>
                 <span className="text-[10px] text-text3 ml-auto">
                   {formatDateTime(comment.created_at)}
@@ -120,7 +122,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
         <MentionInput
           value={body}
           onChange={setBody}
-          placeholder="コメントを入力... (@でメンバーをメンション)"
+          placeholder={t('comment.placeholder')}
           rows={3}
           className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-none focus:outline-none focus:border-mint"
         />
@@ -131,7 +133,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
             disabled={!body.trim() || addComment.isPending}
             className="px-4 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
           >
-            {addComment.isPending ? '送信中...' : '送信'}
+            {addComment.isPending ? t('comment.sending') : t('comment.send')}
           </button>
         </div>
       </div>
