@@ -1,5 +1,4 @@
-import nodemailer from 'nodemailer'
-
+// nodemailer is imported dynamically to avoid bundling in client components
 interface EmailOptions {
   to: string
   subject: string
@@ -58,6 +57,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     return true
   }
 
+  const nodemailer = (await import('nodemailer')).default
   const transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
