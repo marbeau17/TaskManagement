@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { GlobalSearch } from '@/components/shared/GlobalSearch'
 import { useI18n } from '@/hooks/useI18n'
 
 interface ShellProps {
@@ -71,6 +72,9 @@ export function Shell({ children }: ShellProps) {
               <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
+          <div className="ml-auto">
+            <GlobalSearch />
+          </div>
         </div>
         {children}
       </div>
