@@ -4,8 +4,18 @@
 
 import { useMock } from '@/lib/utils'
 
-// In-memory store for mock mode
-const mockSettings: Record<string, string> = {}
+// localStorage-backed store for mock mode (persists across reloads)
+function getMockSettings(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  try {
+    return JSON.parse(localStorage.getItem('workflow-settings') || '{}')
+  } catch { return {} }
+}
+
+function setMockSettings(settings: Record<string, string>) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem('workflow-settings', JSON.stringify(settings))
+}
 
 interface SettingRow {
   key: string
@@ -18,7 +28,7 @@ interface SettingRow {
 
 export async function getSetting(key: string): Promise<string> {
   if (useMock()) {
-    return mockSettings[key] ?? ''
+    return getMockSettings()[key] ?? ''
   }
 
   const { createClient } = await import('@/lib/supabase/client')
@@ -40,7 +50,9 @@ export async function getSetting(key: string): Promise<string> {
 
 export async function setSetting(key: string, value: string): Promise<void> {
   if (useMock()) {
-    mockSettings[key] = value
+    const settings = getMockSettings()
+    settings[key] = value
+    setMockSettings(settings)
     return
   }
 
@@ -60,7 +72,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
 
 export async function getAllSettings(): Promise<Record<string, string>> {
   if (useMock()) {
-    return { ...mockSettings }
+    return { ...getMockSettings() }
   }
 
   const { createClient } = await import('@/lib/supabase/client')
