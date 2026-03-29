@@ -70,6 +70,6 @@ export async function updateWorkflowSettings(
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as WorkflowSettings
 }

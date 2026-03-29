@@ -43,6 +43,9 @@ export function useRealtimeSubscription(options: RealtimeSubscriptionOptions) {
   useEffect(() => {
     if (!enabled) return
 
+    // Skip realtime in mock mode
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_MOCK === 'true') return
+
     const supabase = createClient()
     const channelName = `realtime:${table}:${filter ?? 'all'}:${Date.now()}`
     let channel: RealtimeChannel = supabase.channel(channelName)
@@ -63,7 +66,11 @@ export function useRealtimeSubscription(options: RealtimeSubscriptionOptions) {
       )
     }
 
-    channel.subscribe()
+    channel.subscribe((status) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.warn(`[Realtime] Channel error for ${table}, will retry`)
+      }
+    })
 
     return () => {
       supabase.removeChannel(channel)

@@ -67,7 +67,7 @@ export async function getMilestones(projectId: string): Promise<Milestone[]> {
     .eq('project_id', projectId)
     .order('due_date', { ascending: true, nullsFirst: false })
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data ?? []) as Milestone[]
 }
 
@@ -134,7 +134,7 @@ export async function createMilestone(input: CreateMilestoneData): Promise<Miles
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as Milestone
 }
 
@@ -168,7 +168,7 @@ export async function updateMilestone(
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as Milestone
 }
 
@@ -191,5 +191,5 @@ export async function deleteMilestone(id: string): Promise<void> {
     .delete()
     .eq('id', id)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
 }

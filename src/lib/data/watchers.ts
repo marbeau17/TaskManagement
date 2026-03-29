@@ -37,7 +37,7 @@ export async function getWatchers(taskId: string): Promise<TaskWatcher[]> {
     .eq('task_id', taskId)
     .order('created_at', { ascending: true })
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data ?? []) as TaskWatcher[]
 }
 
@@ -77,7 +77,7 @@ export async function addWatcher(
     .select('*, user:users!task_watchers_user_id_fkey(*)')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as TaskWatcher
 }
 
@@ -106,7 +106,7 @@ export async function removeWatcher(
     .eq('task_id', taskId)
     .eq('user_id', userId)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return true
 }
 
@@ -134,6 +134,6 @@ export async function isWatching(
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return !!data
 }

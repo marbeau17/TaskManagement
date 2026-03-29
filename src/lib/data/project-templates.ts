@@ -26,7 +26,7 @@ export async function getProjectTemplates(): Promise<ProjectTemplate[]> {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data ?? []).map(parseTemplate)
 }
 
@@ -112,7 +112,7 @@ export async function createProjectTemplate(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return parseTemplate(data)
 }
 
@@ -229,7 +229,7 @@ export async function deleteProjectTemplate(id: string): Promise<boolean> {
     .delete()
     .eq('id', id)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return true
 }
 

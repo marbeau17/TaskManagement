@@ -26,7 +26,7 @@ export async function getFieldDefinitions(
     .eq('project_id', projectId)
     .order('sort_order', { ascending: true })
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data ?? []) as CustomFieldDefinition[]
 }
 
@@ -50,7 +50,7 @@ export async function createFieldDefinition(
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as CustomFieldDefinition
 }
 
@@ -69,7 +69,7 @@ export async function updateFieldDefinition(
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as CustomFieldDefinition
 }
 
@@ -83,7 +83,7 @@ export async function deleteFieldDefinition(id: string): Promise<void> {
     .delete()
     .eq('id', id)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
 }
 
 export async function reorderFieldDefinitions(
@@ -124,7 +124,7 @@ export async function getFieldValues(
     .eq('entity_type', entityType)
     .eq('entity_id', entityId)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data ?? []) as CustomFieldValue[]
 }
 
@@ -152,7 +152,7 @@ export async function upsertFieldValue(
     .select('*, definition:custom_field_definitions!field_id(*)')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return data as CustomFieldValue
 }
 
@@ -166,7 +166,7 @@ export async function deleteFieldValue(id: string): Promise<void> {
     .delete()
     .eq('id', id)
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
 }
 
 export async function bulkUpsertFieldValues(

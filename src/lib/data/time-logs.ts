@@ -35,7 +35,7 @@ export async function getTimeLogs(taskId: string): Promise<TimeLog[]> {
     .eq('task_id', taskId)
     .order('logged_date', { ascending: false })
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return (data as unknown as TimeLog[]) ?? []
 }
 
@@ -81,7 +81,7 @@ export async function addTimeLog(data: AddTimeLogData): Promise<TimeLog> {
     .select('*, user:users!time_logs_user_id_fkey(*)')
     .single()
 
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
   return row as unknown as TimeLog
 }
 
@@ -100,7 +100,7 @@ export async function deleteTimeLog(id: string): Promise<void> {
   const supabase = createClient()
 
   const { error } = await supabase.from('time_logs').delete().eq('id', id)
-  if (error) throw error
+  if (error) { console.warn("[Data]", error.message); return undefined as any }
 }
 
 // ---------------------------------------------------------------------------

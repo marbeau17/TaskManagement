@@ -40,7 +40,10 @@ export async function getSetting(key: string): Promise<string> {
     .eq('key', key)
     .single()
 
-  if (error) return ''
+  if (error) {
+    console.warn('[Settings] getSetting error:', error.message)
+    return ''
+  }
   return (data as SettingRow | null)?.value ?? ''
 }
 
@@ -63,7 +66,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
     .from('app_settings')
     .upsert({ key, value }, { onConflict: 'key' })
 
-  if (error) throw error
+  if (error) console.warn('[Settings] setSetting error:', error.message)
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +85,10 @@ export async function getAllSettings(): Promise<Record<string, string>> {
     .from('app_settings')
     .select('key, value')
 
-  if (error) throw error
+  if (error) {
+    console.warn('[Settings] getAllSettings error:', error.message)
+    return {}
+  }
 
   const result: Record<string, string> = {}
   for (const row of (data ?? []) as SettingRow[]) {

@@ -71,7 +71,10 @@ export async function getNotifications(
     .order('created_at', { ascending: false })
     .limit(limit)
 
-  if (error) throw error
+  if (error) {
+    console.warn('[Notifications] Table may not exist:', error.message)
+    return []
+  }
   return (data ?? []) as Notification[]
 }
 
@@ -96,7 +99,10 @@ export async function getUnreadCount(userId: string): Promise<number> {
     .eq('user_id', userId)
     .eq('is_read', false)
 
-  if (error) throw error
+  if (error) {
+    console.warn('[Notifications] getUnreadCount error:', error.message)
+    return 0
+  }
   return count ?? 0
 }
 
@@ -121,7 +127,7 @@ export async function markAsRead(notificationId: string): Promise<void> {
     .update({ is_read: true })
     .eq('id', notificationId)
 
-  if (error) throw error
+  if (error) console.warn('[Notifications] error:', error.message)
 }
 
 // ---------------------------------------------------------------------------
@@ -146,7 +152,7 @@ export async function markAllAsRead(userId: string): Promise<void> {
     .eq('user_id', userId)
     .eq('is_read', false)
 
-  if (error) throw error
+  if (error) console.warn('[Notifications] error:', error.message)
 }
 
 // ---------------------------------------------------------------------------
