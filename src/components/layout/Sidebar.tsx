@@ -41,6 +41,7 @@ const MAIN_NAV = [
 const SYSTEM_NAV = [
   { id: 'reports', labelKey: 'nav.reports', icon: '📊', href: '/reports' },
   { id: 'templates', labelKey: 'nav.templates', icon: '📝', href: '/templates' },
+  { id: 'import', labelKey: 'nav.import', icon: '📥', href: '/import' },
   { id: 'members', labelKey: 'nav.members', icon: '👥', href: '/members' },
   { id: 'settings', labelKey: 'nav.settings', icon: '⚙', href: '/settings' },
 ]

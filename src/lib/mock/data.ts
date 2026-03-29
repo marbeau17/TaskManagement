@@ -14,6 +14,7 @@ import type {
 import type { TaskTemplate } from '@/types/template'
 import type { Project } from '@/types/project'
 import type { Issue, IssueComment } from '@/types/issue'
+import { getImportedTasks, getImportedClients } from './imported-data'
 
 // ---------------------------------------------------------------------------
 // Default password for mock users
@@ -233,6 +234,24 @@ export const mockUsers: MockUserWithPassword[] = [
     updated_at: '2025-04-01T00:00:00',
     password: DEFAULT_PASSWORD,
   },
+  {
+    id: 'u12',
+    name: '奥津 佑樹',
+    name_short: '奥',
+    role: 'requester',
+    avatar_color: 'av-b',
+    email: 'y.okutsu@meetsc.co.jp',
+    weekly_capacity_hours: 16,
+    is_active: true,
+    must_change_password: false,
+    manager_id: 'u2',
+    level: 'L5',
+    department: 'マーケティング部',
+    title: 'Specialist',
+    created_at: '2025-04-01T00:00:00',
+    updated_at: '2025-04-01T00:00:00',
+    password: DEFAULT_PASSWORD,
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -243,6 +262,31 @@ export const mockClients: Client[] = [
   { id: 'c1', name: '株式会社サンプル', created_at: '2025-01-01T00:00:00' },
   { id: 'c2', name: 'テスト工業株式会社', created_at: '2025-01-01T00:00:00' },
   { id: 'c3', name: 'グローバル商事', created_at: '2025-01-01T00:00:00' },
+  { id: 'c4', name: 'Amazon', created_at: '2025-01-01T00:00:00' },
+  { id: 'c5', name: 'LINEロジスティックス株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c6', name: 'きらぼし銀行', created_at: '2025-01-01T00:00:00' },
+  { id: 'c7', name: 'インターグ株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c8', name: 'エーアンドエーマテリアル株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c9', name: 'ゴードンミラー株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c10', name: 'パートナー（コズコム）', created_at: '2025-01-01T00:00:00' },
+  { id: 'c11', name: 'プレジデント社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c12', name: 'メジャークラフト株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c13', name: '仙楽園', created_at: '2025-01-01T00:00:00' },
+  { id: 'c14', name: '出光リテール販売株式会社 東海北陸カンパニー', created_at: '2025-01-01T00:00:00' },
+  { id: 'c15', name: '出光興産株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c16', name: '北海道乳業株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c17', name: '新井クリエイト', created_at: '2025-01-01T00:00:00' },
+  { id: 'c18', name: '星光産業株式会社', created_at: '2025-01-01T00:00:00' },
+  { id: 'c19', name: '株式会社EN', created_at: '2025-01-01T00:00:00' },
+  { id: 'c20', name: '株式会社GMP', created_at: '2025-01-01T00:00:00' },
+  { id: 'c21', name: '株式会社LUCE', created_at: '2025-01-01T00:00:00' },
+  { id: 'c22', name: '株式会社SPINDLE', created_at: '2025-01-01T00:00:00' },
+  { id: 'c23', name: '株式会社アイシン', created_at: '2025-01-01T00:00:00' },
+  { id: 'c24', name: '株式会社イートップ', created_at: '2025-01-01T00:00:00' },
+  { id: 'c25', name: '株式会社プレブ', created_at: '2025-01-01T00:00:00' },
+  { id: 'c26', name: '株式会社武居商店', created_at: '2025-01-01T00:00:00' },
+  { id: 'c27', name: '葉山家具', created_at: '2025-01-01T00:00:00' },
+  ...getImportedClients(),
 ]
 
 // ---------------------------------------------------------------------------
@@ -292,11 +336,11 @@ const rawTasks: Task[] = [
     created_at: '2025-04-09T09:00:00',
     updated_at: '2025-04-11T16:00:00',
   },
-  // 2. 採用バナー制作 — waiting, unassigned
+  // 2. 採用バナー制作 — waiting, unassigned → 人事 function
   {
     id: 't2',
     client_id: 'c2',
-    project_id: null,
+    project_id: 'proj-hr',
     title: '採用バナー制作',
     description: '採用サイト用のバナー画像制作。サイズ: 1200x628px。',
     status: 'waiting',
@@ -318,11 +362,11 @@ const rawTasks: Task[] = [
     created_at: '2025-04-10T10:00:00',
     updated_at: '2025-04-10T10:00:00',
   },
-  // 3. LP 原稿執筆 — done (渡邊)
+  // 3. LP 原稿執筆 — done (渡邊) → マーケティング function
   {
     id: 't3',
     client_id: 'c3',
-    project_id: null,
+    project_id: 'proj-mkt',
     title: 'LP 原稿執筆',
     description: 'ランディングページ用のコピーライティング。',
     status: 'done',
@@ -396,11 +440,11 @@ const rawTasks: Task[] = [
     created_at: '2025-04-08T09:00:00',
     updated_at: '2025-04-11T10:00:00',
   },
-  // 6. ニュースレター原稿 — waiting, unassigned
+  // 6. ニュースレター原稿 — waiting, unassigned → マーケティング function
   {
     id: 't6',
     client_id: 'c2',
-    project_id: null,
+    project_id: 'proj-mkt',
     title: 'ニュースレター原稿',
     description: '月次ニュースレターの原稿作成。',
     status: 'waiting',
@@ -526,11 +570,11 @@ const rawTasks: Task[] = [
     created_at: '2025-04-01T09:00:00',
     updated_at: '2025-04-08T18:00:00',
   },
-  // 11. 製品カタログ DTP — in_progress (Yudi)
+  // 11. 製品カタログ DTP — in_progress (Yudi) → 営業 function
   {
     id: 't11',
     client_id: 'c1',
-    project_id: null,
+    project_id: 'proj-sales',
     title: '製品カタログ DTP',
     description: '新製品カタログのDTP作業。A4 16ページ。',
     status: 'in_progress',
@@ -604,11 +648,11 @@ const rawTasks: Task[] = [
     created_at: '2025-04-11T10:00:00',
     updated_at: '2025-04-11T10:00:00',
   },
-  // 14. プレスリリース用画像 — todo (角田)
+  // 14. プレスリリース用画像 — todo (角田) → ブランディング function
   {
     id: 't14',
     client_id: 'c1',
-    project_id: null,
+    project_id: 'proj-brand',
     title: 'プレスリリース用画像',
     description: 'プレスリリース配信用のOGP画像とサムネイル画像。',
     status: 'todo',
@@ -724,7 +768,10 @@ function buildTaskWithRelations(task: Task): TaskWithRelations {
   }
 }
 
-export const mockTasks: TaskWithRelations[] = rawTasks.map(buildTaskWithRelations)
+export const mockTasks: TaskWithRelations[] = [
+  ...rawTasks.map(buildTaskWithRelations),
+  ...getImportedTasks(),
+]
 
 // ---------------------------------------------------------------------------
 // Comments (for task t1)
@@ -960,6 +1007,7 @@ export const mockTemplates: TaskTemplate[] = [
 // ---------------------------------------------------------------------------
 
 export const mockProjects: Project[] = [
+  // --- Legacy client-based projects (kept for issue references) ---
   {
     id: 'proj1',
     name: 'サンプル社 Webリニューアル',
@@ -1001,6 +1049,147 @@ export const mockProjects: Project[] = [
     created_at: '2025-02-20T09:00:00',
     updated_at: '2025-04-11T15:00:00',
     pm: findUser('u2'),
+  },
+  // --- Function-based projects (mapped from TaskList.csv ファンクション) ---
+  {
+    id: 'proj-sales',
+    name: '営業',
+    description: '営業活動全般。会社案内、契約書、提案資料作成、顧客対応等を管理。タスク種類: 営業, 契約書関連, NDA締結, CRM',
+    status: 'active',
+    pm_id: 'u1',
+    key_prefix: 'SAL',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u1'),
+  },
+  {
+    id: 'proj-it',
+    name: 'IT/システム',
+    description: 'IT基盤構築・システム開発。社内ポータル、業務ツール構築、IT構築タスクを管理。タスク種類: IT構築, 社内基盤構築',
+    status: 'active',
+    pm_id: 'u2',
+    key_prefix: 'ITS',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u2'),
+  },
+  {
+    id: 'proj-soumu',
+    name: '総務',
+    description: '総務・バックオフィス業務。インボイス発行、補助金申請、事務手続き等を管理。タスク種類: バックオフィス, インボイス発行, 補助金',
+    status: 'active',
+    pm_id: 'u1',
+    key_prefix: 'SOM',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u1'),
+  },
+  {
+    id: 'proj-hr',
+    name: '人事',
+    description: '人事・採用関連業務。JD作成、採用活動、研修・勉強会の企画運営。タスク種類: JD作成, 採用活動, Training, 勉強会',
+    status: 'active',
+    pm_id: 'u1',
+    key_prefix: 'HRM',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u1'),
+  },
+  {
+    id: 'proj-brand',
+    name: 'ブランディング',
+    description: 'ブランド戦略・クリエイティブ制作。ロゴ、名刺、会社案内デザイン、PR素材等を管理。タスク種類: ブランディング, ミーツHP関連',
+    status: 'active',
+    pm_id: 'u2',
+    key_prefix: 'BRD',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u2'),
+  },
+  {
+    id: 'proj-delivery',
+    name: 'デリバリー',
+    description: 'クライアントへのサービスデリバリー。EC運用、広告運用、納品物の品質管理。タスク種類: デリバリー, ECサイト運用, マニュアル作成',
+    status: 'active',
+    pm_id: 'u5',
+    key_prefix: 'DLV',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u5'),
+  },
+  {
+    id: 'proj-ops',
+    name: 'オペレーション',
+    description: '日常業務オペレーション。ECサイト運用、データ分析、業務改善タスクを管理。タスク種類: EC広告改善・分析, データ分析',
+    status: 'active',
+    pm_id: 'u5',
+    key_prefix: 'OPS',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u5'),
+  },
+  {
+    id: 'proj-mgmt',
+    name: '経営',
+    description: '経営戦略・資金調達・目標管理。経営計画策定、投資判断等の管理タスク。タスク種類: 経営戦略',
+    status: 'active',
+    pm_id: 'u1',
+    key_prefix: 'MGT',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u1'),
+  },
+  {
+    id: 'proj-presales',
+    name: 'プレセールス活動',
+    description: 'プレセールス・新規案件獲得活動。提案書作成、デモ準備、見積り作成等を管理。タスク種類: プレセールス活動',
+    status: 'active',
+    pm_id: 'u2',
+    key_prefix: 'PSA',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u2'),
+  },
+  {
+    id: 'proj-mkt',
+    name: 'マーケティング',
+    description: 'マーケティング活動全般。SNS運用、広告、LP制作、メルマガ、コンテンツマーケティング。タスク種類: マーケティング, CRM',
+    status: 'active',
+    pm_id: 'u4',
+    key_prefix: 'MKT',
+    next_issue_seq: 1,
+    start_date: '2025-01-01',
+    end_date: null,
+    created_at: '2025-01-01T00:00:00',
+    updated_at: '2025-04-11T00:00:00',
+    pm: findUser('u4'),
   },
 ]
 

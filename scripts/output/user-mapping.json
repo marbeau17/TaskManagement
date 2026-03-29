@@ -1,0 +1,84 @@
+{
+  "description": "Mapping from TaskList.csv Owner emails to mock user IDs",
+  "source": "docs/TaskList.csv (Owner column)",
+  "mapping": {
+    "y.ito@meetsc.co.jp": {
+      "userId": "u1",
+      "name": "伊藤 祐太",
+      "role": "admin",
+      "status": "existing"
+    },
+    "o.yasuda@meetsc.co.jp": {
+      "userId": "u2",
+      "name": "安田 修",
+      "role": "admin",
+      "status": "existing"
+    },
+    "y.akimoto@meetsc.co.jp": {
+      "userId": "u3",
+      "name": "秋元 由美子",
+      "role": "creator",
+      "status": "existing"
+    },
+    "r.watanabe@meetsc.co.jp": {
+      "userId": "u4",
+      "name": "渡邊 梨紗",
+      "role": "creator",
+      "status": "existing"
+    },
+    "m.takimiya@meetsc.co.jp": {
+      "userId": "u5",
+      "name": "瀧宮 誠",
+      "role": "admin",
+      "status": "existing"
+    },
+    "h.ohta@meetsc.co.jp": {
+      "userId": "u6",
+      "name": "太田 晴瑠",
+      "role": "creator",
+      "status": "existing"
+    },
+    "h.ota@meetsc.co.jp": {
+      "userId": "u6",
+      "name": "太田 晴瑠",
+      "role": "creator",
+      "status": "existing (alias)"
+    },
+    "l.trabuio@meetsc.co.jp": {
+      "userId": "u7",
+      "name": "Luca Trabuio",
+      "role": "creator",
+      "status": "existing"
+    },
+    "h.kadota@meetsc.co.jp": {
+      "userId": "u8",
+      "name": "角田 春華",
+      "role": "creator",
+      "status": "existing"
+    },
+    "r.agcaoili@meetsc.co.jp": {
+      "userId": "u9",
+      "name": "Rafael Agcaoili",
+      "role": "creator",
+      "status": "existing"
+    },
+    "m.takeuchi@meetsc.co.jp": {
+      "userId": "u10",
+      "name": "竹内 美鈴",
+      "role": "creator",
+      "status": "existing"
+    },
+    "y.putra@meetsc.co.jp": {
+      "userId": "u11",
+      "name": "Yudi Dharma Putra",
+      "role": "creator",
+      "status": "existing"
+    },
+    "y.okutsu@meetsc.co.jp": {
+      "userId": "u12",
+      "name": "奥津",
+      "role": "requester",
+      "status": "added"
+    }
+  }
+}
