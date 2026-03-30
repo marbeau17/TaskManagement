@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Topbar } from '@/components/layout'
 import { Avatar, FilterBar, Pagination, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
-import { useIssues, useDeleteIssue } from '@/hooks/useIssues'
+import { useIssues, useDeleteIssue, useUpdateIssue } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -33,6 +33,9 @@ export default function IssuesPage() {
   const [sourceFilter, setSourceFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
+  const [editingCell, setEditingCell] = useState<{ issueId: string; field: string } | null>(null)
+  const [editDraft, setEditDraft] = useState('')
+  const updateIssueMutation = useUpdateIssue()
 
   const filters: IssueFilters = useMemo(() => ({
     search: search || undefined,
@@ -62,6 +65,15 @@ export default function IssuesPage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [filters])
+
+  const handleInlineSave = (issueId: string, field: string, value: any) => {
+    updateIssueMutation.mutate({ id: issueId, data: { [field]: value } })
+    setEditingCell(null)
+  }
+  const startEdit = (issueId: string, field: string, currentValue: string) => {
+    setEditingCell({ issueId, field })
+    setEditDraft(currentValue ?? '')
+  }
 
   const paginatedIssues = useMemo(() => {
     if (!issues) return []
@@ -242,7 +254,7 @@ export default function IssuesPage() {
                   {paginatedIssues.map((issue) => (
                     <tr
                       key={issue.id}
-                      onClick={() => router.push(`/issues/${issue.id}`)}
+                      onClick={() => { if (!editingCell) router.push(`/issues/${issue.id}`) }}
                       className="border-b border-wf-border cursor-pointer hover:bg-surf2/50 transition-colors"
                     >
                       <td className="px-[12px] py-[10px] text-[12px] font-mono text-mint font-bold whitespace-nowrap tracking-wide">
@@ -251,17 +263,88 @@ export default function IssuesPage() {
                       <td className="px-[12px] py-[10px]">
                         <IssueTypeBadge type={issue.type} size="sm" />
                       </td>
-                      <td className="px-[12px] py-[10px] min-w-[180px]">
-                        <div className="text-[12.5px] font-bold text-text leading-tight">{issue.title}</div>
+                      <td className="px-[12px] py-[10px] min-w-[180px]"
+                        onDoubleClick={(e) => { e.stopPropagation(); startEdit(issue.id, 'title', issue.title) }}
+                      >
+                        {editingCell?.issueId === issue.id && editingCell.field === 'title' ? (
+                          <input
+                            type="text"
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            onBlur={() => handleInlineSave(issue.id, 'title', editDraft)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleInlineSave(issue.id, 'title', editDraft)
+                              if (e.key === 'Escape') setEditingCell(null)
+                            }}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[12.5px] font-bold text-text bg-surface border border-mint rounded px-1 py-0.5 w-full focus:outline-none"
+                          />
+                        ) : (
+                          <div className="text-[12.5px] font-bold text-text leading-tight">{issue.title}</div>
+                        )}
                       </td>
-                      <td className="px-[12px] py-[10px]">
-                        <SeverityBadge severity={issue.severity} size="sm" />
+                      <td className="px-[12px] py-[10px]"
+                        onDoubleClick={(e) => { e.stopPropagation(); startEdit(issue.id, 'severity', issue.severity) }}
+                      >
+                        {editingCell?.issueId === issue.id && editingCell.field === 'severity' ? (
+                          <select
+                            value={editDraft}
+                            onChange={(e) => handleInlineSave(issue.id, 'severity', e.target.value)}
+                            onBlur={() => setEditingCell(null)}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                          >
+                            <option value="critical">{t('issues.critical')}</option>
+                            <option value="high">{t('issues.high')}</option>
+                            <option value="medium">{t('issues.medium')}</option>
+                            <option value="low">{t('issues.low')}</option>
+                          </select>
+                        ) : (
+                          <SeverityBadge severity={issue.severity} size="sm" />
+                        )}
                       </td>
-                      <td className="px-[12px] py-[10px]">
-                        <IssueStatusBadge status={issue.status} size="sm" />
+                      <td className="px-[12px] py-[10px]"
+                        onDoubleClick={(e) => { e.stopPropagation(); startEdit(issue.id, 'status', issue.status) }}
+                      >
+                        {editingCell?.issueId === issue.id && editingCell.field === 'status' ? (
+                          <select
+                            value={editDraft}
+                            onChange={(e) => handleInlineSave(issue.id, 'status', e.target.value)}
+                            onBlur={() => setEditingCell(null)}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                          >
+                            <option value="open">{t('issues.open')}</option>
+                            <option value="in_progress">{t('issues.inProgress')}</option>
+                            <option value="resolved">{t('issues.resolved')}</option>
+                            <option value="verified">{t('issues.verified')}</option>
+                            <option value="closed">{t('issues.closed')}</option>
+                          </select>
+                        ) : (
+                          <IssueStatusBadge status={issue.status} size="sm" />
+                        )}
                       </td>
-                      <td className="px-[12px] py-[10px]">
-                        {issue.assignee ? (
+                      <td className="px-[12px] py-[10px]"
+                        onDoubleClick={(e) => { e.stopPropagation(); startEdit(issue.id, 'assigned_to', issue.assigned_to ?? '') }}
+                      >
+                        {editingCell?.issueId === issue.id && editingCell.field === 'assigned_to' ? (
+                          <select
+                            value={editDraft}
+                            onChange={(e) => handleInlineSave(issue.id, 'assigned_to', e.target.value || null)}
+                            onBlur={() => setEditingCell(null)}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11.5px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                          >
+                            <option value="">{t('issues.unassigned')}</option>
+                            {(members ?? []).filter((m) => m.is_active).map((m) => (
+                              <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                          </select>
+                        ) : issue.assignee ? (
                           <div className="flex items-center gap-[4px]">
                             <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
                             <span className="text-[11px] text-text whitespace-nowrap">{issue.assignee.name}</span>

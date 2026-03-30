@@ -7,9 +7,12 @@ import { Avatar, Pagination, ProgressBar, StatusChip } from '@/components/shared
 import { formatDate, formatHours } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
-import { useSubtasks, useBulkDeleteTasks } from '@/hooks/useTasks'
+import { useSubtasks, useBulkDeleteTasks, useUpdateTask } from '@/hooks/useTasks'
+import { useClients } from '@/hooks/useClients'
+import { useMembers } from '@/hooks/useMembers'
 import { useI18n } from '@/hooks/useI18n'
 import { usePermission } from '@/hooks/usePermission'
+import { getStatusLabels } from '@/lib/constants'
 
 interface TaskTableProps {
   tasks: TaskWithRelations[]
@@ -183,13 +186,29 @@ function SubtaskRows({
 }
 
 export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTableProps) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const router = useRouter()
   const { can } = usePermission()
   const deleteTask = useBulkDeleteTasks()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null)
+  const [editDraft, setEditDraft] = useState<string>('')
+  const updateTask = useUpdateTask()
+  const { data: clients } = useClients()
+  const { data: members } = useMembers()
+  const statusLabels = useMemo(() => getStatusLabels(locale), [locale])
+
+  const handleInlineSave = useCallback((taskId: string, field: string, value: any) => {
+    updateTask.mutate({ taskId, data: { [field]: value || null } })
+    setEditingCell(null)
+  }, [updateTask])
+
+  const startEdit = useCallback((taskId: string, field: string, currentValue: string) => {
+    setEditingCell({ taskId, field })
+    setEditDraft(currentValue ?? '')
+  }, [])
 
   const toggleExpand = useCallback((taskId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -412,7 +431,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
               return (
                 <React.Fragment key={task.id}>
                 <tr
-                  onClick={() => router.push(`/tasks/${task.id}`)}
+                  onClick={() => { if (!editingCell) router.push(`/tasks/${task.id}`) }}
                   className={`
                     border-b border-wf-border cursor-pointer
                     hover:bg-surf2/50 transition-colors
@@ -456,27 +475,80 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   </td>
 
                   {/* Client */}
-                  <td className="px-[12px] py-[10px]">
-                    <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
-                      {task.client.name}
-                    </span>
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'client_id', task.client_id) }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'client_id' ? (
+                      <select
+                        value={editDraft}
+                        onChange={(e) => { handleInlineSave(task.id, 'client_id', e.target.value) }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11.5px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      >
+                        {clients?.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
+                        {task.client.name}
+                      </span>
+                    )}
                   </td>
 
                   {/* Task name */}
-                  <td className="px-[12px] py-[10px] min-w-[180px]">
-                    <div className="text-[12.5px] font-bold text-text leading-tight">
-                      {task.title}
-                    </div>
-                    {task.description && (
-                      <div className="text-[11px] text-text3 mt-[2px] line-clamp-1">
-                        {task.description}
-                      </div>
+                  <td className="px-[12px] py-[10px] min-w-[180px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'title', task.title) }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'title' ? (
+                      <input
+                        type="text"
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onBlur={() => handleInlineSave(task.id, 'title', editDraft)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleInlineSave(task.id, 'title', editDraft)
+                          if (e.key === 'Escape') setEditingCell(null)
+                        }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[12.5px] font-bold text-text bg-surface border border-mint rounded px-1 py-0.5 w-full focus:outline-none"
+                      />
+                    ) : (
+                      <>
+                        <div className="text-[12.5px] font-bold text-text leading-tight">
+                          {task.title}
+                        </div>
+                        {task.description && (
+                          <div className="text-[11px] text-text3 mt-[2px] line-clamp-1">
+                            {task.description}
+                          </div>
+                        )}
+                      </>
                     )}
                   </td>
 
                   {/* Assignee(s) */}
-                  <td className="px-[12px] py-[10px]">
-                    {task.assignees && task.assignees.length > 0 ? (
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'assigned_to', task.assigned_to ?? '') }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'assigned_to' ? (
+                      <select
+                        value={editDraft}
+                        onChange={(e) => { handleInlineSave(task.id, 'assigned_to', e.target.value || null) }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11.5px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      >
+                        <option value="">{t('tasks.unassigned')}</option>
+                        {members?.filter((m) => m.is_active).map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    ) : task.assignees && task.assignees.length > 0 ? (
                       <div className="flex items-center gap-[6px]">
                         <div className="flex items-center -space-x-2">
                           {task.assignees.slice(0, 3).map((a) =>
@@ -534,8 +606,20 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   </td>
 
                   {/* Deadline */}
-                  <td className="px-[12px] py-[10px]">
-                    {deadline ? (
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'confirmed_deadline', task.confirmed_deadline?.slice(0, 10) ?? '') }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'confirmed_deadline' ? (
+                      <input
+                        type="date"
+                        value={editDraft}
+                        onChange={(e) => { handleInlineSave(task.id, 'confirmed_deadline', e.target.value || null) }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11.5px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      />
+                    ) : deadline ? (
                       <span
                         className={`text-[11.5px] whitespace-nowrap ${
                           taskOverdue
@@ -578,8 +662,27 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   </td>
 
                   {/* Status */}
-                  <td className="px-[12px] py-[10px]">
-                    <StatusChip status={task.status} size="sm" />
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'status', task.status) }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'status' ? (
+                      <select
+                        value={editDraft}
+                        onChange={(e) => {
+                          handleInlineSave(task.id, 'status', e.target.value)
+                        }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      >
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <StatusChip status={task.status} size="sm" />
+                    )}
                   </td>
                 </tr>
 

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Topbar } from '@/components/layout'
 import { Avatar, ProgressBar, FilterBar, Pagination } from '@/components/shared'
-import { useProjects, useCreateProject } from '@/hooks/useProjects'
+import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
@@ -248,6 +248,9 @@ export default function ProjectsPage() {
   const { data: allTasks } = useTasks()
   const { data: allIssues } = useIssues()
   const createProjectMutation = useCreateProject()
+  const updateProjectMutation = useUpdateProject()
+  const [editingProject, setEditingProject] = useState<{ id: string; field: string } | null>(null)
+  const [editDraft, setEditDraft] = useState('')
 
   // Filter projects
   const filteredProjects = useMemo(() => {
@@ -388,7 +391,7 @@ export default function ProjectsPage() {
             return (
               <button
                 key={project.id}
-                onClick={() => router.push(`/projects/${project.id}`)}
+                onClick={() => { if (!editingProject) router.push(`/projects/${project.id}`) }}
                 className="bg-surface border border-border2 rounded-[10px] shadow p-[16px] text-left hover:border-mint transition-colors group"
               >
                 {/* Header row */}
@@ -397,19 +400,101 @@ export default function ProjectsPage() {
                     <span className="text-[10px] font-bold text-mint bg-mint-ll dark:bg-mint-dd/30 px-[7px] py-[2px] rounded-[4px] shrink-0">
                       {project.key_prefix}
                     </span>
-                    <h3 className="text-[14px] font-bold text-text truncate group-hover:text-mint transition-colors">
-                      {project.name}
-                    </h3>
+                    {editingProject?.id === project.id && editingProject.field === 'name' ? (
+                      <input
+                        type="text"
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onBlur={() => {
+                          if (editDraft.trim() && editDraft.trim() !== project.name) {
+                            updateProjectMutation.mutate({ id: project.id, data: { name: editDraft.trim() } })
+                          }
+                          setEditingProject(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                          if (e.key === 'Escape') setEditingProject(null)
+                        }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[14px] font-bold text-text bg-surface border border-mint rounded px-1 py-0.5 w-full focus:outline-none"
+                      />
+                    ) : (
+                      <h3
+                        className="text-[14px] font-bold text-text truncate group-hover:text-mint transition-colors"
+                        onDoubleClick={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                          setEditDraft(project.name)
+                          setEditingProject({ id: project.id, field: 'name' })
+                        }}
+                      >
+                        {project.name}
+                      </h3>
+                    )}
                   </div>
-                  <ProjectStatusBadge status={project.status} />
+                  {editingProject?.id === project.id && editingProject.field === 'status' ? (
+                    <select
+                      value={editDraft}
+                      onChange={(e) => {
+                        updateProjectMutation.mutate({ id: project.id, data: { status: e.target.value as ProjectStatus } })
+                        setEditingProject(null)
+                      }}
+                      onBlur={() => setEditingProject(null)}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[10px] bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                    >
+                      <option value="planning">{t('projects.statusPlanning')}</option>
+                      <option value="active">{t('projects.statusActive')}</option>
+                      <option value="on_hold">{t('projects.statusOnHold')}</option>
+                      <option value="completed">{t('projects.statusCompleted')}</option>
+                      <option value="archived">{t('projects.statusArchived')}</option>
+                    </select>
+                  ) : (
+                    <span onDoubleClick={(e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      setEditDraft(project.status)
+                      setEditingProject({ id: project.id, field: 'status' })
+                    }}>
+                      <ProjectStatusBadge status={project.status} />
+                    </span>
+                  )}
                 </div>
 
                 {/* Description */}
-                {project.description && (
-                  <p className="text-[11px] text-text2 line-clamp-2 mb-[10px]">
+                {editingProject?.id === project.id && editingProject.field === 'description' ? (
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    onBlur={() => {
+                      if (editDraft !== (project.description ?? '')) {
+                        updateProjectMutation.mutate({ id: project.id, data: { description: editDraft } })
+                      }
+                      setEditingProject(null)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setEditingProject(null)
+                    }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                    rows={2}
+                    className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 w-full focus:outline-none resize-none mb-[10px]"
+                  />
+                ) : project.description ? (
+                  <p
+                    className="text-[11px] text-text2 line-clamp-2 mb-[10px]"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      setEditDraft(project.description ?? '')
+                      setEditingProject({ id: project.id, field: 'description' })
+                    }}
+                  >
                     {project.description}
                   </p>
-                )}
+                ) : null}
 
                 {/* PM info */}
                 {project.pm && (

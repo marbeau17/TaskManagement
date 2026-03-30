@@ -274,7 +274,7 @@ export async function getSubtasks(
 
 export async function updateTask(
   id: string,
-  data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline'>>
+  data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to'>>
 ): Promise<Task> {
   if (useMock()) {
     const { updateMockTask } = await import('@/lib/mock/handlers')
