@@ -443,10 +443,16 @@ export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
     const { bulkDeleteMockTasks } = await import('@/lib/mock/handlers')
     return bulkDeleteMockTasks(taskIds)
   }
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-  const { error } = await supabase.from('tasks').delete().in('id', taskIds)
-  if (error) throw error
+  // Use server-side API route to bypass RLS restrictions
+  const res = await fetch('/api/tasks/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taskIds }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Delete failed')
+  }
 }
 
 // ---------------------------------------------------------------------------

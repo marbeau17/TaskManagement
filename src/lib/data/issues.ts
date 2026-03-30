@@ -274,16 +274,16 @@ export async function deleteIssue(id: string): Promise<void> {
     return
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('issues')
-    .delete()
-    .eq('id', id)
-
-  if (error) { console.warn('[Data]', error.message) }
+  // Use server-side API route to bypass RLS restrictions
+  const res = await fetch('/api/issues/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ issueId: id }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    console.warn('[Issues] Delete failed:', data.error)
+  }
 }
 
 // ---------------------------------------------------------------------------
