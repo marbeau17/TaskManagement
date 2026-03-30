@@ -148,7 +148,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
         </nav>
       </div>
 
-      {/* クリエイター section */}
+      {/* メンバー section */}
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
         {!collapsed && (
           <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
