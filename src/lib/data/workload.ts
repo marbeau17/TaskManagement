@@ -32,7 +32,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours, progress, planned_hours_per_week, confirmed_deadline, desired_deadline')
+    .select('assigned_to, status, estimated_hours, actual_hours, progress, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
