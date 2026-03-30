@@ -304,6 +304,9 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
         completionRate: 0,
         dueThisWeekCount: 0,
         dueThisMonthCount: 0,
+        velocity: 0,
+        rejectedCount: 0,
+        rejectionRate: 0,
       }
     }
 
@@ -313,7 +316,10 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
     let filteredTasks = tasks
     if (period === 'week') {
       const weekEnd = new Date(now)
-      weekEnd.setDate(now.getDate() + (7 - now.getDay()))
+      const dayOfWeek = now.getDay() // 0=Sun, 1=Mon...6=Sat
+      const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
+      weekEnd.setDate(now.getDate() + daysToSunday)
+      weekEnd.setHours(23, 59, 59, 999)
       const weekEndStr = weekEnd.toISOString().slice(0, 10)
       filteredTasks = tasks.filter((t) => {
         const deadline = t.confirmed_deadline ?? t.desired_deadline
@@ -364,11 +370,15 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
       if (!deadline) return false
       return new Date(deadline) < now
     }).length
-    const completionRate = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+    const completableCount = filteredTasks.filter((t) => t.status !== 'rejected').length
+    const completionRate = completableCount > 0 ? Math.round((doneCount / completableCount) * 100) : 0
 
     // Additional period counts (always computed from all tasks)
     const weekEnd2 = new Date(now)
-    weekEnd2.setDate(now.getDate() + (7 - now.getDay()))
+    const dayOfWeek2 = now.getDay() // 0=Sun, 1=Mon...6=Sat
+    const daysToSunday2 = dayOfWeek2 === 0 ? 0 : 7 - dayOfWeek2
+    weekEnd2.setDate(now.getDate() + daysToSunday2)
+    weekEnd2.setHours(23, 59, 59, 999)
     const weekEndStr2 = weekEnd2.toISOString().slice(0, 10)
     const monthEnd2 = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     const monthEndStr2 = monthEnd2.toISOString().slice(0, 10)
@@ -385,6 +395,18 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
       return deadline && deadline <= monthEndStr2
     }).length
 
+    // Velocity: tasks completed in last 7 days
+    const sevenDaysAgo = new Date(now)
+    sevenDaysAgo.setDate(now.getDate() - 7)
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10)
+    const completedThisWeek = tasks.filter((t) =>
+      t.status === 'done' && t.updated_at >= sevenDaysAgoStr
+    ).length
+
+    // Rejection rate
+    const rejectedCount = tasks.filter((t) => t.status === 'rejected').length
+    const rejectionRate = tasks.length > 0 ? Math.round((rejectedCount / tasks.length) * 100) : 0
+
     return {
       totalCount,
       activeCount,
@@ -396,6 +418,9 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
       completionRate,
       dueThisWeekCount,
       dueThisMonthCount,
+      velocity: completedThisWeek,
+      rejectedCount,
+      rejectionRate,
     }
   }, [tasks, period])
 

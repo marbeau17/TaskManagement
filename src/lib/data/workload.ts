@@ -5,6 +5,7 @@
 import type { User, Client } from '@/types/database'
 import type { WorkloadSummary, WorkloadKpiData, ResourceLoadData, ResourceLoadEntry } from '@/types/workload'
 import { useMock } from '@/lib/utils'
+import { getTaskWeeklyHours } from '@/lib/workload-utils'
 
 // ---------------------------------------------------------------------------
 // getWorkloadSummaries
@@ -59,26 +60,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     const activeTasks = allUserTasks.filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
     const completedTasks = allUserTasks.filter((t: any) => t.status === 'done')
     const estimatedHours = activeTasks.reduce(
-      (sum: number, t: any) => {
-        // 1. Check template_data for explicit weekly_plan for this week
-        const weeklyPlan = t.template_data?.weekly_plan
-        if (weeklyPlan && weekStart && weeklyPlan[weekStart] > 0) {
-          return sum + weeklyPlan[weekStart]
-        }
-        // 2. Check planned_hours_per_week
-        const weeklyHours = t.planned_hours_per_week
-        if (weeklyHours && weeklyHours > 0) return sum + weeklyHours
-        // 3. Prorate estimated_hours across weeks until deadline
-        const estimated = t.estimated_hours ?? 0
-        if (estimated <= 0) return sum
-        const deadline = t.confirmed_deadline ?? t.desired_deadline
-        if (!deadline) return sum + estimated // no deadline = count full amount
-        const startDate = t.start_date ? new Date(t.start_date) : new Date()
-        const endDate = new Date(deadline)
-        const totalDays = Math.max(7, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
-        const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
-        return sum + (estimated / totalWeeks)
-      },
+      (sum: number, t: any) => sum + getTaskWeeklyHours(t, weekStart),
       0
     )
     const actualHours = activeTasks.reduce(

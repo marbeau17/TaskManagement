@@ -8,6 +8,7 @@ import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
 import { MemberWorkloadTable } from '@/components/workload/MemberWorkloadTable'
 import { CapacityMatrix } from '@/components/workload/CapacityMatrix'
+import { UtilizationTrend } from '@/components/workload/UtilizationTrend'
 import { useWorkloadKpi, useWorkloadSummaries, useResourceLoadData } from '@/hooks/useWorkload'
 
 const ResourceLoadChart = dynamic(
@@ -74,6 +75,9 @@ export default function WorkloadPage() {
         ) : (
           <ResourceLoadChart data={resourceData} />
         )}
+
+        {/* Utilization Trend */}
+        <UtilizationTrend />
 
         {/* Week Navigation + Member Workload Table */}
         <div className="flex items-center justify-between">

@@ -14,8 +14,8 @@ export function KpiCards({ period = 'all' }: KpiCardsProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-[12px]">
+        {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="bg-surface border border-border2 rounded-[10px] p-[13px] shadow h-[88px] animate-pulse" />
         ))}
       </div>
@@ -23,7 +23,7 @@ export function KpiCards({ period = 'all' }: KpiCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-[12px]">
       {/* Tasks - period aware */}
       <KpiCard
         label={period === 'week' || period === 'last_week' ? t('kpi.dueThisWeek') : period === 'month' || period === 'last_month' ? t('kpi.dueThisMonth') : t('kpi.activeTasks')}
@@ -50,6 +50,16 @@ export function KpiCards({ period = 'all' }: KpiCardsProps) {
         value={stats.completionRate}
         unit={t('kpi.unit.percent')}
         subText={`${stats.doneCount} / ${stats.totalCount} ${t('kpi.completed')}`}
+        variant="mint"
+      />
+
+      {/* Velocity */}
+      <KpiCard
+        label={t('kpi.velocity')}
+        value={stats.velocity}
+        unit={t('kpi.unit.tasksWeek')}
+        subText={stats.rejectionRate > 0 ? `${t('kpi.rejectionRate')}: ${stats.rejectionRate}%` : t('kpi.noRejections')}
+        subColor={stats.rejectionRate > 5 ? '#C8A030' : undefined}
         variant="mint"
       />
 

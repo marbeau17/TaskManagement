@@ -1,20 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { addDays, format, differenceInDays } from 'date-fns'
+import { addDays, format } from 'date-fns'
 import { Avatar } from '@/components/shared'
 import { useI18n } from '@/hooks/useI18n'
 import { useTasks } from '@/hooks/useTasks'
 import { useMembers } from '@/hooks/useMembers'
-
-function getMonday(date: Date): Date {
-  const day = date.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  const d = new Date(date)
-  d.setDate(date.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
+import { getTaskWeeklyHours, taskOverlapsWeek, getMonday } from '@/lib/workload-utils'
 
 function getCellColor(rate: number): string {
   if (rate >= 100) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
@@ -59,32 +51,11 @@ export function CapacityMatrix() {
       weeks.forEach((w) => { weekHours[w.key] = 0 })
 
       memberTasks.forEach((task) => {
-        // Check template_data for weekly_plan
-        const weeklyPlan = (task.template_data as any)?.weekly_plan as Record<string, number> | undefined
-
-        if (weeklyPlan) {
-          // Use explicit weekly plan
-          weeks.forEach((w) => {
-            if (weeklyPlan[w.key]) {
-              weekHours[w.key] += weeklyPlan[w.key]
-            }
-          })
-        } else {
-          // Prorate estimated_hours across weeks until deadline
-          const deadline = task.confirmed_deadline ?? task.desired_deadline
-          if (!deadline || !task.estimated_hours) return
-
-          const startDate = task.start_date ? new Date(task.start_date) : new Date(task.created_at)
-          const endDate = new Date(deadline)
-          const totalWeeks = Math.max(1, Math.ceil(differenceInDays(endDate, startDate) / 7))
-          const hoursPerWeek = task.estimated_hours / totalWeeks
-
-          weeks.forEach((w) => {
-            if (w.monday <= endDate && w.sunday >= startDate) {
-              weekHours[w.key] += hoursPerWeek
-            }
-          })
-        }
+        weeks.forEach((w) => {
+          if (taskOverlapsWeek(task, w.monday, w.sunday)) {
+            weekHours[w.key] += getTaskWeeklyHours(task, w.key)
+          }
+        })
       })
 
       return {
