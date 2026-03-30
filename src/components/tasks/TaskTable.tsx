@@ -511,7 +511,19 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
               >
                 <div className="flex items-center justify-between mb-[6px]">
                   <span className="text-[11px] font-bold text-text2">{task.client.name}</span>
-                  <StatusChip status={task.status} size="sm" />
+                  <select
+                    value={task.status}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                      updateTask.mutate({ taskId: task.id, data: { status: e.target.value } as any })
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] font-semibold rounded-full px-[8px] py-[2px] border bg-surface focus:outline-none focus:border-mint cursor-pointer"
+                  >
+                    {Object.entries(statusLabels).map(([val, label]) => (
+                      <option key={val} value={val}>{label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="text-[13px] font-bold text-text mb-[6px] leading-tight">
                   {task.title}
