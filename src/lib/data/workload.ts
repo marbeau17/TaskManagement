@@ -28,12 +28,12 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   if (usersError) throw usersError
   const typedUsers = (users ?? []) as User[]
 
-  // Fetch only active (non-done) tasks with an assignee
+  // Fetch all non-rejected tasks with an assignee
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours, confirmed_deadline, desired_deadline')
+    .select('assigned_to, status, estimated_hours, actual_hours, progress, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
-    .in('status', ['todo', 'in_progress'])
+    .neq('status', 'rejected')
 
   if (tasksError) throw tasksError
 
@@ -43,24 +43,32 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     const start = new Date(weekStart)
     const end = new Date(start)
     end.setDate(end.getDate() + 6)
-    const startStr = start.toISOString().slice(0, 10)
     const endStr = end.toISOString().slice(0, 10)
     filteredTasks = filteredTasks.filter((t: any) => {
       const deadline = t.confirmed_deadline ?? t.desired_deadline
-      if (!deadline) return true // tasks with no deadline count for current week
-      return deadline >= startStr && deadline <= endStr
+      if (!deadline) return true // no deadline = include
+      // Include tasks with deadline up to end of this week
+      // (tasks are being worked on until their deadline)
+      return deadline <= endStr
     })
   }
 
   const summaries: WorkloadSummary[] = typedUsers.map((user) => {
-    const userTasks = filteredTasks.filter((t) => t.assigned_to === user.id)
-    const completedTasks = userTasks.filter((t) => t.status === 'done')
-    const estimatedHours = userTasks.reduce(
+    const allUserTasks = filteredTasks.filter((t: any) => t.assigned_to === user.id)
+    const activeTasks = allUserTasks.filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
+    const completedTasks = allUserTasks.filter((t: any) => t.status === 'done')
+    const estimatedHours = activeTasks.reduce(
       (sum, t) => sum + (t.estimated_hours ?? 0),
       0
     )
-    const actualHours = userTasks.reduce(
-      (sum, t) => sum + (t.actual_hours ?? 0),
+    const actualHours = activeTasks.reduce(
+      (sum, t) => {
+        // Use actual_hours if manually entered, otherwise derive from progress
+        const hours = (t.actual_hours ?? 0) > 0
+          ? (t.actual_hours ?? 0)
+          : ((t.progress ?? 0) / 100) * (t.estimated_hours ?? 0)
+        return sum + hours
+      },
       0
     )
     const capacityHours = user.weekly_capacity_hours
@@ -76,10 +84,10 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
 
     return {
       user,
-      task_count: userTasks.length,
+      task_count: allUserTasks.length,
       completed_count: completedTasks.length,
       estimated_hours: estimatedHours,
-      actual_hours: actualHours,
+      actual_hours: Math.round(actualHours * 10) / 10,
       capacity_hours: capacityHours,
       utilization_rate: utilizationRate,
       status,

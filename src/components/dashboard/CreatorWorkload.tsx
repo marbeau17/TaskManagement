@@ -75,7 +75,7 @@ function WorkloadRow({ summary }: { summary: WorkloadSummary }) {
 
         {/* Line 3: Hours info */}
         <div className="text-[11px] text-text2">
-          {formatHours(actual_hours)} / {formatHours(capacity_hours)}
+          {formatHours(actual_hours)} / {formatHours(estimated_hours)}
         </div>
       </div>
 
@@ -113,7 +113,7 @@ function WorkloadRow({ summary }: { summary: WorkloadSummary }) {
 
         {/* 実績/見積 */}
         <span className="text-[11px] text-text2 text-right">
-          {formatHours(actual_hours)} / {formatHours(capacity_hours)}
+          {formatHours(actual_hours)} / {formatHours(estimated_hours)}
         </span>
 
         {/* 状態チップ */}

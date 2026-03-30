@@ -22,6 +22,7 @@ export function ProgressInput({ task }: ProgressInputProps) {
   const [progress, setProgress] = useState(task.progress)
   const [status, setStatus] = useState<TaskStatus>(task.status)
   const [actualHours, setActualHours] = useState(task.actual_hours)
+  const [manualHoursSet, setManualHoursSet] = useState(task.actual_hours > 0)
   const mutation = useUpdateTaskProgress()
 
   const handleSubmit = () => {
@@ -86,7 +87,12 @@ export function ProgressInput({ task }: ProgressInputProps) {
             <button
               key={pct}
               type="button"
-              onClick={() => setProgress(pct)}
+              onClick={() => {
+                setProgress(pct)
+                if (!manualHoursSet && task.estimated_hours) {
+                  setActualHours(Math.round((pct / 100) * task.estimated_hours * 10) / 10)
+                }
+              }}
               className={`
                 flex-1 py-[5px] rounded-md text-[12px] font-semibold border transition-colors
                 ${
@@ -149,7 +155,10 @@ export function ProgressInput({ task }: ProgressInputProps) {
             min={0}
             step={0.5}
             value={actualHours}
-            onChange={(e) => setActualHours(Number(e.target.value))}
+            onChange={(e) => {
+              setActualHours(Number(e.target.value))
+              setManualHoursSet(true)
+            }}
             className="w-20 border border-wf-border rounded-md px-2 py-1 text-[13px] text-text bg-surface focus:outline-none focus:border-mint"
           />
           <span className="text-[12px] text-text2">h</span>
