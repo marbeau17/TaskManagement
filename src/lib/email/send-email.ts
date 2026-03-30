@@ -18,29 +18,40 @@ async function getSmtpConfig() {
   let fromEmail = process.env.SMTP_FROM_EMAIL
 
   // Fallback: check DB settings (for settings configured via UI)
+  // Use admin client to bypass RLS on server-side API routes
   if (!user || !pass) {
     try {
-      const { getSetting } = await import('@/lib/data/settings')
-      const [dbHost, dbPort, dbUser, dbPass, dbFromName, dbFromEmail] = await Promise.all([
-        getSetting('smtp_host'),
-        getSetting('smtp_port'),
-        getSetting('smtp_user'),
-        getSetting('smtp_password'),
-        getSetting('smtp_from_name'),
-        getSetting('smtp_from_email'),
-      ])
-      host = host || dbHost || 'smtp.gmail.com'
-      port = port || dbPort || '587'
-      user = user || dbUser || ''
-      pass = pass || dbPass || ''
-      fromName = fromName || dbFromName || 'WorkFlow Task Management'
-      fromEmail = fromEmail || dbFromEmail || user
-    } catch {
-      // Settings module not available, use env only
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const supabase = createAdminClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: settingsRows } = await (supabase as any)
+        .from('app_settings')
+        .select('key, value')
+
+      const dbSettings: Record<string, string> = {}
+      for (const row of (settingsRows ?? []) as Array<{ key: string; value: string }>) {
+        dbSettings[row.key] = row.value
+      }
+
+      host = host || dbSettings['smtp_host'] || 'smtp.gmail.com'
+      port = port || dbSettings['smtp_port'] || '587'
+      user = user || dbSettings['smtp_user'] || ''
+      pass = pass || dbSettings['smtp_password'] || ''
+      fromName = fromName || dbSettings['smtp_from_name'] || 'WorkFlow Task Management'
+      fromEmail = fromEmail || dbSettings['smtp_from_email'] || user
+    } catch (err) {
+      console.warn('[Email] Failed to load DB settings:', err)
     }
   }
 
-  return { host: host || 'smtp.gmail.com', port: Number(port) || 587, user, pass, fromName: fromName || 'WorkFlow Task Management', fromEmail: fromEmail || user || '' }
+  return {
+    host: host || 'smtp.gmail.com',
+    port: Number(port) || 587,
+    user,
+    pass,
+    fromName: fromName || 'WorkFlow Task Management',
+    fromEmail: fromEmail || user || '',
+  }
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {

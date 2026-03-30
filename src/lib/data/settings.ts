@@ -1,5 +1,6 @@
 // =============================================================================
 // Data abstraction layer – App Settings
+// Uses server-side API route to bypass RLS restrictions
 // =============================================================================
 
 import { isMockMode } from '@/lib/utils'
@@ -17,11 +18,6 @@ function setMockSettings(settings: Record<string, string>) {
   localStorage.setItem('workflow-settings', JSON.stringify(settings))
 }
 
-interface SettingRow {
-  key: string
-  value: string
-}
-
 // ---------------------------------------------------------------------------
 // getSetting
 // ---------------------------------------------------------------------------
@@ -31,20 +27,14 @@ export async function getSetting(key: string): Promise<string> {
     return getMockSettings()[key] ?? ''
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  const { data, error } = await (supabase as any)
-    .from('app_settings')
-    .select('value')
-    .eq('key', key)
-    .maybeSingle()
-
-  if (error) {
-    console.warn('[Settings] getSetting error:', error.message)
+  try {
+    const res = await fetch(`/api/settings?key=${encodeURIComponent(key)}`)
+    if (!res.ok) return ''
+    const data = await res.json()
+    return data.value ?? ''
+  } catch {
     return ''
   }
-  return (data as SettingRow | null)?.value ?? ''
 }
 
 // ---------------------------------------------------------------------------
@@ -59,14 +49,19 @@ export async function setSetting(key: string, value: string): Promise<void> {
     return
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  const { error } = await (supabase as any)
-    .from('app_settings')
-    .upsert({ key, value }, { onConflict: 'key' })
-
-  if (error) console.warn('[Settings] setSetting error:', error.message)
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      console.warn('[Settings] setSetting error:', data.error)
+    }
+  } catch (err) {
+    console.warn('[Settings] setSetting error:', err)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -78,21 +73,11 @@ export async function getAllSettings(): Promise<Record<string, string>> {
     return { ...getMockSettings() }
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  const { data, error } = await (supabase as any)
-    .from('app_settings')
-    .select('key, value')
-
-  if (error) {
-    console.warn('[Settings] getAllSettings error:', error.message)
+  try {
+    const res = await fetch('/api/settings')
+    if (!res.ok) return {}
+    return await res.json()
+  } catch {
     return {}
   }
-
-  const result: Record<string, string> = {}
-  for (const row of (data ?? []) as SettingRow[]) {
-    result[row.key] = row.value
-  }
-  return result
 }
