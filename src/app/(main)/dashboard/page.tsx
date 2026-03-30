@@ -12,6 +12,7 @@ import {
   ClientView,
   RecentActivity,
   ProjectIssueSummary,
+  UpcomingTasks,
 } from '@/components/dashboard'
 
 const BurndownChart = dynamic(
@@ -79,7 +80,7 @@ export default function DashboardPage() {
       {/* Main content area */}
       <div className="flex-1 overflow-y-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]">
         {/* KPI Cards */}
-        <KpiCards />
+        <KpiCards period={period} />
 
         {/* Tab bar */}
         <div className="flex items-center gap-[4px] border-b border-border2 pb-[1px]">
@@ -119,6 +120,7 @@ export default function DashboardPage() {
 
             {/* Right column: Alerts + Unassigned */}
             <div className="flex flex-col gap-[12px]">
+              <UpcomingTasks />
               <DeadlineAlerts />
               <UnassignedTasks />
             </div>

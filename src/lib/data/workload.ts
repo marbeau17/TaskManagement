@@ -32,7 +32,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours, progress, confirmed_deadline, desired_deadline')
+    .select('assigned_to, status, estimated_hours, actual_hours, progress, start_date, planned_hours_per_week, template_data, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
@@ -60,20 +60,34 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     const completedTasks = allUserTasks.filter((t: any) => t.status === 'done')
     const estimatedHours = activeTasks.reduce(
       (sum: number, t: any) => {
-        // Prefer planned_hours_per_week if set, otherwise use total estimated_hours
+        // 1. Check template_data for explicit weekly_plan for this week
+        const weeklyPlan = t.template_data?.weekly_plan
+        if (weeklyPlan && weekStart && weeklyPlan[weekStart] > 0) {
+          return sum + weeklyPlan[weekStart]
+        }
+        // 2. Check planned_hours_per_week
         const weeklyHours = t.planned_hours_per_week
         if (weeklyHours && weeklyHours > 0) return sum + weeklyHours
-        return sum + (t.estimated_hours ?? 0)
+        // 3. Prorate estimated_hours across weeks until deadline
+        const estimated = t.estimated_hours ?? 0
+        if (estimated <= 0) return sum
+        const deadline = t.confirmed_deadline ?? t.desired_deadline
+        if (!deadline) return sum + estimated // no deadline = count full amount
+        const startDate = t.start_date ? new Date(t.start_date) : new Date()
+        const endDate = new Date(deadline)
+        const totalDays = Math.max(7, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+        const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
+        return sum + (estimated / totalWeeks)
       },
       0
     )
     const actualHours = activeTasks.reduce(
       (sum: number, t: any) => {
-        // Use actual_hours if manually entered, otherwise derive from progress
-        const hours = (t.actual_hours ?? 0) > 0
-          ? (t.actual_hours ?? 0)
-          : ((t.progress ?? 0) / 100) * (t.estimated_hours ?? 0)
-        return sum + hours
+        if ((t.actual_hours ?? 0) > 0) return sum + t.actual_hours
+        // Derive from progress
+        const estimated = t.estimated_hours ?? 0
+        const progress = t.progress ?? 0
+        return sum + (progress / 100) * estimated
       },
       0
     )
@@ -92,7 +106,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
       user,
       task_count: allUserTasks.length,
       completed_count: completedTasks.length,
-      estimated_hours: estimatedHours,
+      estimated_hours: Math.round(estimatedHours * 10) / 10,
       actual_hours: Math.round(actualHours * 10) / 10,
       capacity_hours: capacityHours,
       utilization_rate: utilizationRate,

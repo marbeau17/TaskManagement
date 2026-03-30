@@ -288,7 +288,7 @@ export function useAttachments(taskId: string) {
 // Dashboard stats (computed)
 // ---------------------------------------------------------------------------
 
-export function useTaskStats() {
+export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_month' | 'all') {
   const { data: tasks, ...rest } = useTasks()
 
   const stats = useMemo(() => {
@@ -302,26 +302,88 @@ export function useTaskStats() {
         doneCount: 0,
         overdueCount: 0,
         completionRate: 0,
+        dueThisWeekCount: 0,
+        dueThisMonthCount: 0,
       }
     }
 
     const now = new Date()
-    const totalCount = tasks.length
-    const activeCount = tasks.filter((t) => t.status !== 'done' && t.status !== 'rejected').length
-    const waitingCount = tasks.filter((t) => t.status === 'waiting').length
-    const todoCount = tasks.filter((t) => t.status === 'todo').length
-    const inProgressCount = tasks.filter(
-      (t) => t.status === 'in_progress'
-    ).length
-    const doneCount = tasks.filter((t) => t.status === 'done').length
-    const overdueCount = tasks.filter((t) => {
+
+    // Period filtering
+    let filteredTasks = tasks
+    if (period === 'week') {
+      const weekEnd = new Date(now)
+      weekEnd.setDate(now.getDate() + (7 - now.getDay()))
+      const weekEndStr = weekEnd.toISOString().slice(0, 10)
+      filteredTasks = tasks.filter((t) => {
+        const deadline = t.confirmed_deadline ?? t.desired_deadline
+        if (!deadline) return true
+        return deadline <= weekEndStr
+      })
+    } else if (period === 'last_week') {
+      const lastWeekStart = new Date(now)
+      lastWeekStart.setDate(now.getDate() - now.getDay() - 7)
+      const lastWeekEnd = new Date(lastWeekStart)
+      lastWeekEnd.setDate(lastWeekStart.getDate() + 6)
+      const startStr = lastWeekStart.toISOString().slice(0, 10)
+      const endStr = lastWeekEnd.toISOString().slice(0, 10)
+      filteredTasks = tasks.filter((t) => {
+        const deadline = t.confirmed_deadline ?? t.desired_deadline
+        if (!deadline) return true
+        return deadline >= startStr && deadline <= endStr
+      })
+    } else if (period === 'month') {
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      const monthEndStr = monthEnd.toISOString().slice(0, 10)
+      filteredTasks = tasks.filter((t) => {
+        const deadline = t.confirmed_deadline ?? t.desired_deadline
+        if (!deadline) return true
+        return deadline <= monthEndStr
+      })
+    } else if (period === 'last_month') {
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+      const startStr = lastMonthStart.toISOString().slice(0, 10)
+      const endStr = lastMonthEnd.toISOString().slice(0, 10)
+      filteredTasks = tasks.filter((t) => {
+        const deadline = t.confirmed_deadline ?? t.desired_deadline
+        if (!deadline) return true
+        return deadline >= startStr && deadline <= endStr
+      })
+    }
+
+    const totalCount = filteredTasks.length
+    const activeCount = filteredTasks.filter((t) => t.status !== 'done' && t.status !== 'rejected').length
+    const waitingCount = filteredTasks.filter((t) => t.status === 'waiting').length
+    const todoCount = filteredTasks.filter((t) => t.status === 'todo').length
+    const inProgressCount = filteredTasks.filter((t) => t.status === 'in_progress').length
+    const doneCount = filteredTasks.filter((t) => t.status === 'done').length
+    const overdueCount = filteredTasks.filter((t) => {
       if (t.status === 'done') return false
       const deadline = t.confirmed_deadline ?? t.desired_deadline
       if (!deadline) return false
       return new Date(deadline) < now
     }).length
-    const completionRate =
-      totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+    const completionRate = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+
+    // Additional period counts (always computed from all tasks)
+    const weekEnd2 = new Date(now)
+    weekEnd2.setDate(now.getDate() + (7 - now.getDay()))
+    const weekEndStr2 = weekEnd2.toISOString().slice(0, 10)
+    const monthEnd2 = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const monthEndStr2 = monthEnd2.toISOString().slice(0, 10)
+
+    const dueThisWeekCount = tasks.filter((t) => {
+      if (t.status === 'done' || t.status === 'rejected') return false
+      const deadline = t.confirmed_deadline ?? t.desired_deadline
+      return deadline && deadline <= weekEndStr2
+    }).length
+
+    const dueThisMonthCount = tasks.filter((t) => {
+      if (t.status === 'done' || t.status === 'rejected') return false
+      const deadline = t.confirmed_deadline ?? t.desired_deadline
+      return deadline && deadline <= monthEndStr2
+    }).length
 
     return {
       totalCount,
@@ -332,8 +394,10 @@ export function useTaskStats() {
       doneCount,
       overdueCount,
       completionRate,
+      dueThisWeekCount,
+      dueThisMonthCount,
     }
-  }, [tasks])
+  }, [tasks, period])
 
   return { ...rest, data: stats }
 }

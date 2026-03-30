@@ -4,8 +4,12 @@ import { KpiCard } from '@/components/shared'
 import { useTaskStats } from '@/hooks/useTasks'
 import { useI18n } from '@/hooks/useI18n'
 
-export function KpiCards() {
-  const { data: stats, isLoading } = useTaskStats()
+interface KpiCardsProps {
+  period?: 'week' | 'last_week' | 'month' | 'last_month' | 'all'
+}
+
+export function KpiCards({ period = 'all' }: KpiCardsProps) {
+  const { data: stats, isLoading } = useTaskStats(period)
   const { t } = useI18n()
 
   if (isLoading) {
@@ -20,10 +24,10 @@ export function KpiCards() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
-      {/* Tasks this week */}
+      {/* Tasks - period aware */}
       <KpiCard
-        label={t('kpi.thisWeekTasks')}
-        value={stats.activeCount}
+        label={period === 'week' || period === 'last_week' ? t('kpi.dueThisWeek') : period === 'month' || period === 'last_month' ? t('kpi.dueThisMonth') : t('kpi.activeTasks')}
+        value={period === 'week' || period === 'last_week' ? stats.dueThisWeekCount : period === 'month' || period === 'last_month' ? stats.dueThisMonthCount : stats.activeCount}
         unit={t('kpi.unit.count')}
         subText={`${stats.doneCount} ${t('kpi.completed')} / ${stats.totalCount} ${t('kpi.tasks')}`}
         subColor="#4A9482"
