@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, RoleChip } from '@/components/shared'
 import { AssignChangeModal } from '@/components/tasks/AssignChangeModal'
-import { useTaskAssignees, useRemoveTaskAssignee } from '@/hooks/useTaskAssignees'
+import { useTaskAssignees, useRemoveTaskAssignee, useUpdateTaskAssigneeHours } from '@/hooks/useTaskAssignees'
 import { useI18n } from '@/hooks/useI18n'
 
 interface AssignInfoProps {
@@ -22,6 +22,7 @@ export function AssignInfo({ task }: AssignInfoProps) {
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const { data: assignees } = useTaskAssignees(task.id)
   const removeAssignee = useRemoveTaskAssignee()
+  const updateHours = useUpdateTaskAssigneeHours()
 
   // Fallback: if no assignees from task_assignees yet, show legacy assigned_user
   const legacyUser = task.assigned_user
@@ -65,6 +66,26 @@ export function AssignInfo({ task }: AssignInfoProps) {
                         {t('assignInfo.weeklyHours')}{user.weekly_capacity_hours}h
                       </span>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-[4px] ml-auto">
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={assignee.allocated_hours || ''}
+                      placeholder="0"
+                      onChange={(e) => {
+                        const hours = parseFloat(e.target.value) || 0
+                        updateHours.mutate({
+                          taskId: task.id,
+                          userId: user.id,
+                          hours,
+                        })
+                      }}
+                      className="w-[50px] text-[11px] text-text text-center bg-surface border border-wf-border rounded px-1 py-0.5 focus:outline-none focus:border-mint"
+                      title={t('workload.allocatedHours')}
+                    />
+                    <span className="text-[9px] text-text3">h</span>
                   </div>
                   <button
                     type="button"

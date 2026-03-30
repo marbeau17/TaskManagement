@@ -61,6 +61,7 @@ export async function addTaskAssignee(
       id: `mock-assignee-${mockIdCounter++}`,
       task_id: taskId,
       user_id: userId,
+      allocated_hours: 0,
       created_at: new Date().toISOString(),
       user: mockUsers.find((u) => u.id === userId),
     }
@@ -112,6 +113,33 @@ export async function addTaskAssignee(
   }
 
   return data as TaskAssignee
+}
+
+// ---------------------------------------------------------------------------
+// updateTaskAssigneeHours
+// ---------------------------------------------------------------------------
+
+export async function updateTaskAssigneeHours(
+  taskId: string,
+  userId: string,
+  hours: number
+): Promise<void> {
+  if (isMockMode()) {
+    const assignee = getMockAssignees().find(
+      (a) => a.task_id === taskId && a.user_id === userId
+    )
+    if (assignee) assignee.allocated_hours = hours
+    return
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from('task_assignees')
+    .update({ allocated_hours: hours })
+    .eq('task_id', taskId)
+    .eq('user_id', userId)
 }
 
 // ---------------------------------------------------------------------------

@@ -33,11 +33,27 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours, progress, start_date, planned_hours_per_week, template_data, confirmed_deadline, desired_deadline')
+    .select('id, assigned_to, status, estimated_hours, actual_hours, progress, start_date, planned_hours_per_week, template_data, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
   if (tasksError) throw tasksError
+
+  // Also fetch task_assignees for multi-assignee support
+  let taskAssigneeMap: Record<string, string[]> = {}
+  try {
+    const { data: assigneeRows } = await (supabase as any)
+      .from('task_assignees')
+      .select('task_id, user_id')
+    if (assigneeRows) {
+      for (const row of assigneeRows) {
+        if (!taskAssigneeMap[row.task_id]) taskAssigneeMap[row.task_id] = []
+        taskAssigneeMap[row.task_id].push(row.user_id)
+      }
+    }
+  } catch {
+    // task_assignees table might not exist yet - graceful fallback
+  }
 
   // Filter tasks by week if weekStart provided
   let filteredTasks = tasks ?? []
@@ -56,20 +72,37 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   }
 
   const summaries: WorkloadSummary[] = typedUsers.map((user) => {
-    const allUserTasks = filteredTasks.filter((t: any) => t.assigned_to === user.id)
+    const allUserTasks = filteredTasks.filter((t: any) => {
+      // Primary assignee
+      if (t.assigned_to === user.id) return true
+      // Multi-assignee via task_assignees table
+      const taskAssignees = taskAssigneeMap[t.id]
+      if (taskAssignees && taskAssignees.includes(user.id)) return true
+      return false
+    })
     const activeTasks = allUserTasks.filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
     const completedTasks = allUserTasks.filter((t: any) => t.status === 'done')
     const estimatedHours = activeTasks.reduce(
-      (sum: number, t: any) => sum + getTaskWeeklyHours(t, weekStart),
+      (sum: number, t: any) => {
+        const rawHours = getTaskWeeklyHours(t, weekStart)
+        // Divide by number of assignees (including primary)
+        const assignees = taskAssigneeMap[t.id]
+        const assigneeCount = assignees ? assignees.length : 1
+        return sum + (rawHours / assigneeCount)
+      },
       0
     )
     const actualHours = activeTasks.reduce(
       (sum: number, t: any) => {
-        if ((t.actual_hours ?? 0) > 0) return sum + t.actual_hours
-        // Derive from progress
-        const estimated = t.estimated_hours ?? 0
-        const progress = t.progress ?? 0
-        return sum + (progress / 100) * estimated
+        let hours: number
+        if ((t.actual_hours ?? 0) > 0) {
+          hours = t.actual_hours
+        } else {
+          hours = ((t.progress ?? 0) / 100) * (t.estimated_hours ?? 0)
+        }
+        const assignees = taskAssigneeMap[t.id]
+        const assigneeCount = assignees ? assignees.length : 1
+        return sum + (hours / assigneeCount)
       },
       0
     )
@@ -182,24 +215,48 @@ export async function getResourceLoadData(): Promise<ResourceLoadData> {
   // Fetch active tasks with assignees
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
-    .select('assigned_to, client_id, status, estimated_hours')
+    .select('id, assigned_to, client_id, status, estimated_hours')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
     .neq('status', 'done')
 
   if (tasksError) throw tasksError
 
+  // Also fetch task_assignees for multi-assignee support
+  let resourceTaskAssigneeMap: Record<string, string[]> = {}
+  try {
+    const { data: assigneeRows } = await (supabase as any)
+      .from('task_assignees')
+      .select('task_id, user_id')
+    if (assigneeRows) {
+      for (const row of assigneeRows) {
+        if (!resourceTaskAssigneeMap[row.task_id]) resourceTaskAssigneeMap[row.task_id] = []
+        resourceTaskAssigneeMap[row.task_id].push(row.user_id)
+      }
+    }
+  } catch {
+    // task_assignees table might not exist yet - graceful fallback
+  }
+
   const allClientNames = new Set<string>()
 
   const entries: ResourceLoadEntry[] = typedUsers.map((user) => {
-    const userTasks = (tasks ?? []).filter((t) => t.assigned_to === user.id)
+    const userTasks = (tasks ?? []).filter((t: any) => {
+      if (t.assigned_to === user.id) return true
+      const taskAssignees = resourceTaskAssigneeMap[t.id]
+      if (taskAssignees && taskAssignees.includes(user.id)) return true
+      return false
+    })
 
     const clientHours: Record<string, number> = {}
     for (const t of userTasks) {
       const clientName = clientNameMap.get(t.client_id) ?? '未分類'
       allClientNames.add(clientName)
+      // Divide by number of assignees for multi-assignee tasks
+      const assignees = resourceTaskAssigneeMap[t.id]
+      const assigneeCount = assignees ? assignees.length : 1
       clientHours[clientName] =
-        (clientHours[clientName] ?? 0) + (t.estimated_hours ?? 0)
+        (clientHours[clientName] ?? 0) + ((t.estimated_hours ?? 0) / assigneeCount)
     }
 
     const totalAssigned = Object.values(clientHours).reduce(

@@ -91,6 +91,7 @@ export interface TaskAssignee {
   id: string
   task_id: string
   user_id: string
+  allocated_hours: number
   created_at: string
   user?: User
 }
