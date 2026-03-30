@@ -43,10 +43,6 @@ export function useRealtimeSubscription(options: RealtimeSubscriptionOptions) {
   useEffect(() => {
     if (!enabled) return
 
-    // Temporarily disabled: Vercel env var has trailing newline corrupting WebSocket URL
-    // Fix: Remove trailing whitespace from NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel Dashboard
-    return
-
     const supabase = createClient()
     const channelName = `realtime:${table}:${filter ?? 'all'}:${Date.now()}`
     let channel: RealtimeChannel = supabase.channel(channelName)
