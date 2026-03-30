@@ -116,7 +116,7 @@ export function useUpdateTask() {
       data,
     }: {
       taskId: string
-      data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week'>>
+      data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'weekly_plan'>>
     }) => updateTask(taskId, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['tasks'] })

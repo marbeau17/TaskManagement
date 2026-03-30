@@ -961,6 +961,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'workload.unitPeople': '名',
     'workload.unitPercent': '%',
     'workload.weeklyActualHours': '今週 実績工数合計',
+    'weeklyPlan.title': '📅 週間作業計画',
+    'weeklyPlan.totalPlanned': '合計予定',
   },
   en: {
     'activity.assigned': 'assigned a member',
@@ -1913,6 +1915,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'workload.unitPeople': '',
     'workload.unitPercent': '%',
     'workload.weeklyActualHours': 'Weekly Actual Hours',
+    'weeklyPlan.title': '📅 Weekly Work Plan',
+    'weeklyPlan.totalPlanned': 'Total Planned',
   }
 }
 

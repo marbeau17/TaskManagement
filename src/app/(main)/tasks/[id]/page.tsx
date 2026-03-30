@@ -14,6 +14,7 @@ import { ActivityLog } from '@/components/tasks/ActivityLog'
 import { AttachmentList } from '@/components/tasks/AttachmentList'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
+import { WeeklyPlanInput } from '@/components/tasks/WeeklyPlanInput'
 import { TimeLogSection } from '@/components/tasks/TimeLogSection'
 import { WatcherButton } from '@/components/tasks/WatcherButton'
 import { useI18n } from '@/hooks/useI18n'
@@ -173,6 +174,7 @@ export default function TaskDetailPage() {
         <div className="flex flex-col gap-4">
           <TaskDetailInfo task={task} />
           <ProgressInput task={task} />
+          <WeeklyPlanInput task={task} />
           <SubtaskList parentTask={task} />
           <CommentSection taskId={task.id} currentUserId={user?.id ?? ''} />
         </div>

@@ -71,6 +71,7 @@ export interface Task {
   actual_hours: number
   priority: number
   planned_hours_per_week: number
+  weekly_plan: Record<string, number> | null
   reference_url: string | null
   is_draft: boolean
   template_id: string | null

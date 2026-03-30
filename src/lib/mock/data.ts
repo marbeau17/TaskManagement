@@ -284,7 +284,7 @@ function findClient(id: string): Client {
 // Raw tasks (plain Task objects)
 // ---------------------------------------------------------------------------
 
-const rawTasks: Omit<Task, 'priority' | 'planned_hours_per_week'>[] = [
+const rawTasks: Omit<Task, 'priority' | 'planned_hours_per_week' | 'weekly_plan'>[] = [
   // 1. TOPページ コーディング — overdue, in_progress
   {
     id: 't1',
@@ -733,11 +733,12 @@ const rawTasks: Omit<Task, 'priority' | 'planned_hours_per_week'>[] = [
 // Build TaskWithRelations from raw tasks
 // ---------------------------------------------------------------------------
 
-function buildTaskWithRelations(task: Omit<Task, 'priority' | 'planned_hours_per_week'>): TaskWithRelations {
+function buildTaskWithRelations(task: Omit<Task, 'priority' | 'planned_hours_per_week' | 'weekly_plan'> & { weekly_plan?: Record<string, number> | null }): TaskWithRelations {
   return {
     ...task,
     priority: 3,
     planned_hours_per_week: 0,
+    weekly_plan: null,
     client: findClient(task.client_id),
     assigned_user: task.assigned_to ? findUser(task.assigned_to) : null,
     requester: findUser(task.requested_by),

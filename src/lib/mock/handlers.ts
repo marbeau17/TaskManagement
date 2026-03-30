@@ -203,6 +203,7 @@ export function createMockTask(
     actual_hours: 0,
     priority: 3,
     planned_hours_per_week: 0,
+    weekly_plan: null,
     reference_url: step1.reference_url ?? null,
     is_draft: !step2,
     template_id: null,
