@@ -151,7 +151,7 @@ export async function createIssue(data: CreateIssueData): Promise<Issue> {
       issue_key: issueKey,
       type: data.type,
       severity: data.severity,
-      priority: 0,
+      priority: 3,
       status: 'open',
       title: data.title,
       description: data.description ?? '',

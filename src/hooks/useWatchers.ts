@@ -17,6 +17,7 @@ export function useWatchers(taskId: string) {
     queryKey: ['watchers', taskId],
     queryFn: () => getWatchers(taskId),
     enabled: !!taskId,
+    retry: false,
   })
 }
 
@@ -28,6 +29,7 @@ export function useIsWatching(taskId: string, userId: string | undefined) {
   return useQuery({
     queryKey: ['watching', taskId, userId],
     queryFn: () => isWatching(taskId, userId!),
+    retry: false,
     enabled: !!taskId && !!userId,
   })
 }

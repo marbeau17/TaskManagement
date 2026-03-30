@@ -33,7 +33,8 @@ export function useNotifications(limit = 20) {
     queryKey: ['notifications', userId, limit],
     queryFn: () => getNotifications(userId!, limit),
     enabled: !!userId,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    retry: false,
   })
 
   return {
@@ -53,7 +54,8 @@ export function useUnreadCount() {
     queryKey: ['notifications-unread-count', userId],
     queryFn: () => getUnreadCount(userId!),
     enabled: !!userId,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    retry: false,
   })
 
   return {

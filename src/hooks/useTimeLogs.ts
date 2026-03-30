@@ -18,6 +18,7 @@ export function useTimeLogs(taskId: string) {
     queryKey: ['timeLogs', taskId],
     queryFn: () => getTimeLogs(taskId),
     enabled: !!taskId,
+    retry: false,
   })
 }
 
@@ -26,6 +27,7 @@ export function useTimeLogSummary(taskId: string) {
     queryKey: ['timeLogSummary', taskId],
     queryFn: () => getTimeLogSummary(taskId),
     enabled: !!taskId,
+    retry: false,
   })
 }
 
