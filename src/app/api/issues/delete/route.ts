@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'issueId required' }, { status: 400 })
     }
 
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-    const supabase = await createServerSupabaseClient()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const supabase = createAdminClient()
 
     // Delete related records first
     await (supabase as any).from('issue_comments').delete().eq('issue_id', issueId)

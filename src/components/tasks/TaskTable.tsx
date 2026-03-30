@@ -7,8 +7,9 @@ import { Avatar, ProgressBar, StatusChip } from '@/components/shared'
 import { formatDate, formatHours } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
-import { useSubtasks } from '@/hooks/useTasks'
+import { useSubtasks, useBulkDeleteTasks } from '@/hooks/useTasks'
 import { useI18n } from '@/hooks/useI18n'
+import { usePermission } from '@/hooks/usePermission'
 
 interface TaskTableProps {
   tasks: TaskWithRelations[]
@@ -185,6 +186,8 @@ function SubtaskRows({
 export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTableProps) {
   const { t } = useI18n()
   const router = useRouter()
+  const { can } = usePermission()
+  const deleteTask = useBulkDeleteTasks()
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 

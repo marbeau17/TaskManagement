@@ -8,8 +8,8 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-    const supabase = await createServerSupabaseClient()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const supabase = createAdminClient()
 
     // Soft delete: set is_active to false
     const { data, error } = await supabase

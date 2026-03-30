@@ -5,8 +5,8 @@ export async function POST(request: NextRequest) {
     const { projectId } = await request.json()
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 })
 
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-    const supabase = await createServerSupabaseClient()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const supabase = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
 

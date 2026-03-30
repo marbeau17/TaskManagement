@@ -5,8 +5,8 @@ export async function POST(request: NextRequest) {
     const { clientId } = await request.json()
     if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 })
 
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
-    const supabase = await createServerSupabaseClient()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const supabase = createAdminClient()
 
     const { error } = await supabase.from('clients').delete().eq('id', clientId)
 
