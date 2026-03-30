@@ -36,6 +36,7 @@ const MAIN_NAV = [
   { id: 'clients', labelKey: 'nav.clients', icon: '🏢', href: '/clients' },
   { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
+  { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline' },
 ]
 
 const SYSTEM_NAV = [
