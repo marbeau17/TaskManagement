@@ -7,6 +7,7 @@ import {
   getTaskById,
   getSubtasks,
   createTask,
+  updateTask,
   updateTaskProgress,
   assignTask,
   bulkUpdateTaskStatus,
@@ -20,7 +21,7 @@ import {
   bulkAssignTasks,
   bulkDeleteTasks,
 } from '@/lib/data/tasks'
-import type { TaskStatus } from '@/types/database'
+import type { Task, TaskStatus } from '@/types/database'
 import { useRealtimeComments, useRealtimeTaskStatus } from './useRealtimeSubscription'
 import type {
   TaskFilters,
@@ -103,6 +104,23 @@ export function useUpdateTaskProgress() {
       qc.invalidateQueries({
         queryKey: ['activityLogs', variables.taskId],
       })
+    },
+  })
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      data,
+    }: {
+      taskId: string
+      data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline'>>
+    }) => updateTask(taskId, data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['tasks', variables.taskId] })
     },
   })
 }

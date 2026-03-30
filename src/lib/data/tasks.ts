@@ -269,6 +269,33 @@ export async function getSubtasks(
 }
 
 // ---------------------------------------------------------------------------
+// updateTask — generic field update
+// ---------------------------------------------------------------------------
+
+export async function updateTask(
+  id: string,
+  data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline'>>
+): Promise<Task> {
+  if (useMock()) {
+    const { updateMockTask } = await import('@/lib/mock/handlers')
+    return updateMockTask(id, data)
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  const { data: result, error } = await supabase
+    .from('tasks')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return result as Task
+}
+
+// ---------------------------------------------------------------------------
 // updateTaskProgress
 // ---------------------------------------------------------------------------
 

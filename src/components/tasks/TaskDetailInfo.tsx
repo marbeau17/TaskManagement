@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import type { TaskWithRelations } from '@/types/database'
 import { useTemplates } from '@/hooks/useTemplates'
 import { useI18n } from '@/hooks/useI18n'
+import { useUpdateTask } from '@/hooks/useTasks'
+import { useClients } from '@/hooks/useClients'
 
 interface TaskDetailInfoProps {
   task: TaskWithRelations & {
@@ -17,21 +20,109 @@ function formatDate(dateStr: string | null): string {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
+function toInputDate(dateStr: string | null): string {
+  if (!dateStr) return ''
+  return dateStr.slice(0, 10)
+}
+
 function isOverdue(dateStr: string | null): boolean {
   if (!dateStr) return false
   return new Date(dateStr) < new Date()
 }
 
+/** Inline editable text field */
+function EditableText({
+  value,
+  onSave,
+  multiline,
+  className,
+}: {
+  value: string
+  onSave: (val: string) => void
+  multiline?: boolean
+  className?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+
+  const handleStart = () => {
+    setDraft(value)
+    setEditing(true)
+  }
+
+  const handleSave = () => {
+    setEditing(false)
+    if (draft.trim() !== value) {
+      onSave(draft.trim())
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !multiline) {
+      handleSave()
+    }
+    if (e.key === 'Escape') {
+      setDraft(value)
+      setEditing(false)
+    }
+  }
+
+  if (editing) {
+    if (multiline) {
+      return (
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          rows={4}
+          className="w-full text-[12.5px] text-text bg-surface border border-mint rounded-md px-3 py-2 resize-y focus:outline-none"
+          style={{ lineHeight: 1.8 }}
+        />
+      )
+    }
+    return (
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={handleKeyDown}
+        autoFocus
+        className={`text-text bg-surface border border-mint rounded-md px-2 py-1 focus:outline-none ${className ?? 'text-[13px] font-bold w-full'}`}
+      />
+    )
+  }
+
+  return (
+    <span
+      onClick={handleStart}
+      className={`cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors ${className ?? ''}`}
+      title="Click to edit"
+    >
+      {value || '-'}
+    </span>
+  )
+}
+
 export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
   const { t } = useI18n()
   const { data: templates } = useTemplates()
+  const { data: clients } = useClients()
+  const updateTask = useUpdateTask()
   const deadline = task.confirmed_deadline ?? task.desired_deadline
   const overdue = task.status !== 'done' && isOverdue(deadline)
 
-  // Resolve template for display
+  const [editingClient, setEditingClient] = useState(false)
+
   const template = task.template_id && templates
     ? templates.find((t) => t.id === task.template_id) ?? null
     : null
+
+  const handleSave = (field: string, value: any) => {
+    updateTask.mutate({ taskId: task.id, data: { [field]: value || null } })
+  }
 
   return (
     <div className="bg-surface rounded-lg border border-wf-border p-5">
@@ -42,46 +133,75 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
       {/* Client name */}
       <div className="mb-3">
         <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.client')}</span>
-        <span className="text-[13px] font-bold text-text">
-          {'🏢 '}{task.client.name}
-        </span>
+        {editingClient ? (
+          <select
+            value={task.client_id}
+            onChange={(e) => {
+              handleSave('client_id', e.target.value)
+              setEditingClient(false)
+            }}
+            onBlur={() => setEditingClient(false)}
+            autoFocus
+            className="text-[13px] text-text bg-surface border border-mint rounded-md px-2 py-1 focus:outline-none w-full"
+          >
+            {clients?.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        ) : (
+          <span
+            onClick={() => setEditingClient(true)}
+            className="text-[13px] font-bold text-text cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors inline-block"
+            title="Click to edit"
+          >
+            {'🏢 '}{task.client.name}
+          </span>
+        )}
       </div>
 
       {/* Task name */}
       <div className="mb-3">
         <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.taskName')}</span>
-        <span className="text-[13px] font-bold text-text">{task.title}</span>
+        <EditableText
+          value={task.title}
+          onSave={(val) => handleSave('title', val)}
+          className="text-[13px] font-bold"
+        />
       </div>
 
       {/* Description */}
-      {task.description && (
-        <div className="mb-4">
-          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.description')}</span>
-          <div
-            className="bg-surf2 rounded-md p-3 text-[12.5px] text-text whitespace-pre-wrap"
-            style={{ lineHeight: 1.8 }}
-          >
-            {task.description}
-          </div>
-        </div>
-      )}
+      <div className="mb-4">
+        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.description')}</span>
+        <EditableText
+          value={task.description ?? ''}
+          onSave={(val) => handleSave('description', val)}
+          multiline
+          className="text-[12.5px]"
+        />
+      </div>
 
       {/* Deadlines */}
       <div className="flex gap-6">
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.desiredDeadline')}</span>
-          <span className="text-[13px] text-text">
-            {formatDate(task.desired_deadline)}
-          </span>
+          <input
+            type="date"
+            value={toInputDate(task.desired_deadline)}
+            onChange={(e) => handleSave('desired_deadline', e.target.value || null)}
+            className="text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+          />
         </div>
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.confirmedDeadline')}</span>
-          <span
-            className={`text-[13px] font-semibold ${overdue ? 'text-danger' : 'text-text'}`}
-          >
-            {overdue && '🚨 '}
-            {formatDate(task.confirmed_deadline)}
-          </span>
+          <div className="flex items-center gap-1">
+            {overdue && <span>🚨</span>}
+            <input
+              type="date"
+              value={toInputDate(task.confirmed_deadline)}
+              onChange={(e) => handleSave('confirmed_deadline', e.target.value || null)}
+              className={`text-[13px] font-semibold bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer ${overdue ? 'text-danger' : 'text-text'}`}
+            />
+          </div>
         </div>
       </div>
 

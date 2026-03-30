@@ -126,6 +126,10 @@ export default function IssueDetailPage() {
   const transitionStatus = useTransitionIssueStatus()
   const [resolutionNotes, setResolutionNotes] = useState('')
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descDraft, setDescDraft] = useState('')
 
   if (isLoading) {
     return (
@@ -175,10 +179,43 @@ export default function IssueDetailPage() {
           {t('issues.backToList')}
         </button>
         <span className="text-[16px] font-mono text-mint font-bold tracking-wide">{issue.issue_key}</span>
-        <h1 className="text-[15px] font-bold text-text truncate max-w-[400px]">
-          {issue.title}
-        </h1>
-        <IssueTypeBadge type={issue.type} />
+        {editingTitle ? (
+          <input
+            type="text"
+            value={titleDraft}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={() => {
+              if (titleDraft.trim() && titleDraft.trim() !== issue.title) {
+                updateIssue.mutate({ id: issue.id, data: { title: titleDraft.trim() } })
+              }
+              setEditingTitle(false)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+              if (e.key === 'Escape') setEditingTitle(false)
+            }}
+            autoFocus
+            className="text-[15px] font-bold text-text bg-surface border border-mint rounded-md px-2 py-0.5 focus:outline-none max-w-[400px] w-[300px]"
+          />
+        ) : (
+          <h1
+            className="text-[15px] font-bold text-text truncate max-w-[400px] cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors"
+            onClick={() => { setTitleDraft(issue.title); setEditingTitle(true) }}
+            title="Click to edit"
+          >
+            {issue.title}
+          </h1>
+        )}
+        <select
+          value={issue.type}
+          onChange={(e) => updateIssue.mutate({ id: issue.id, data: { type: e.target.value as any } })}
+          className="text-[12px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+        >
+          <option value="bug">{t('issues.bug')}</option>
+          <option value="improvement">{t('issues.improvement')}</option>
+          <option value="question">{t('issues.question')}</option>
+          <option value="incident">{t('issues.incident')}</option>
+        </select>
         <IssueStatusBadge status={issue.status} />
         <div className="flex-1" />
 
@@ -212,9 +249,34 @@ export default function IssueDetailPage() {
           {/* Description */}
           <div className="bg-surface rounded-lg border border-wf-border p-5">
             <h3 className="text-[13px] font-bold text-text mb-3">{t('issues.description')}</h3>
-            <div className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">
-              {issue.description || t('issues.noDescription')}
-            </div>
+            {editingDesc ? (
+              <div>
+                <textarea
+                  value={descDraft}
+                  onChange={(e) => setDescDraft(e.target.value)}
+                  onBlur={() => {
+                    if (descDraft !== (issue.description ?? '')) {
+                      updateIssue.mutate({ id: issue.id, data: { description: descDraft } })
+                    }
+                    setEditingDesc(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setEditingDesc(false)
+                  }}
+                  autoFocus
+                  rows={5}
+                  className="w-full text-[12.5px] text-text bg-surface border border-mint rounded-md px-3 py-2 resize-y focus:outline-none leading-relaxed"
+                />
+              </div>
+            ) : (
+              <div
+                className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 py-1 transition-colors min-h-[24px]"
+                onClick={() => { setDescDraft(issue.description ?? ''); setEditingDesc(true) }}
+                title="Click to edit"
+              >
+                {issue.description || t('issues.noDescription')}
+              </div>
+            )}
           </div>
 
           {/* Bug/Incident specific sections */}
@@ -251,13 +313,32 @@ export default function IssueDetailPage() {
             {/* Severity */}
             <div>
               <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterSeverity')}</div>
-              <SeverityBadge severity={issue.severity} />
+              <select
+                value={issue.severity}
+                onChange={(e) => updateIssue.mutate({ id: issue.id, data: { severity: e.target.value as any } })}
+                className="text-[12px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+              >
+                <option value="critical">{t('issues.critical')}</option>
+                <option value="high">{t('issues.high')}</option>
+                <option value="medium">{t('issues.medium')}</option>
+                <option value="low">{t('issues.low')}</option>
+              </select>
             </div>
 
             {/* Priority */}
             <div>
               <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.priority')}</div>
-              <div className="text-[12.5px] text-text">{issue.priority}</div>
+              <select
+                value={issue.priority}
+                onChange={(e) => updateIssue.mutate({ id: issue.id, data: { priority: Number(e.target.value) } })}
+                className="text-[12px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+              >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+                <option value={5}>5</option>
+              </select>
             </div>
 
             {/* Assignee */}
@@ -383,7 +464,14 @@ export default function IssueDetailPage() {
             {/* Source */}
             <div>
               <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.filterSource')}</div>
-              <div className="text-[12px] text-text">{issue.source === 'customer' ? t('issues.sourceCustomer') : t('issues.sourceInternal')}</div>
+              <select
+                value={issue.source}
+                onChange={(e) => updateIssue.mutate({ id: issue.id, data: { source: e.target.value as any } })}
+                className="text-[12px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+              >
+                <option value="internal">{t('issues.sourceInternal')}</option>
+                <option value="customer">{t('issues.sourceCustomer')}</option>
+              </select>
             </div>
 
             {/* Dates */}
