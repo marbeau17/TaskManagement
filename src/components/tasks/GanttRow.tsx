@@ -119,6 +119,28 @@ export function GanttRow({
         </div>
       </div>
 
+      {/* Period column */}
+      <div
+        className="
+          w-[100px] min-w-[100px] shrink-0
+          px-[6px] py-[6px] border-r border-wf-border
+          flex flex-col justify-center
+          sticky left-[220px] z-10 bg-surface group-hover:bg-surf2/40 transition-colors
+        "
+      >
+        <div className="text-[9px] text-text2 leading-tight">
+          {task.start_date
+            ? `${new Date(task.start_date).getMonth() + 1}/${new Date(task.start_date).getDate()}`
+            : '-'}
+          {' ~ '}
+          {task.confirmed_deadline
+            ? `${new Date(task.confirmed_deadline).getMonth() + 1}/${new Date(task.confirmed_deadline).getDate()}`
+            : task.desired_deadline
+              ? `${new Date(task.desired_deadline).getMonth() + 1}/${new Date(task.desired_deadline).getDate()}`
+              : '-'}
+        </div>
+      </div>
+
       {/* Timeline bar area */}
       <div
         className="relative h-[40px] flex-1 group-hover:bg-surf2/40 transition-colors"

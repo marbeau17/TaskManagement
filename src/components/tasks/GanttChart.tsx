@@ -204,6 +204,14 @@ export function GanttChart({ tasks }: GanttChartProps) {
             {t(ZOOM_LEVEL_KEYS[level])}
           </button>
         ))}
+        {/* Legend */}
+        <div className="hidden md:flex items-center gap-[8px] ml-[16px]">
+          <div className="flex items-center gap-[3px]"><div className="w-[10px] h-[6px] rounded bg-amber-300" /><span className="text-[9px] text-text3">{t('tasks.statusWaiting') ?? 'Waiting'}</span></div>
+          <div className="flex items-center gap-[3px]"><div className="w-[10px] h-[6px] rounded bg-gray-300" /><span className="text-[9px] text-text3">{t('tasks.statusTodo') ?? 'Todo'}</span></div>
+          <div className="flex items-center gap-[3px]"><div className="w-[10px] h-[6px] rounded bg-blue-400" /><span className="text-[9px] text-text3">{t('tasks.statusInProgress') ?? 'In Progress'}</span></div>
+          <div className="flex items-center gap-[3px]"><div className="w-[10px] h-[6px] rounded bg-emerald-400" /><span className="text-[9px] text-text3">{t('tasks.statusDone') ?? 'Done'}</span></div>
+          <div className="flex items-center gap-[3px]"><div className="w-[10px] h-[6px] rounded bg-red-400" /><span className="text-[9px] text-text3">{t('tasks.statusRejected') ?? 'Rejected'}</span></div>
+        </div>
         <span className="ml-auto text-[10px] text-text3">
           {rootTasks.length} {t('gantt.taskCount')}
         </span>
@@ -211,13 +219,14 @@ export function GanttChart({ tasks }: GanttChartProps) {
 
       {/* Scrollable chart area */}
       <div ref={scrollRef} className="flex-1 overflow-auto relative">
-        <div style={{ minWidth: 220 + totalDays * dayWidth }}>
+        <div style={{ minWidth: 320 + totalDays * dayWidth }}>
           {/* ===== Header ===== */}
           <div className="sticky top-0 z-10 bg-surface border-b border-wf-border">
             {/* Top row (month labels for week zoom) */}
             {headerRows.top && (
               <div className="flex border-b border-wf-border">
                 <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border sticky left-0 z-20 bg-surface" />
+                <div className="w-[100px] min-w-[100px] shrink-0 border-r border-wf-border sticky left-[220px] z-20 bg-surface" />
                 {headerRows.top.map((col, i) => (
                   <div
                     key={i}
@@ -235,6 +244,11 @@ export function GanttChart({ tasks }: GanttChartProps) {
               <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border px-[10px] py-[4px] sticky left-0 z-20 bg-surface">
                 <span className="text-[10px] font-semibold text-text2">
                   {t('gantt.taskName')} / {t('gantt.assignee')}
+                </span>
+              </div>
+              <div className="w-[100px] min-w-[100px] shrink-0 border-r border-wf-border px-[6px] py-[4px] sticky left-[220px] z-20 bg-surface">
+                <span className="text-[10px] font-semibold text-text2">
+                  {t('tasks.ganttPeriod')}
                 </span>
               </div>
               {headerRows.bottom.map((col, i) => (
@@ -258,7 +272,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
           <div className="relative">
             {/* Day stripe background columns (day zoom only) */}
             {dayStripes && (
-              <div className="absolute inset-0 pointer-events-none" style={{ left: 220 }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ left: 320 }}>
                 {dayStripes.map((s) => (
                   <div
                     key={s.key}
@@ -277,7 +291,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
             {todayOffset !== null && (
               <div
                 className="absolute top-0 bottom-0 w-[2px] bg-red-500 z-[5] pointer-events-none"
-                style={{ left: 220 + todayOffset }}
+                style={{ left: 320 + todayOffset }}
               />
             )}
 
