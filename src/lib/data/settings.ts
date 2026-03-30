@@ -38,7 +38,7 @@ export async function getSetting(key: string): Promise<string> {
     .from('app_settings')
     .select('value')
     .eq('key', key)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.warn('[Settings] getSetting error:', error.message)
