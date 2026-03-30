@@ -58,7 +58,21 @@ export function GanttRow({
         ? new Date(task.desired_deadline)
         : null
 
-    if (!endDate) return null
+    if (!endDate) {
+      // Default: show a 14-day bar from start date
+      const defaultEnd = new Date(startDate)
+      defaultEnd.setDate(defaultEnd.getDate() + 14)
+      const offsetDays = differenceInDays(startDate, timelineStart)
+      const durationDays = 14
+      const visibleStart = Math.max(0, offsetDays)
+      const visibleEnd = Math.min(totalDays, offsetDays + durationDays)
+      if (visibleEnd <= visibleStart) return null
+      return {
+        left: visibleStart * dayWidth,
+        width: (visibleEnd - visibleStart) * dayWidth,
+        hasDeadline: false,
+      }
+    }
 
     const offsetDays = differenceInDays(startDate, timelineStart)
     const durationDays = Math.max(1, differenceInDays(endDate, startDate) + 1)
@@ -71,6 +85,7 @@ export function GanttRow({
     return {
       left: visibleStart * dayWidth,
       width: (visibleEnd - visibleStart) * dayWidth,
+      hasDeadline: true,
     }
   }, [task, timelineStart, totalDays, dayWidth])
 
@@ -115,6 +130,7 @@ export function GanttRow({
               absolute top-[8px] h-[24px] rounded-[4px]
               ${colors.bar}
               cursor-pointer group
+              ${!bar.hasDeadline ? 'border border-dashed border-text3/50' : ''}
             `}
             style={{ left: bar.left, width: Math.max(bar.width, 4) }}
             onClick={() => router.push(`/tasks/${task.id}`)}

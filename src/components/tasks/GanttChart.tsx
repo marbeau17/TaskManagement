@@ -18,6 +18,7 @@ import { ja } from 'date-fns/locale'
 import type { TaskWithRelations } from '@/types/database'
 import { GanttRow } from './GanttRow'
 import { useI18n } from '@/hooks/useI18n'
+import { APP_CONFIG } from '@/lib/config'
 
 type ZoomLevel = 'day' | 'week' | 'month'
 
@@ -26,11 +27,7 @@ interface GanttChartProps {
 }
 
 /** Width in px per logical column at each zoom level */
-const COLUMN_WIDTH: Record<ZoomLevel, number> = {
-  day: 36,
-  week: 28,   // per day within a week column
-  month: 12,  // per day within a month column
-}
+const COLUMN_WIDTH = APP_CONFIG.gantt.columnWidth as Record<ZoomLevel, number>
 
 const ZOOM_LEVEL_KEYS: Record<ZoomLevel, string> = {
   day: 'gantt.zoomDay',

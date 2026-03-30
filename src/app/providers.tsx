@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
+import { APP_CONFIG } from '@/lib/config'
 import { useTheme } from '@/hooks/useTheme'
 
 /** Ensures dark/light theme is applied inside the Providers tree */
@@ -25,8 +26,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
               // Retry up to 2 times for other errors
               return failureCount < 2
             },
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-            staleTime: 60_000,
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, APP_CONFIG.cache.queryMaxRetryDelayMs),
+            staleTime: APP_CONFIG.cache.queryStaleTimeMs,
             refetchOnWindowFocus: true,
             refetchOnReconnect: true,
           },

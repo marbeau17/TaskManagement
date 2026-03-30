@@ -22,6 +22,47 @@ import type {
 import { useMock } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
+// Activity log helper
+// ---------------------------------------------------------------------------
+
+async function logActivity(
+  supabase: any,
+  taskId: string,
+  userId: string | null,
+  action: string,
+  details?: string
+) {
+  try {
+    await supabase.from('activity_logs').insert({
+      task_id: taskId,
+      user_id: userId,
+      action,
+      details: details ?? null,
+      created_at: new Date().toISOString(),
+    })
+  } catch {
+    // Activity logging is non-critical - don't fail the main operation
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Status transition validation (for future use)
+// ---------------------------------------------------------------------------
+
+const VALID_TASK_TRANSITIONS: Record<string, string[]> = {
+  waiting: ['todo', 'rejected'],
+  todo: ['in_progress', 'waiting', 'rejected'],
+  in_progress: ['done', 'todo', 'rejected'],
+  done: ['in_progress', 'todo'],
+  rejected: ['todo', 'waiting'],
+}
+
+function isValidTaskTransition(from: string, to: string): boolean {
+  if (from === to) return true
+  return VALID_TASK_TRANSITIONS[from]?.includes(to) ?? false
+}
+
+// ---------------------------------------------------------------------------
 // getTasks
 // ---------------------------------------------------------------------------
 
@@ -286,12 +327,21 @@ export async function updateTask(
 
   const { data: result, error } = await supabase
     .from('tasks')
-    .update(data)
+    .update({ ...data, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
+
+  if (result) {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      const fields = Object.keys(data).join(', ')
+      await logActivity(supabase, id, authUser?.id ?? null, 'updated', `Fields: ${fields}`)
+    } catch {}
+  }
+
   return result as Task
 }
 
@@ -311,18 +361,32 @@ export async function updateTaskProgress(
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
+  // TODO: Validate status transition once current status is available
+  // if (update.status && currentStatus && !isValidTaskTransition(currentStatus, update.status)) {
+  //   throw new Error(`Invalid status transition from ${currentStatus} to ${update.status}`)
+  // }
+
   const { data, error } = await supabase
     .from('tasks')
     .update({
       progress: update.progress,
       status: update.status,
       actual_hours: update.actual_hours,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
+
+  if (data) {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      await logActivity(supabase, id, authUser?.id ?? null, 'progress_updated', `Progress: ${update.progress}%, Status: ${update.status}`)
+    } catch {}
+  }
+
   return data as Task
 }
 
@@ -356,12 +420,19 @@ export async function assignTask(
       director_id: authUser?.id ?? null,
       status: 'todo',
       is_draft: false,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
+
+  if (updated) {
+    try {
+      await logActivity(supabase, id, authUser?.id ?? null, 'assigned', `Assigned to: ${data.assigned_to}`)
+    } catch {}
+  }
 
   // Send email notification via API route (fire-and-forget, avoids nodemailer in client bundle)
   if (process.env.NEXT_PUBLIC_USE_MOCK !== 'true' && data.assigned_to) {
@@ -421,7 +492,7 @@ export async function bulkUpdateTaskStatus(
 
   const { error } = await supabase
     .from('tasks')
-    .update({ status })
+    .update({ status, updated_at: new Date().toISOString() })
     .in('id', taskIds)
 
   if (error) throw error
@@ -438,7 +509,7 @@ export async function bulkAssignTasks(taskIds: string[], userId: string): Promis
   }
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
-  const { error } = await supabase.from('tasks').update({ assigned_to: userId }).in('id', taskIds)
+  const { error } = await supabase.from('tasks').update({ assigned_to: userId, updated_at: new Date().toISOString() }).in('id', taskIds)
   if (error) throw error
 }
 
@@ -465,7 +536,7 @@ export async function cloneTask(taskId: string): Promise<Task> {
 // bulkDeleteTasks
 // ---------------------------------------------------------------------------
 
-export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
+export async function bulkDeleteTasks(taskIds: string[], force = false): Promise<void> {
   if (useMock()) {
     const { bulkDeleteMockTasks } = await import('@/lib/mock/handlers')
     return bulkDeleteMockTasks(taskIds)
@@ -474,7 +545,7 @@ export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
   const res = await fetch('/api/tasks/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ taskIds }),
+    body: JSON.stringify({ taskIds, force }),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {

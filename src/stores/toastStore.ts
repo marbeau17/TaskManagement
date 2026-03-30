@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { APP_CONFIG } from '@/lib/config'
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning'
 
@@ -22,7 +23,7 @@ export const useToastStore = create<ToastStore>((set) => ({
     // Auto-dismiss after 4 seconds
     setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
-    }, 4000)
+    }, APP_CONFIG.ui.toastDismissMs)
   },
   removeToast: (id) =>
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
