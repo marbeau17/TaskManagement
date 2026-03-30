@@ -185,7 +185,7 @@ export default function ClientsPage() {
       setDeletingClient(null)
     } catch (e: any) {
       const msg = e?.message || String(e)
-      if (msg.includes('foreign key') || msg.includes('violates') || msg.includes('referenced')) {
+      if (msg.includes('deleteFkError') || msg.includes('foreign key') || msg.includes('violates') || msg.includes('referenced')) {
         setDeleteError(t('clients.deleteFkError'))
       } else {
         setDeleteError(t('clients.deleteFailedPrefix') + msg)
