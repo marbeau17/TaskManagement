@@ -48,37 +48,37 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* WorkFlow Design System Colors */
+  /* WorkFlow Design System Colors — use CSS variables for dark mode */
   --color-mint: #6FB5A3;
   --color-mint-l: #A8D5CA;
   --color-mint-ll: #E2F2EE;
   --color-mint-d: #4A9482;
-  --color-mint-dd: #2E6B5A;
-  --color-wf-bg: #F0F4F3;
-  --color-surface: #FAFCFB;
-  --color-surf2: #EEF3F1;
-  --color-surf3: #E4EDEA;
-  --color-text: #2A3A36;
-  --color-text2: #647870;
-  --color-text3: #9DAFAA;
-  --color-wf-border: #CCDDD8;
-  --color-border2: #E0ECEB;
-  --color-warn-bg: #FBF5E6;
+  --color-mint-dd: var(--wf-mint-dd, #2E6B5A);
+  --color-wf-bg: var(--wf-bg, #F0F4F3);
+  --color-surface: var(--wf-surface, #FAFCFB);
+  --color-surf2: var(--wf-surf2, #EEF3F1);
+  --color-surf3: var(--wf-surf3, #E4EDEA);
+  --color-text: var(--wf-text, #2A3A36);
+  --color-text2: var(--wf-text2, #647870);
+  --color-text3: var(--wf-text3, #9DAFAA);
+  --color-wf-border: var(--wf-border, #CCDDD8);
+  --color-border2: var(--wf-border2, #E0ECEB);
+  --color-warn-bg: var(--wf-warn-bg, #FBF5E6);
   --color-warn: #7A5E18;
   --color-warn-b: #D8C070;
-  --color-danger-bg: #FAE8E8;
+  --color-danger-bg: var(--wf-danger-bg, #FAE8E8);
   --color-danger: #7A3030;
   --color-danger-b: #D08888;
-  --color-ok-bg: #E4F4EC;
+  --color-ok-bg: var(--wf-ok-bg, #E4F4EC);
   --color-ok: #1E6040;
   --color-ok-b: #7ABEA0;
-  --color-info-bg: #E6EFF8;
-  --color-info: #1E4A7A;
+  --color-info-bg: var(--wf-info-bg, #E6EFF8);
+  --color-info: var(--wf-info, #1E4A7A);
   --color-info-b: #7AAAD8;
-  --color-req-bg: #FDF0F6;
+  --color-req-bg: var(--wf-req-bg, #FDF0F6);
   --color-req: #8A2A5A;
   --color-req-b: #E898C0;
-  --color-gold-bg: #FDFAE0;
+  --color-gold-bg: var(--wf-gold-bg, #FDFAE0);
   --color-gold: #7A6010;
   --color-gold-b: #D8C040;
 }
@@ -171,24 +171,24 @@
     --bar-ok: #6FB5A3;
     --bar-blue: #7A9BE8;
     --bar-slate: #B0BEC5;
-    --color-info: #7AAAD8;
-    --color-purple: #A080D0;
-    --color-wf-bg: #1A2420;
-    --color-surface: #1F2E28;
-    --color-surf2: #253530;
-    --color-surf3: #2B3D36;
-    --color-text: #E8F0EC;
-    --color-text2: #A8B8B0;
-    --color-text3: #6B7D75;
-    --color-wf-border: #3A4D45;
-    --color-border2: #2F4038;
-    --color-mint-dd: #1A3D30;
-    --color-warn-bg: #3D3520;
-    --color-danger-bg: #3D2020;
-    --color-ok-bg: #1A3D28;
-    --color-info-bg: #1A2840;
-    --color-req-bg: #3D1A30;
-    --color-gold-bg: #3D3518;
+    /* WorkFlow dark theme — these drive @theme inline var() references */
+    --wf-bg: #1A2420;
+    --wf-surface: #1F2E28;
+    --wf-surf2: #253530;
+    --wf-surf3: #2B3D36;
+    --wf-text: #E8F0EC;
+    --wf-text2: #A8B8B0;
+    --wf-text3: #6B7D75;
+    --wf-border: #3A4D45;
+    --wf-border2: #2F4038;
+    --wf-mint-dd: #1A3D30;
+    --wf-warn-bg: #3D3520;
+    --wf-danger-bg: #3D2020;
+    --wf-ok-bg: #1A3D28;
+    --wf-info-bg: #1A2840;
+    --wf-info: #7AAAD8;
+    --wf-req-bg: #3D1A30;
+    --wf-gold-bg: #3D3518;
   }
 
   * {
