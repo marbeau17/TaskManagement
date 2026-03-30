@@ -444,19 +444,14 @@ export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
     return bulkDeleteMockTasks(taskIds)
   }
   // Use server-side API route to bypass RLS restrictions
-  console.log('[bulkDeleteTasks] Calling API with taskIds:', taskIds)
   const res = await fetch('/api/tasks/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ taskIds }),
   })
   const data = await res.json().catch(() => ({}))
-  console.log('[bulkDeleteTasks] API response:', res.status, data)
   if (!res.ok) {
     throw new Error(data.error || 'Delete failed')
-  }
-  if (data.logs) {
-    console.log('[bulkDeleteTasks] Server logs:', data.logs)
   }
 }
 
