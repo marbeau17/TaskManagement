@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { projectId } = await request.json()
+    if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 })
+
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+    const supabase = await createServerSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+
+    await db.from('project_members').delete().eq('project_id', projectId)
+    const { error } = await db.from('projects').delete().eq('id', projectId)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}

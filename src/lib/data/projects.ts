@@ -133,15 +133,14 @@ export async function deleteProject(id: string): Promise<boolean> {
     return deleteMockProject(id)
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('projects')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw error
+  const res = await fetch('/api/projects/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectId: id }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Delete failed')
+  }
   return true
 }

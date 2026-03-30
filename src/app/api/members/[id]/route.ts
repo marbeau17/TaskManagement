@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { deleteMember } from '@/lib/data/members'
 
 export async function DELETE(
   request: NextRequest,
@@ -8,11 +7,29 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const success = await deleteMember(id)
-    return NextResponse.json({ success })
+
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+    const supabase = await createServerSupabaseClient()
+
+    // Soft delete: set is_active to false
+    const { data, error } = await supabase
+      .from('users')
+      .update({ is_active: false })
+      .eq('id', id)
+      .select()
+
+    if (error) {
+      return NextResponse.json({ error: error.message, success: false }, { status: 500 })
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'No rows updated', success: false }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to delete member', detail: String(error) },
+      { error: String(error), success: false },
       { status: 500 }
     )
   }

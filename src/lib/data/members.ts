@@ -152,22 +152,13 @@ export async function deleteMember(id: string): Promise<boolean> {
     return deleteMockMember(id)
   }
 
-  const { createClient } = await import('@/lib/supabase/client')
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('users')
-    .update({ is_active: false })
-    .eq('id', id)
-    .select()
-
-  if (error) {
-    console.error('[deleteMember] Supabase error:', error.message, error.code)
-    throw new Error(`members.error.deleteFailed: ${error.message}`)
+  const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'members.error.deleteFailed')
   }
-
-  if (!data || data.length === 0) {
-    console.error('[deleteMember] No rows updated. RLS may have blocked the operation.')
+  const result = await res.json()
+  if (!result.success) {
     throw new Error('members.error.deleteNotPermitted')
   }
 

@@ -88,15 +88,15 @@ export async function deleteClient(id: string): Promise<boolean> {
     return deleteMockClient(id)
   }
 
-  const { createClient: createSupabaseClient } = await import('@/lib/supabase/client')
-  const supabase = createSupabaseClient()
-
-  const { error } = await supabase
-    .from('clients')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw error
+  const res = await fetch('/api/clients/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientId: id }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Delete failed')
+  }
   return true
 }
 
