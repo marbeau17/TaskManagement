@@ -315,6 +315,7 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
     // Period filtering
     let filteredTasks = tasks
     if (period === 'week') {
+      const todayStr = now.toISOString().slice(0, 10)
       const weekEnd = new Date(now)
       const dayOfWeek = now.getDay() // 0=Sun, 1=Mon...6=Sat
       const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
@@ -322,9 +323,10 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
       weekEnd.setHours(23, 59, 59, 999)
       const weekEndStr = weekEnd.toISOString().slice(0, 10)
       filteredTasks = tasks.filter((t) => {
+        if (t.status === 'done' || t.status === 'rejected') return false
         const deadline = t.confirmed_deadline ?? t.desired_deadline
-        if (!deadline) return true
-        return deadline <= weekEndStr
+        if (!deadline) return false // no deadline = not counted for period view
+        return deadline >= todayStr && deadline <= weekEndStr
       })
     } else if (period === 'last_week') {
       const lastWeekStart = new Date(now)
@@ -339,12 +341,14 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
         return deadline >= startStr && deadline <= endStr
       })
     } else if (period === 'month') {
+      const todayStr = now.toISOString().slice(0, 10)
       const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
       const monthEndStr = monthEnd.toISOString().slice(0, 10)
       filteredTasks = tasks.filter((t) => {
+        if (t.status === 'done' || t.status === 'rejected') return false
         const deadline = t.confirmed_deadline ?? t.desired_deadline
-        if (!deadline) return true
-        return deadline <= monthEndStr
+        if (!deadline) return false
+        return deadline >= todayStr && deadline <= monthEndStr
       })
     } else if (period === 'last_month') {
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -356,6 +360,9 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
         if (!deadline) return true
         return deadline >= startStr && deadline <= endStr
       })
+    } else {
+      // 'all' - show all tasks (no period filter)
+      filteredTasks = tasks
     }
 
     const totalCount = filteredTasks.length
@@ -364,11 +371,12 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
     const todoCount = filteredTasks.filter((t) => t.status === 'todo').length
     const inProgressCount = filteredTasks.filter((t) => t.status === 'in_progress').length
     const doneCount = filteredTasks.filter((t) => t.status === 'done').length
-    const overdueCount = filteredTasks.filter((t) => {
-      if (t.status === 'done') return false
+    const todayStrAll = now.toISOString().slice(0, 10)
+    const overdueCount = tasks.filter((t) => {
+      if (t.status === 'done' || t.status === 'rejected') return false
       const deadline = t.confirmed_deadline ?? t.desired_deadline
       if (!deadline) return false
-      return new Date(deadline) < now
+      return deadline < todayStrAll
     }).length
     const completableCount = filteredTasks.filter((t) => t.status !== 'rejected').length
     const completionRate = completableCount > 0 ? Math.round((doneCount / completableCount) * 100) : 0
@@ -386,13 +394,15 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
     const dueThisWeekCount = tasks.filter((t) => {
       if (t.status === 'done' || t.status === 'rejected') return false
       const deadline = t.confirmed_deadline ?? t.desired_deadline
-      return deadline && deadline <= weekEndStr2
+      if (!deadline) return false
+      return deadline >= todayStrAll && deadline <= weekEndStr2
     }).length
 
     const dueThisMonthCount = tasks.filter((t) => {
       if (t.status === 'done' || t.status === 'rejected') return false
       const deadline = t.confirmed_deadline ?? t.desired_deadline
-      return deadline && deadline <= monthEndStr2
+      if (!deadline) return false
+      return deadline >= todayStrAll && deadline <= monthEndStr2
     }).length
 
     // Velocity: tasks completed in last 7 days

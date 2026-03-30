@@ -55,7 +55,7 @@ export function Shell({ children }: ShellProps) {
             onClick={closeMobile}
           />
           {/* Sidebar panel */}
-          <div className="relative w-[192px] h-full z-50 animate-slide-in-left">
+          <div className="relative w-[192px] h-full z-50 animate-slide-in-left overflow-y-auto">
             <Sidebar activePage={activePage} onNavigate={closeMobile} />
           </div>
         </div>

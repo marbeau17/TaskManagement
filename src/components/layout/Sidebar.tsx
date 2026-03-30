@@ -71,7 +71,9 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   const nextTheme = () => {
     const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
     const idx = order.indexOf(theme)
-    setTheme(order[(idx + 1) % order.length])
+    const next = order[(idx + 1) % order.length]
+    console.log('[DarkMode] Toggle:', theme, '->', next)
+    setTheme(next)
   }
 
   const themeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
@@ -89,7 +91,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   }
 
   return (
-    <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none`}>
+    <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none overflow-y-auto overflow-x-hidden`}>
       {/* Logo */}
       <div className={`${collapsed ? 'px-[8px] pt-[16px] pb-[12px] flex justify-center' : 'px-[16px] pt-[16px] pb-[12px]'}`}>
         <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? 'WorkFlow' : undefined}>

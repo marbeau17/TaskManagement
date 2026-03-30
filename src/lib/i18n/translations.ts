@@ -989,6 +989,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     'workload.weeklyActualHours': '今週 実績工数合計',
     'weeklyPlan.title': '📅 週間作業計画',
     'weeklyPlan.totalPlanned': '合計予定',
+    'weeklyPlan.planned': '予定',
+    'weeklyPlan.actual': '実績',
+    'weeklyPlan.totalActual': '合計実績',
   },
   en: {
     'activity.assigned': 'assigned a member',
@@ -1969,6 +1972,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     'workload.weeklyActualHours': 'Weekly Actual Hours',
     'weeklyPlan.title': '📅 Weekly Work Plan',
     'weeklyPlan.totalPlanned': 'Total Planned',
+    'weeklyPlan.planned': 'Planned',
+    'weeklyPlan.actual': 'Actual',
+    'weeklyPlan.totalActual': 'Total Actual',
   }
 }
 

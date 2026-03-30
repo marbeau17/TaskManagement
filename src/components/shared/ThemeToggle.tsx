@@ -18,7 +18,10 @@ export function ThemeToggle() {
       {THEME_OPTIONS.map((opt) => (
         <button
           key={opt.value}
-          onClick={() => setTheme(opt.value)}
+          onClick={() => {
+            console.log('[DarkMode] ThemeToggle select:', theme, '->', opt.value)
+            setTheme(opt.value)
+          }}
           className={`
             px-[10px] py-[4px] rounded-[5px] text-[11px] transition-all whitespace-nowrap
             ${
