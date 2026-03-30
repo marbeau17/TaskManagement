@@ -25,12 +25,17 @@ const COLUMN_KEYS = [
   'tasks.col.client',
   'tasks.col.taskName',
   'tasks.col.assignee',
+  'tasks.col.status',
   'tasks.col.progress',
   'tasks.col.deadline',
   'tasks.col.estimate',
   'tasks.col.actual',
-  'tasks.col.status',
 ] as const
+
+type SortField = 'wbs' | 'client' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status'
+type SortDir = 'asc' | 'desc'
+
+const SORT_FIELDS: SortField[] = ['wbs', 'client', 'title', 'assignee', 'status', 'progress', 'deadline', 'estimate', 'actual']
 
 
 /** Inline component to render subtask rows when a parent is expanded */
@@ -129,6 +134,11 @@ function SubtaskRows({
               )}
             </td>
 
+            {/* Status */}
+            <td className="px-[12px] py-[10px]">
+              <StatusChip status={task.status} size="sm" />
+            </td>
+
             {/* Progress */}
             <td className="px-[12px] py-[10px] min-w-[100px]">
               <div className="flex items-center gap-[8px]">
@@ -173,11 +183,6 @@ function SubtaskRows({
                 {formatHours(task.actual_hours)}
               </span>
             </td>
-
-            {/* Status */}
-            <td className="px-[12px] py-[10px]">
-              <StatusChip status={task.status} size="sm" />
-            </td>
           </tr>
         )
       })}
@@ -199,6 +204,18 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
   const { data: clients } = useClients()
   const { data: members } = useMembers()
   const statusLabels = useMemo(() => getStatusLabels(locale), [locale])
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const handleSort = useCallback((field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+    setCurrentPage(1)
+  }, [sortField])
 
   const handleInlineSave = useCallback((taskId: string, field: string, value: any) => {
     updateTask.mutate({ taskId, data: { [field]: value || null } })
@@ -237,24 +254,63 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
     return tasks.filter((t) => !t.parent_task_id)
   }, [tasks])
 
+  const sortedTasks = useMemo(() => {
+    if (!sortField) return rootTasks
+    const sorted = [...rootTasks]
+    const dir = sortDir === 'asc' ? 1 : -1
+    sorted.sort((a, b) => {
+      switch (sortField) {
+        case 'wbs':
+          return dir * (a.wbs_code ?? '').localeCompare(b.wbs_code ?? '')
+        case 'client':
+          return dir * a.client.name.localeCompare(b.client.name, 'ja')
+        case 'title':
+          return dir * a.title.localeCompare(b.title, 'ja')
+        case 'assignee': {
+          const nameA = a.assigned_user?.name ?? ''
+          const nameB = b.assigned_user?.name ?? ''
+          return dir * nameA.localeCompare(nameB, 'ja')
+        }
+        case 'status': {
+          const statusOrder = { waiting: 0, todo: 1, in_progress: 2, done: 3, rejected: 4 }
+          return dir * ((statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5))
+        }
+        case 'progress':
+          return dir * (a.progress - b.progress)
+        case 'deadline': {
+          const deadA = a.confirmed_deadline ?? a.desired_deadline ?? '9999'
+          const deadB = b.confirmed_deadline ?? b.desired_deadline ?? '9999'
+          return dir * deadA.localeCompare(deadB)
+        }
+        case 'estimate':
+          return dir * ((a.estimated_hours ?? 0) - (b.estimated_hours ?? 0))
+        case 'actual':
+          return dir * (a.actual_hours - b.actual_hours)
+        default:
+          return 0
+      }
+    })
+    return sorted
+  }, [rootTasks, sortField, sortDir])
+
   const selectable = !!onSelectionChange
   const selected = selectedIds ?? new Set<string>()
 
-  const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(rootTasks.length / pageSize))
+  const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(sortedTasks.length / pageSize))
 
   // Reset to page 1 if tasks change and current page is out of bounds
   const safePage = currentPage > totalPages ? 1 : currentPage
 
   const pagedTasks = useMemo(() => {
-    if (pageSize === 0) return rootTasks
+    if (pageSize === 0) return sortedTasks
     const start = (safePage - 1) * pageSize
-    return rootTasks.slice(start, start + pageSize)
-  }, [rootTasks, safePage, pageSize])
+    return sortedTasks.slice(start, start + pageSize)
+  }, [sortedTasks, safePage, pageSize])
 
   // Reset page when tasks array identity changes (filters applied)
-  const [prevTasksLen, setPrevTasksLen] = useState(rootTasks.length)
-  if (rootTasks.length !== prevTasksLen) {
-    setPrevTasksLen(rootTasks.length)
+  const [prevTasksLen, setPrevTasksLen] = useState(sortedTasks.length)
+  if (sortedTasks.length !== prevTasksLen) {
+    setPrevTasksLen(sortedTasks.length)
     if (currentPage !== 1) setCurrentPage(1)
   }
 
@@ -291,7 +347,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
       <Pagination
         page={safePage}
         pageSize={pageSize}
-        totalCount={rootTasks.length}
+        totalCount={sortedTasks.length}
         onPageChange={setCurrentPage}
         onPageSizeChange={setPageSize}
       />
@@ -396,14 +452,29 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   />
                 </th>
               )}
-              {COLUMN_KEYS.map((key) => (
-                <th
-                  key={key}
-                  className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap"
-                >
-                  {t(key)}
-                </th>
-              ))}
+              {COLUMN_KEYS.map((key, idx) => {
+                const field = SORT_FIELDS[idx]
+                const isActive = sortField === field
+                return (
+                  <th
+                    key={key}
+                    onClick={() => handleSort(field)}
+                    className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap cursor-pointer hover:text-mint select-none transition-colors"
+                  >
+                    <span className="inline-flex items-center gap-[4px]">
+                      {t(key)}
+                      {isActive && (
+                        <span className="text-mint text-[10px]">
+                          {sortDir === 'asc' ? '\u25B2' : '\u25BC'}
+                        </span>
+                      )}
+                      {!isActive && (
+                        <span className="text-text3/50 text-[9px]">{'\u25B4\u25BE'}</span>
+                      )}
+                    </span>
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
@@ -593,6 +664,30 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                     )}
                   </td>
 
+                  {/* Status */}
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'status', task.status) }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'status' ? (
+                      <select
+                        value={editDraft}
+                        onChange={(e) => {
+                          handleInlineSave(task.id, 'status', e.target.value)
+                        }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      >
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <StatusChip status={task.status} size="sm" />
+                    )}
+                  </td>
+
                   {/* Progress */}
                   <td className="px-[12px] py-[10px] min-w-[100px]">
                     <div className="flex items-center gap-[8px]">
@@ -659,30 +754,6 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         </span>
                       )}
                     </div>
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-[12px] py-[10px]"
-                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'status', task.status) }}
-                  >
-                    {editingCell?.taskId === task.id && editingCell.field === 'status' ? (
-                      <select
-                        value={editDraft}
-                        onChange={(e) => {
-                          handleInlineSave(task.id, 'status', e.target.value)
-                        }}
-                        onBlur={() => setEditingCell(null)}
-                        autoFocus
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
-                      >
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <StatusChip status={task.status} size="sm" />
-                    )}
                   </td>
                 </tr>
 

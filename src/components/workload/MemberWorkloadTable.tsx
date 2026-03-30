@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useI18n } from '@/hooks/useI18n'
 import { Avatar } from '@/components/shared'
 import {
@@ -79,14 +79,53 @@ function RoleChip({ role }: { role: string }) {
 
 export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
   const { t } = useI18n()
+  const [sortField, setSortField] = useState<string | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
+
   const sorted = useMemo(() => {
-    return [...summaries].sort((a, b) => {
-      const roleA = roleSortKey(a.user.role)
-      const roleB = roleSortKey(b.user.role)
-      if (roleA !== roleB) return roleA - roleB
-      return a.user.name.localeCompare(b.user.name, 'ja')
+    const arr = [...summaries]
+    if (!sortField) {
+      // Default: sort by role then name
+      return arr.sort((a, b) => {
+        const roleA = roleSortKey(a.user.role)
+        const roleB = roleSortKey(b.user.role)
+        if (roleA !== roleB) return roleA - roleB
+        return a.user.name.localeCompare(b.user.name, 'ja')
+      })
+    }
+    const dir = sortDir === 'asc' ? 1 : -1
+    return arr.sort((a, b) => {
+      switch (sortField) {
+        case 'name':
+          return dir * a.user.name.localeCompare(b.user.name, 'ja')
+        case 'role':
+          return dir * (roleSortKey(a.user.role) - roleSortKey(b.user.role))
+        case 'rate':
+          return dir * (a.utilization_rate - b.utilization_rate)
+        case 'actual':
+          return dir * (a.actual_hours - b.actual_hours)
+        case 'tasks':
+          return dir * (a.task_count - b.task_count)
+        case 'completed':
+          return dir * (a.completed_count - b.completed_count)
+        case 'status': {
+          const statusOrder = { available: 0, normal: 1, warning: 2, overloaded: 3 }
+          return dir * ((statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4))
+        }
+        default:
+          return 0
+      }
     })
-  }, [summaries])
+  }, [summaries, sortField, sortDir])
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
@@ -162,14 +201,31 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
       {/* ====== Desktop grid view ====== */}
       {/* Header */}
       <div className="hidden md:grid min-w-[700px] grid-cols-[1fr_80px_160px_70px_100px_60px_60px_80px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
-        <div>{t('workload.member')}</div>
-        <div className="text-center">{t('workload.role')}</div>
-        <div>{t('workload.bar')}</div>
-        <div className="text-right">{t('workload.rate')}</div>
-        <div className="text-right">{t('workload.actualEstimated')}</div>
-        <div className="text-center">{t('workload.taskCount')}</div>
-        <div className="text-center">{t('workload.completedCount')}</div>
-        <div className="text-center">{t('workload.status')}</div>
+        {([
+          { label: t('workload.member'), field: 'name', align: '' },
+          { label: t('workload.role'), field: 'role', align: 'text-center' },
+          { label: t('workload.bar'), field: 'rate', align: '' },
+          { label: t('workload.rate'), field: 'rate', align: 'text-right' },
+          { label: t('workload.actualEstimated'), field: 'actual', align: 'text-right' },
+          { label: t('workload.taskCount'), field: 'tasks', align: 'text-center' },
+          { label: t('workload.completedCount'), field: 'completed', align: 'text-center' },
+          { label: t('workload.status'), field: 'status', align: 'text-center' },
+        ] as const).map(({ label, field, align }) => (
+          <div
+            key={`${field}-${label}`}
+            onClick={() => handleSort(field)}
+            className={`cursor-pointer hover:text-mint select-none transition-colors ${align}`}
+          >
+            <span className="inline-flex items-center gap-[3px]">
+              {label}
+              {sortField === field ? (
+                <span className="text-mint text-[9px]">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+              ) : (
+                <span className="text-text3/40 text-[8px]">{'\u25B4\u25BE'}</span>
+              )}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Rows */}

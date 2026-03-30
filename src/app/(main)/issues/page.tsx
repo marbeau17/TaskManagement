@@ -15,6 +15,12 @@ import { useI18n } from '@/hooks/useI18n'
 import type { IssueFilters } from '@/types/issue'
 
 // ---------------------------------------------------------------------------
+// Sort types
+// ---------------------------------------------------------------------------
+type SortField = 'key' | 'type' | 'title' | 'severity' | 'status' | 'assignee' | 'project' | 'created'
+type SortDir = 'asc' | 'desc'
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
@@ -36,6 +42,18 @@ export default function IssuesPage() {
   const [editingCell, setEditingCell] = useState<{ issueId: string; field: string } | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const updateIssueMutation = useUpdateIssue()
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+    setCurrentPage(1)
+  }
 
   const filters: IssueFilters = useMemo(() => ({
     search: search || undefined,
@@ -75,21 +93,53 @@ export default function IssuesPage() {
     setEditDraft(currentValue ?? '')
   }
 
+  const sortedIssues = useMemo(() => {
+    if (!issues || !sortField) return issues ?? []
+    const sorted = [...issues]
+    const dir = sortDir === 'asc' ? 1 : -1
+    sorted.sort((a, b) => {
+      switch (sortField) {
+        case 'key':
+          return dir * (a.issue_key ?? '').localeCompare(b.issue_key ?? '')
+        case 'type':
+          return dir * a.type.localeCompare(b.type)
+        case 'title':
+          return dir * a.title.localeCompare(b.title, 'ja')
+        case 'severity': {
+          const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+          return dir * ((order[a.severity] ?? 4) - (order[b.severity] ?? 4))
+        }
+        case 'status': {
+          const order: Record<string, number> = { open: 0, in_progress: 1, resolved: 2, verified: 3, closed: 4 }
+          return dir * ((order[a.status] ?? 5) - (order[b.status] ?? 5))
+        }
+        case 'assignee':
+          return dir * (a.assignee?.name ?? '').localeCompare(b.assignee?.name ?? '', 'ja')
+        case 'project':
+          return dir * (a.project?.name ?? '').localeCompare(b.project?.name ?? '', 'ja')
+        case 'created':
+          return dir * a.created_at.localeCompare(b.created_at)
+        default:
+          return 0
+      }
+    })
+    return sorted
+  }, [issues, sortField, sortDir])
+
   const paginatedIssues = useMemo(() => {
-    if (!issues) return []
-    if (pageSize === 0) return issues
+    if (pageSize === 0) return sortedIssues
     const start = (currentPage - 1) * pageSize
-    return issues.slice(start, start + pageSize)
-  }, [issues, currentPage, pageSize])
+    return sortedIssues.slice(start, start + pageSize)
+  }, [sortedIssues, currentPage, pageSize])
 
   return (
     <>
       <Topbar title={t('issues.title')}>
         <button
           onClick={() => {
-            if (issues && issues.length > 0) exportIssuesCsv(issues)
+            if (sortedIssues.length > 0) exportIssuesCsv(sortedIssues)
           }}
-          disabled={!issues || issues.length === 0}
+          disabled={sortedIssues.length === 0}
           className="px-[14px] py-[6px] text-[12px] font-semibold text-text bg-surf2 border border-wf-border rounded-[6px] hover:bg-wf-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('issues.csvExport')}
@@ -174,7 +224,7 @@ export default function IssuesPage() {
           <Pagination
             page={currentPage}
             pageSize={pageSize}
-            totalCount={issues?.length ?? 0}
+            totalCount={sortedIssues.length}
             onPageChange={setCurrentPage}
             onPageSizeChange={setPageSize}
           />
@@ -190,7 +240,7 @@ export default function IssuesPage() {
         {/* Issue cards - mobile */}
         {!isLoading && (
           <div className="md:hidden flex flex-col gap-[8px]">
-            {(!issues || issues.length === 0) && (
+            {sortedIssues.length === 0 && (
               <div className="py-[32px] text-center text-text3 text-[13px]">
                 {t('issues.notFound')}
               </div>
@@ -232,21 +282,38 @@ export default function IssuesPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-wf-border">
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colKey')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colType')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colTitle')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colSeverity')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colStatus')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colAssignee')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colProject')}</th>
-                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colCreatedAt')}</th>
+                    {([
+                      { label: t('issues.colKey'), field: 'key' as const },
+                      { label: t('issues.colType'), field: 'type' as const },
+                      { label: t('issues.colTitle'), field: 'title' as const },
+                      { label: t('issues.colSeverity'), field: 'severity' as const },
+                      { label: t('issues.colStatus'), field: 'status' as const },
+                      { label: t('issues.colAssignee'), field: 'assignee' as const },
+                      { label: t('issues.colProject'), field: 'project' as const },
+                      { label: t('issues.colCreatedAt'), field: 'created' as const },
+                    ]).map(({ label, field }) => (
+                      <th
+                        key={field}
+                        onClick={() => handleSort(field)}
+                        className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap cursor-pointer hover:text-mint select-none transition-colors"
+                      >
+                        <span className="inline-flex items-center gap-[4px]">
+                          {label}
+                          {sortField === field ? (
+                            <span className="text-mint text-[10px]">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+                          ) : (
+                            <span className="text-text3/50 text-[9px]">{'\u25B4\u25BE'}</span>
+                          )}
+                        </span>
+                      </th>
+                    ))}
                     <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap w-[60px]"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(!issues || issues.length === 0) && (
+                  {sortedIssues.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-[12px] py-[32px] text-center text-text3 text-[13px]">
+                      <td colSpan={9} className="px-[12px] py-[32px] text-center text-text3 text-[13px]">
                         {t('issues.notFound')}
                       </td>
                     </tr>
