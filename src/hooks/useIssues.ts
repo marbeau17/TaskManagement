@@ -12,6 +12,7 @@ import {
   getIssueComments,
   addIssueComment,
 } from '@/lib/data/issues'
+import { toast } from '@/stores/toastStore'
 
 export function useIssues(filters?: IssueFilters) {
   return useQuery({
@@ -36,6 +37,9 @@ export function useCreateIssue() {
       queryClient.invalidateQueries({ queryKey: ['issues'] })
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create issue')
+    },
   })
 }
 
@@ -52,6 +56,9 @@ export function useUpdateIssue() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update issue')
+    },
   })
 }
 
@@ -63,6 +70,9 @@ export function useTransitionIssueStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to transition issue status')
+    },
   })
 }
 
@@ -70,7 +80,13 @@ export function useDeleteIssue() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteIssue(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['issues'] }) },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issues'] })
+      toast.success('Issue deleted successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete issue')
+    },
   })
 }
 
@@ -91,6 +107,9 @@ export function useAddIssueComment() {
       queryClient.invalidateQueries({
         queryKey: ['issue-comments', variables.issueId],
       })
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to add comment')
     },
   })
 }

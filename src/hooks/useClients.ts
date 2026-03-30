@@ -7,6 +7,7 @@ import {
   updateClient,
   deleteClient,
 } from '@/lib/data/clients'
+import { toast } from '@/stores/toastStore'
 
 export function useClients() {
   return useQuery({
@@ -22,6 +23,9 @@ export function useCreateClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create client')
+    },
   })
 }
 
@@ -33,6 +37,9 @@ export function useUpdateClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update client')
+    },
   })
 }
 
@@ -42,6 +49,10 @@ export function useDeleteClient() {
     mutationFn: (id: string) => deleteClient(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] })
+      toast.success('Client deleted successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete client')
     },
   })
 }

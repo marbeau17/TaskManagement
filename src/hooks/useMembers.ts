@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getMembers, getMemberById, addMember, deleteMember } from '@/lib/data/members'
 import type { InviteMemberForm } from '@/types/member'
+import { toast } from '@/stores/toastStore'
 
 export function useMembers() {
   return useQuery({
@@ -26,6 +27,9 @@ export function useAddMember() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to add member')
+    },
   })
 }
 
@@ -35,6 +39,10 @@ export function useDeleteMember() {
     mutationFn: (id: string) => deleteMember(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] })
+      toast.success('Member deleted successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete member')
     },
   })
 }

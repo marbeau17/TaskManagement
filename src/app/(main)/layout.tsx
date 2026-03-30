@@ -34,11 +34,15 @@ export default async function MainLayout({
     }
 
     // B-003: Enforce password change – prevent bypass via direct URL access
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('must_change_password')
       .eq('id', user.id)
       .single()
+
+    if (profileError) {
+      console.error('Profile fetch failed:', profileError.message)
+    }
 
     if (profile?.must_change_password) {
       redirect('/change-password')

@@ -10,7 +10,10 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
 
-    await db.from('project_members').delete().eq('project_id', projectId)
+    const { error: membersError } = await db.from('project_members').delete().eq('project_id', projectId)
+    if (membersError) {
+      console.error('Failed to delete project_members:', membersError.message)
+    }
     const { error } = await db.from('projects').delete().eq('id', projectId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

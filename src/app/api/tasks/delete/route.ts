@@ -14,10 +14,14 @@ export async function POST(request: NextRequest) {
     const db = supabase as any
 
     // Delete related records first (FK constraints)
-    await db.from('comments').delete().in('task_id', taskIds)
-    await db.from('activity_logs').delete().in('task_id', taskIds)
-    await db.from('attachments').delete().in('task_id', taskIds)
-    await db.from('task_assignees').delete().in('task_id', taskIds)
+    const relatedTables = ['comments', 'activity_logs', 'attachments', 'task_assignees']
+    for (const table of relatedTables) {
+      const { error: relError } = await db.from(table).delete().in('task_id', taskIds)
+      if (relError) {
+        console.error(`Failed to delete from ${table}:`, relError.message)
+        // Continue with other deletions - non-critical
+      }
+    }
 
     // Delete the tasks
     const { data, error } = await db

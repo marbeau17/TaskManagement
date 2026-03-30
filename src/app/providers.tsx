@@ -17,8 +17,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
-            retry: 1,
+            retry: (failureCount, error: any) => {
+              // Don't retry on auth errors
+              if (error?.status === 401 || error?.status === 403) return false
+              // Don't retry on not found
+              if (error?.status === 404) return false
+              // Retry up to 2 times for other errors
+              return failureCount < 2
+            },
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+            staleTime: 60_000,
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
+          },
+          mutations: {
+            retry: false,
           },
         },
       })

@@ -74,9 +74,15 @@ export async function middleware(request: NextRequest) {
   // IMPORTANT: Do NOT use getSession() here - it reads from storage without
   // verifying the JWT. getUser() sends a request to the Supabase Auth server
   // to validate the token.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data?.user ?? null
+  } catch (authError) {
+    console.error('Auth check failed:', authError)
+    // On auth failure, redirect to login
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 
   if (!user) {
     // Redirect to login if no valid session

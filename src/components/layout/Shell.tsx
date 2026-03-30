@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { GlobalSearch } from '@/components/shared/GlobalSearch'
 import { useI18n } from '@/hooks/useI18n'
+import { ToastContainer } from '@/components/shared/ToastContainer'
 
 interface ShellProps {
   children: React.ReactNode
@@ -78,6 +79,7 @@ export function Shell({ children }: ShellProps) {
         </div>
         {children}
       </div>
+      <ToastContainer />
     </div>
   )
 }

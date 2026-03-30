@@ -23,6 +23,7 @@ import {
 } from '@/lib/data/tasks'
 import type { Task, TaskStatus } from '@/types/database'
 import { useRealtimeComments, useRealtimeTaskStatus } from './useRealtimeSubscription'
+import { toast } from '@/stores/toastStore'
 import type {
   TaskFilters,
   TaskFormStep1,
@@ -85,6 +86,9 @@ export function useCreateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create task')
+    },
   })
 }
 
@@ -105,6 +109,9 @@ export function useUpdateTaskProgress() {
         queryKey: ['activityLogs', variables.taskId],
       })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update task progress')
+    },
   })
 }
 
@@ -121,6 +128,9 @@ export function useUpdateTask() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
       qc.invalidateQueries({ queryKey: ['tasks', variables.taskId] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update task')
     },
   })
 }
@@ -142,6 +152,9 @@ export function useAssignTask() {
         queryKey: ['activityLogs', variables.taskId],
       })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to assign task')
+    },
   })
 }
 
@@ -162,6 +175,9 @@ export function useBulkUpdateTaskStatus() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update task status')
+    },
   })
 }
 
@@ -175,6 +191,9 @@ export function useBulkAssignTasks() {
     mutationFn: ({ taskIds, userId }: { taskIds: string[]; userId: string }) =>
       bulkAssignTasks(taskIds, userId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to assign tasks')
+    },
   })
 }
 
@@ -182,7 +201,13 @@ export function useBulkDeleteTasks() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (taskIds: string[]) => bulkDeleteTasks(taskIds),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      toast.success('Tasks deleted successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete tasks')
+    },
   })
 }
 
@@ -191,6 +216,9 @@ export function useCloneTask() {
   return useMutation({
     mutationFn: (taskId: string) => cloneTask(taskId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }) },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to clone task')
+    },
   })
 }
 
@@ -218,6 +246,9 @@ export function useAddComment() {
       qc.invalidateQueries({
         queryKey: ['activityLogs', variables.taskId],
       })
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to add comment')
     },
   })
 }

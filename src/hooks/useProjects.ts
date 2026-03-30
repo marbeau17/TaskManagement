@@ -14,6 +14,7 @@ import {
   addProjectMember,
   removeProjectMember,
 } from '@/lib/data/project-members'
+import { toast } from '@/stores/toastStore'
 
 // ---------------------------------------------------------------------------
 // Project hooks
@@ -43,6 +44,9 @@ export function useCreateProject() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create project')
+    },
   })
 }
 
@@ -59,6 +63,9 @@ export function useUpdateProject() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update project')
+    },
   })
 }
 
@@ -68,6 +75,10 @@ export function useDeleteProject() {
     mutationFn: (id: string) => deleteProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
+      toast.success('Project deleted successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete project')
     },
   })
 }
@@ -100,6 +111,9 @@ export function useAddProjectMember() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-members'] })
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to add project member')
+    },
   })
 }
 
@@ -109,6 +123,9 @@ export function useRemoveProjectMember() {
     mutationFn: (id: string) => removeProjectMember(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-members'] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to remove project member')
     },
   })
 }
