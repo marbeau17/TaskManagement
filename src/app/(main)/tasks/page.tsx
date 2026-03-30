@@ -87,11 +87,14 @@ export default function TasksPage() {
         title={t('tasks.title')}
         subtitle={t('tasks.totalCount').replace('{count}', String(tasks.length))}
       >
-        <PeriodToggle
-          options={PERIOD_OPTIONS}
-          value={period ?? 'all'}
-          onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
-        />
+        {/* Desktop only controls */}
+        <div className="hidden md:contents">
+          <PeriodToggle
+            options={PERIOD_OPTIONS}
+            value={period ?? 'all'}
+            onChange={(v) => setPeriod(v as 'week' | 'month' | 'all')}
+          />
+        </div>
 
         {/* View toggle */}
         <div className="flex items-center rounded-[7px] border border-wf-border overflow-hidden">
@@ -99,7 +102,7 @@ export default function TasksPage() {
             onClick={() => setViewMode('list')}
             title={t('tasks.listView') ?? 'List'}
             className={`
-              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              h-[30px] md:h-[34px] px-[8px] md:px-[10px] text-[11px] md:text-[12px] font-semibold transition-colors
               inline-flex items-center gap-[4px]
               ${viewMode === 'list'
                 ? 'bg-mint text-white'
@@ -107,13 +110,13 @@ export default function TasksPage() {
             `}
           >
             <List size={14} />
-            {t('tasks.listView') ?? 'List'}
+            <span className="hidden md:inline">{t('tasks.listView') ?? 'List'}</span>
           </button>
           <button
             onClick={() => setViewMode('kanban')}
             title={t('tasks.kanbanView') ?? 'Kanban'}
             className={`
-              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              h-[30px] md:h-[34px] px-[8px] md:px-[10px] text-[11px] md:text-[12px] font-semibold transition-colors
               inline-flex items-center gap-[4px] border-l border-wf-border
               ${viewMode === 'kanban'
                 ? 'bg-mint text-white'
@@ -121,13 +124,13 @@ export default function TasksPage() {
             `}
           >
             <Columns3 size={14} />
-            {t('tasks.kanbanView') ?? 'Kanban'}
+            <span className="hidden md:inline">{t('tasks.kanbanView') ?? 'Kanban'}</span>
           </button>
           <button
             onClick={() => setViewMode('gantt')}
             title={t('tasks.ganttView') ?? 'Gantt'}
             className={`
-              h-[34px] px-[10px] text-[12px] font-semibold transition-colors
+              h-[30px] md:h-[34px] px-[8px] md:px-[10px] text-[11px] md:text-[12px] font-semibold transition-colors
               inline-flex items-center gap-[4px] border-l border-wf-border
               ${viewMode === 'gantt'
                 ? 'bg-mint text-white'
@@ -135,40 +138,56 @@ export default function TasksPage() {
             `}
           >
             <GanttChartSquare size={14} />
-            {t('tasks.ganttView') ?? 'Gantt'}
+            <span className="hidden md:inline">{t('tasks.ganttView') ?? 'Gantt'}</span>
           </button>
         </div>
 
-        {can('tasks', 'create') && (
-          <button
-            onClick={handleCsvExport}
-            disabled={filteredTasks.length === 0}
-            className="
-              h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
-              border border-wf-border text-text2
-              hover:bg-surf2 transition-colors
-              disabled:opacity-40 disabled:cursor-not-allowed
-            "
-          >
-            {t('tasks.csvExport')}
-          </button>
-        )}
+        <div className="hidden md:flex items-center gap-[6px]">
+          {can('tasks', 'create') && (
+            <button
+              onClick={handleCsvExport}
+              disabled={filteredTasks.length === 0}
+              className="
+                h-[34px] px-[14px] rounded-[7px] text-[12px] font-semibold
+                border border-wf-border text-text2
+                hover:bg-surf2 transition-colors
+                disabled:opacity-40 disabled:cursor-not-allowed
+              "
+            >
+              {t('tasks.csvExport')}
+            </button>
+          )}
 
+          {can('tasks', 'create') && (
+            <Link
+              href="/tasks/new"
+              className="
+                h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
+                bg-mint text-white hover:bg-mint-d transition-colors
+                inline-flex items-center
+              "
+            >
+              {t('tasks.newTask')}
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile: compact new task button */}
         {can('tasks', 'create') && (
           <Link
             href="/tasks/new"
             className="
-              h-[34px] px-[16px] rounded-[7px] text-[12px] font-bold
+              md:hidden h-[30px] px-[10px] rounded-[7px] text-[11px] font-bold
               bg-mint text-white hover:bg-mint-d transition-colors
               inline-flex items-center
             "
           >
-            {t('tasks.newTask')}
+            + {t('tasks.newTask')}
           </Link>
         )}
       </Topbar>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]">
+      <div className="flex-1 min-h-0 overflow-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Filters */}
         <TaskFilters />
 
