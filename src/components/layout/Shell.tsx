@@ -61,7 +61,7 @@ export function Shell({ children }: ShellProps) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-auto">
         {/* Mobile hamburger bar (<768px) */}
         <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0 sticky top-0 z-30">
           <button

@@ -82,7 +82,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <>
       <Topbar
         title={t('tasks.title')}
         subtitle={t('tasks.totalCount').replace('{count}', String(tasks.length))}
@@ -187,7 +187,7 @@ export default function TasksPage() {
         )}
       </Topbar>
 
-      <div className="flex-1 min-h-0 overflow-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="p-[12px] md:p-[20px] flex flex-col gap-[16px]">
         {/* Filters */}
         <TaskFilters />
 
@@ -232,6 +232,6 @@ export default function TasksPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
