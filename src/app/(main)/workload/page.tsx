@@ -124,11 +124,29 @@ export default function WorkloadPage() {
               )}
             </div>
 
+            {/* Member's summary stats */}
+            {memberSummary && (
+              <div className="grid grid-cols-3 gap-[8px] mb-[12px]">
+                <div className="bg-surf2 rounded-[6px] p-[8px] text-center">
+                  <div className="text-[16px] font-bold text-text">{memberSummary.task_count}</div>
+                  <div className="text-[9px] text-text3">{t('workload.taskCount')}</div>
+                </div>
+                <div className="bg-surf2 rounded-[6px] p-[8px] text-center">
+                  <div className="text-[16px] font-bold text-text">{memberSummary.estimated_hours}h</div>
+                  <div className="text-[9px] text-text3">{t('workload.headerActualEstimate')}</div>
+                </div>
+                <div className="bg-surf2 rounded-[6px] p-[8px] text-center">
+                  <div className="text-[16px] font-bold text-text">{memberSummary.completed_count}</div>
+                  <div className="text-[9px] text-text3">{t('workload.completedCount')}</div>
+                </div>
+              </div>
+            )}
+
             {/* Member's tasks */}
             <h3 className="text-[12px] font-bold text-text2 mb-[8px]">
               {t('workload.assignedTasks')} ({memberTasks.length})
             </h3>
-            <div className="max-h-[240px] overflow-y-auto">
+            <div>
               {memberTasks.length === 0 ? (
                 <p className="text-[12px] text-text3 py-[8px]">{t('workload.noAssignedTasks')}</p>
               ) : (
@@ -163,67 +181,72 @@ export default function WorkloadPage() {
           </div>
         )}
 
-        {/* KPI Cards */}
-        {kpiLoading || !kpi ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-surface border border-border2 rounded-[10px] h-[90px] animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <WorkloadKpi data={kpi} />
+        {/* ===== Team-wide sections (hidden when viewing individual member) ===== */}
+        {!creatorId && (
+          <>
+            {/* KPI Cards */}
+            {kpiLoading || !kpi ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-surface border border-border2 rounded-[10px] h-[90px] animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : (
+              <WorkloadKpi data={kpi} />
+            )}
+
+            {/* Resource Load Chart */}
+            {loadingResource || !resourceData ? (
+              <div className="bg-surface border border-border2 rounded-[10px] h-[420px] animate-pulse" />
+            ) : (
+              <ResourceLoadChart data={resourceData} />
+            )}
+
+            {/* Utilization Trend */}
+            <UtilizationTrend />
+
+            {/* Week Navigation + Member Workload Table */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-[13px] font-bold text-text">{t('workload.memberTable')}</h3>
+              <div className="flex items-center gap-[8px]">
+                <button
+                  onClick={() => setWeekOffset((o) => o - 1)}
+                  className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
+                >
+                  &lsaquo;
+                </button>
+                <span className="text-[11px] text-text2 font-medium whitespace-nowrap">
+                  {weekStart.replace(/-/g, '/')} - {weekEnd.replace(/-/g, '/')}
+                </span>
+                <button
+                  onClick={() => setWeekOffset((o) => o + 1)}
+                  className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
+                >
+                  &rsaquo;
+                </button>
+                <button
+                  onClick={() => setWeekOffset(0)}
+                  className="text-[10px] text-mint hover:text-mint-d font-medium transition-colors"
+                >
+                  {t('workload.thisWeek')}
+                </button>
+              </div>
+            </div>
+            {summariesLoading || !summaries ? (
+              <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden">
+                <TableSkeleton rows={6} columns={8} />
+              </div>
+            ) : (
+              <MemberWorkloadTable summaries={summaries} />
+            )}
+
+            {/* Capacity Planning Matrix */}
+            <CapacityMatrix />
+          </>
         )}
-
-        {/* Resource Load Chart */}
-        {loadingResource || !resourceData ? (
-          <div className="bg-surface border border-border2 rounded-[10px] h-[420px] animate-pulse" />
-        ) : (
-          <ResourceLoadChart data={resourceData} />
-        )}
-
-        {/* Utilization Trend */}
-        <UtilizationTrend />
-
-        {/* Week Navigation + Member Workload Table */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-[13px] font-bold text-text">{t('workload.memberTable')}</h3>
-          <div className="flex items-center gap-[8px]">
-            <button
-              onClick={() => setWeekOffset((o) => o - 1)}
-              className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
-            >
-              &lsaquo;
-            </button>
-            <span className="text-[11px] text-text2 font-medium whitespace-nowrap">
-              {weekStart.replace(/-/g, '/')} - {weekEnd.replace(/-/g, '/')}
-            </span>
-            <button
-              onClick={() => setWeekOffset((o) => o + 1)}
-              className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
-            >
-              &rsaquo;
-            </button>
-            <button
-              onClick={() => setWeekOffset(0)}
-              className="text-[10px] text-mint hover:text-mint-d font-medium transition-colors"
-            >
-              {t('workload.thisWeek')}
-            </button>
-          </div>
-        </div>
-        {summariesLoading || !summaries ? (
-          <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden">
-            <TableSkeleton rows={6} columns={8} />
-          </div>
-        ) : (
-          <MemberWorkloadTable summaries={summaries} />
-        )}
-
-        {/* Capacity Planning Matrix */}
-        <CapacityMatrix />
       </div>
     </>
   )
