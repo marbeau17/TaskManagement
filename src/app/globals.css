@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -83,122 +83,14 @@
   --color-gold-b: #D8C040;
 }
 
+/* Light/Dark CSS variables are defined in @layer base below */
 :root {
-  --background: #F0F4F3;
-  --foreground: #2A3A36;
-  --card: #FAFCFB;
-  --card-foreground: #2A3A36;
-  --popover: #FAFCFB;
-  --popover-foreground: #2A3A36;
-  --primary: #6FB5A3;
-  --primary-foreground: #FFFFFF;
-  --secondary: #EEF3F1;
-  --secondary-foreground: #2A3A36;
-  --muted: #EEF3F1;
-  --muted-foreground: #647870;
-  --accent: #E2F2EE;
-  --accent-foreground: #2A3A36;
-  --destructive: #7A3030;
-  --border: #CCDDD8;
-  --input: #CCDDD8;
-  --ring: #6FB5A3;
   --chart-1: #6FB5A3;
   --chart-2: #4A9482;
   --chart-3: #7A5E18;
   --chart-4: #1E4A7A;
   --chart-5: #8A2A5A;
   --radius: 0.625rem;
-  --sidebar: #2E6B5A;
-  --sidebar-foreground: rgba(255, 255, 255, 0.68);
-  --sidebar-primary: #FFFFFF;
-  --sidebar-primary-foreground: #2E6B5A;
-  --sidebar-accent: rgba(255, 255, 255, 0.17);
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: rgba(255, 255, 255, 0.12);
-  --sidebar-ring: rgba(255, 255, 255, 0.2);
-
-  /* Workload bar colors */
-  --bar-danger: #C05050;
-  --bar-warning: #C8A030;
-  --bar-ok: #4A9482;
-
-  /* Chart colors */
-  --bar-blue: #5B7FD6;
-  --bar-slate: #94A3B8;
-
-  /* Status colors */
-  --status-waiting: #C8A030;
-  --status-todo: #94A3B8;
-  --status-in-progress: #3B82F6;
-  --status-done: #6FB5A3;
-  --status-rejected: #C05050;
-}
-
-.dark {
-  --background: #1A2420;
-  --foreground: #E8F0EC;
-  --card: #1F2E28;
-  --card-foreground: #E8F0EC;
-  --popover: #1F2E28;
-  --popover-foreground: #E8F0EC;
-  --primary: #6FB5A3;
-  --primary-foreground: #FFFFFF;
-  --secondary: #253530;
-  --secondary-foreground: #E8F0EC;
-  --muted: #253530;
-  --muted-foreground: #A8B8B0;
-  --accent: #2B3D36;
-  --accent-foreground: #E8F0EC;
-  --destructive: #D08888;
-  --border: #3A4D45;
-  --input: #3A4D45;
-  --ring: #6FB5A3;
-  --sidebar: #152018;
-  --sidebar-foreground: rgba(255, 255, 255, 0.68);
-  --sidebar-primary: #FFFFFF;
-  --sidebar-primary-foreground: #152018;
-  --sidebar-accent: rgba(255, 255, 255, 0.17);
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: rgba(255, 255, 255, 0.12);
-  --sidebar-ring: rgba(255, 255, 255, 0.2);
-
-  /* Workload bar colors for dark mode */
-  --bar-danger: #E07070;
-  --bar-warning: #E0C050;
-  --bar-ok: #6FB5A3;
-
-  /* Chart colors for dark mode */
-  --bar-blue: #7A9BE8;
-  --bar-slate: #B0BEC5;
-
-  /* Status colors for dark mode */
-  --status-waiting: #E0C050;
-  --status-todo: #B0BEC5;
-  --status-in-progress: #60A5FA;
-  --status-done: #6FB5A3;
-  --status-rejected: #E07070;
-
-  /* KPI card / chart dark overrides */
-  --color-info: #7AAAD8;
-  --color-purple: #A080D0;
-
-  /* WorkFlow Design System Dark Overrides */
-  --color-wf-bg: #1A2420;
-  --color-surface: #1F2E28;
-  --color-surf2: #253530;
-  --color-surf3: #2B3D36;
-  --color-text: #E8F0EC;
-  --color-text2: #A8B8B0;
-  --color-text3: #6B7D75;
-  --color-wf-border: #3A4D45;
-  --color-border2: #2F4038;
-  --color-mint-dd: #1A3D30;
-  --color-warn-bg: #3D3520;
-  --color-danger-bg: #3D2020;
-  --color-ok-bg: #1A3D28;
-  --color-info-bg: #1A2840;
-  --color-req-bg: #3D1A30;
-  --color-gold-bg: #3D3518;
 }
 
 @keyframes slide-in-left {
