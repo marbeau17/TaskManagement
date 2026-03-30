@@ -434,7 +434,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
   }
 
   return (
-    <div>
+    <div className="flex flex-col">
       {/* Pagination */}
       <Pagination
         page={safePage}

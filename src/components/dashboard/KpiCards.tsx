@@ -23,9 +23,9 @@ export function KpiCards() {
       {/* Tasks this week */}
       <KpiCard
         label={t('kpi.thisWeekTasks')}
-        value={stats.totalCount}
+        value={stats.activeCount}
         unit={t('kpi.unit.count')}
-        subText={`${t('kpi.comparedLastWeek')} +${stats.totalCount}${t('kpi.tasks')}`}
+        subText={`${stats.doneCount} ${t('kpi.completed')} / ${stats.totalCount} ${t('kpi.tasks')}`}
         subColor="#4A9482"
         variant="mint"
       />

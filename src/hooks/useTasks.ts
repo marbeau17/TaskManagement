@@ -116,7 +116,7 @@ export function useUpdateTask() {
       data,
     }: {
       taskId: string
-      data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'weekly_plan'>>
+      data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'template_data'>>
     }) => updateTask(taskId, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
@@ -264,6 +264,7 @@ export function useTaskStats() {
     if (!tasks) {
       return {
         totalCount: 0,
+        activeCount: 0,
         waitingCount: 0,
         todoCount: 0,
         inProgressCount: 0,
@@ -275,6 +276,7 @@ export function useTaskStats() {
 
     const now = new Date()
     const totalCount = tasks.length
+    const activeCount = tasks.filter((t) => t.status !== 'done' && t.status !== 'rejected').length
     const waitingCount = tasks.filter((t) => t.status === 'waiting').length
     const todoCount = tasks.filter((t) => t.status === 'todo').length
     const inProgressCount = tasks.filter(
@@ -292,6 +294,7 @@ export function useTaskStats() {
 
     return {
       totalCount,
+      activeCount,
       waitingCount,
       todoCount,
       inProgressCount,

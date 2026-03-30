@@ -38,7 +38,7 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
     })
   }, [weekOffset])
 
-  const plan: Record<string, number> = (task as any).weekly_plan ?? {}
+  const plan: Record<string, number> = (task.template_data as any)?.weekly_plan ?? {}
   const totalPlanned = Object.values(plan).reduce((s, v) => s + v, 0)
 
   const handleChange = (weekKey: string, hours: number) => {
@@ -48,7 +48,8 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
     } else {
       newPlan[weekKey] = hours
     }
-    updateTask.mutate({ taskId: task.id, data: { weekly_plan: newPlan } as any })
+    const newTemplateData = { ...(task.template_data ?? {}), weekly_plan: newPlan }
+    updateTask.mutate({ taskId: task.id, data: { template_data: newTemplateData } as any })
   }
 
   return (
