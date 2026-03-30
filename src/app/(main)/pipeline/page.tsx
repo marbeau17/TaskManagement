@@ -19,6 +19,7 @@ interface PipelineOpportunity {
   id: string
   seq_id: number
   is_new: boolean
+  client_type: string
   client_name: string
   referral_source: string
   opportunity_name: string
@@ -116,7 +117,7 @@ export default function PipelinePage() {
     const maxSeq = opportunities.reduce((max, o) => Math.max(max, o.seq_id), 0)
     const res = await fetch('/api/pipeline', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seq_id: maxSeq + 1, is_new: true, client_name: '', opportunity_name: '', status: 'Namelikly', probability: 0, cm_percent: 0 }),
+      body: JSON.stringify({ seq_id: maxSeq + 1, is_new: true, client_type: 'Customer', client_name: '', opportunity_name: '', status: 'Namelikly', probability: 0, cm_percent: 0 }),
     }).catch(() => null)
     if (res?.ok) { await fetchData(); toast.success('追加しました') }
     else toast.error('追加に失敗しました')
@@ -134,7 +135,7 @@ export default function PipelinePage() {
     const res = await fetch('/api/pipeline', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        seq_id: maxSeq + 1, is_new: source.is_new,
+        seq_id: maxSeq + 1, is_new: source.is_new, client_type: source.client_type ?? 'Customer',
         client_name: source.client_name, referral_source: source.referral_source,
         opportunity_name: source.opportunity_name, sub_opportunity: source.sub_opportunity,
         status: source.status, probability: source.probability, cm_percent: source.cm_percent,
@@ -207,6 +208,22 @@ export default function PipelinePage() {
   return (
     <>
       <Topbar title={t('pipeline.title')}>
+        <button onClick={() => {
+          const memberName = (uid: string | null) => { if (!uid || !members) return ''; return members.find((m) => m.id === uid)?.name ?? '' }
+          const header = ['ID','新/既','区分','クライアント','紹介先','案件名','サブ案件','状況','勝率%','CM%','PM','コンサル1','コンサル2',...MONTH_LABELS,'合計','加重合計','粗利'].join(',')
+          const rows = opportunities.map((o) => {
+            const total = getTotal(o)
+            return [o.seq_id, o.is_new ? '新' : '既', o.client_type ?? 'Customer', `"${o.client_name}"`, `"${o.referral_source}"`, `"${o.opportunity_name}"`, `"${o.sub_opportunity}"`, o.status, o.probability, o.cm_percent, `"${memberName(o.pm_user_id)}"`, `"${memberName(o.consultant1_user_id)}"`, `"${memberName(o.consultant2_user_id)}"`, ...MONTHS.map((m) => getMonthRevenue(o, m)), total, Math.round(total * o.probability / 100), Math.round(total * o.cm_percent / 100)].join(',')
+          })
+          const csv = '\uFEFF' + header + '\n' + rows.join('\n')
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a'); a.href = url; a.download = `pipeline_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+          URL.revokeObjectURL(url)
+          toast.success('CSVエクスポート完了')
+        }} className="h-[30px] px-[12px] rounded-[6px] text-[12px] font-semibold border border-wf-border text-text2 hover:bg-surf2 transition-colors">
+          CSV出力
+        </button>
         {activeTab === 'list' && (
           <button onClick={addNew} className="h-[30px] px-[12px] rounded-[6px] text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors">
             {t('pipeline.addNew')}
@@ -237,6 +254,7 @@ export default function PipelinePage() {
                   <th className="px-[4px] py-[8px] font-semibold text-text3 sticky left-0 bg-surf2 z-10 w-[24px]"></th>
                   <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-10 w-[30px]">ID</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">新</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2">区分</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.client')}</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">{t('pipeline.referral')}</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.opportunity')}</th>
@@ -266,6 +284,12 @@ export default function PipelinePage() {
                     </td>
                     <td className="px-[4px] py-[3px] text-text3 sticky left-[24px] bg-surface z-10">{opp.seq_id}</td>
                     <td className="px-[6px] py-[3px]"><input type="checkbox" checked={opp.is_new} onChange={(e) => updateField(opp.id, 'is_new', e.target.checked)} className="accent-mint w-[12px] h-[12px]" /></td>
+                    <td className="px-[4px] py-[3px]">
+                      <select value={opp.client_type ?? 'Customer'} onChange={(e) => updateField(opp.id, 'client_type', e.target.value)} className="text-[10px] text-text bg-transparent outline-none cursor-pointer">
+                        <option value="Customer">Customer</option>
+                        <option value="Prospect">Prospect</option>
+                      </select>
+                    </td>
                     <td className="px-[4px] py-[3px]"><input type="text" value={opp.client_name} onChange={(e) => setOpportunities((p) => p.map((o) => o.id === opp.id ? { ...o, client_name: e.target.value } : o))} onBlur={(e) => updateField(opp.id, 'client_name', e.target.value)} className="w-full text-[11px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none" /></td>
                     <td className="px-[4px] py-[3px]"><input type="text" value={opp.referral_source} onChange={(e) => setOpportunities((p) => p.map((o) => o.id === opp.id ? { ...o, referral_source: e.target.value } : o))} onBlur={(e) => updateField(opp.id, 'referral_source', e.target.value)} className="w-full text-[11px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none" /></td>
                     <td className="px-[4px] py-[3px]"><input type="text" value={opp.opportunity_name} onChange={(e) => setOpportunities((p) => p.map((o) => o.id === opp.id ? { ...o, opportunity_name: e.target.value } : o))} onBlur={(e) => updateField(opp.id, 'opportunity_name', e.target.value)} className="w-full text-[11px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none" /></td>
@@ -295,7 +319,7 @@ export default function PipelinePage() {
                 {/* Totals */}
                 {opportunities.length > 0 && (
                   <tr className="border-t-2 border-mint bg-surf2/50 font-bold">
-                    <td colSpan={13} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}</td>
+                    <td colSpan={14} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}</td>
                     {MONTHS.map((m) => <td key={m} className="px-[2px] py-[6px] text-[10px] text-mint text-right">{fmtK(opportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))}</td>)}
                     <td className="px-[6px] py-[6px] text-right text-[12px] text-mint">{fmtK(totalRevenue)}</td>
                     <td></td>
