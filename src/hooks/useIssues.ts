@@ -8,6 +8,7 @@ import {
   createIssue,
   updateIssue,
   transitionIssueStatus,
+  deleteIssue,
   getIssueComments,
   addIssueComment,
 } from '@/lib/data/issues'
@@ -62,6 +63,14 @@ export function useTransitionIssueStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] })
     },
+  })
+}
+
+export function useDeleteIssue() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteIssue(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['issues'] }) },
   })
 }
 

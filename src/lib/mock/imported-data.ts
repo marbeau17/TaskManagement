@@ -15,7 +15,14 @@ import type {
   TaskStatus,
 } from '@/types/database'
 import type { MockUserWithPassword } from './data'
-import { DEFAULT_PASSWORD, mockUsers, mockClients } from './data'
+import { DEFAULT_PASSWORD, BASE_CLIENTS } from './constants'
+
+// Lazy accessor to break circular dependency with data.ts
+function getMockUsers(): MockUserWithPassword[] {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const data = require('./data')
+  return data.mockUsers as MockUserWithPassword[]
+}
 
 // ---------------------------------------------------------------------------
 // CSV row shape (matches SharePoint export headers)
@@ -45,14 +52,21 @@ function mapStatus(spStatus: string): TaskStatus {
   switch (spStatus.trim()) {
     case 'Completed':
     case 'Done':
+    case 'done':
       return 'done'
     case 'Inprogress':
+    case 'In progress':
+    case 'in_progress':
       return 'in_progress'
     case 'NotStarted':
     case 'Not started':
+    case 'todo':
       return 'todo'
     case 'Dropped':
+    case 'rejected':
       return 'rejected'
+    case 'waiting':
+      return 'waiting'
     case '':
     default:
       return 'waiting'
@@ -65,12 +79,18 @@ function mapStatus(spStatus: string): TaskStatus {
 
 function mapPriorityToHours(priority: string): number | null {
   switch (priority.trim()) {
+    case '大':
     case '高':
+    case 'high':
+    case 'High':
       return 16
     case '中':
+    case 'medium':
     case 'Medium':
       return 8
+    case '小':
     case '低':
+    case 'low':
     case 'Low':
       return 4
     default:
@@ -124,16 +144,18 @@ export const okutsuUser: MockUserWithPassword = {
 // Email → user-id lookup  (includes existing mock users + new user)
 // ---------------------------------------------------------------------------
 
-const allUsers: MockUserWithPassword[] = [...mockUsers, okutsuUser]
+function getAllUsers(): MockUserWithPassword[] {
+  return [...getMockUsers(), okutsuUser]
+}
 
 function userIdByEmail(email: string): string | null {
   const normalised = email.trim().toLowerCase()
-  const user = allUsers.find((u) => u.email.toLowerCase() === normalised)
+  const user = getAllUsers().find((u) => u.email.toLowerCase() === normalised)
   return user?.id ?? null
 }
 
 function findUserById(id: string): User {
-  const user = allUsers.find((u) => u.id === id)
+  const user = getAllUsers().find((u) => u.id === id)
   if (!user) throw new Error(`User not found: ${id}`)
   return user
 }
@@ -172,25 +194,28 @@ function canonicalClientName(raw: string): string {
 // Build the deduplicated client list from CSV
 // ---------------------------------------------------------------------------
 
-/** Existing client names (from mock data) that should not be duplicated */
-const existingClientNames = new Set(mockClients.map((c) => c.name))
-
-let nextClientId = mockClients.length + 1
+let nextClientId = 0
 
 function makeClientId(): string {
   return `c${nextClientId++}`
 }
 
-// Internal registry built at import time
+// Internal registry — lazily seeded on first use
 const clientRegistry = new Map<string, Client>()
+let _clientRegistrySeeded = false
 
-// Seed with existing clients
-for (const c of mockClients) {
-  clientRegistry.set(c.name, c)
+function ensureClientRegistry(): void {
+  if (_clientRegistrySeeded) return
+  _clientRegistrySeeded = true
+  nextClientId = BASE_CLIENTS.length + 1
+  for (const c of BASE_CLIENTS) {
+    clientRegistry.set(c.name, c)
+  }
 }
 
 function getOrCreateClient(rawName: string): Client | null {
   if (!rawName.trim()) return null
+  ensureClientRegistry()
 
   const canonical = canonicalClientName(rawName)
 
@@ -325,9 +350,9 @@ function autoLoadFromEmbeddedData(): void {
       Status: t.status as string,
       Owner: (t.owners as string[]).join(';'),
       DueDate: t.dueDate as string || '',
-      '優先度': t.priority as string,
+      '優先度': String(t.priority === 'high' ? '高' : t.priority === 'medium' ? '中' : t.priority === 'low' ? '低' : t.priority || ''),
       '顧客名': t.clientName as string,
-      '工数レベル': String(t.estimatedHours === 16 ? '大' : t.estimatedHours === 8 ? '中' : '小'),
+      '工数レベル': String(t.estimatedHours === 16 ? '大' : t.estimatedHours === 8 ? '中' : t.estimatedHours === 4 ? '小' : t.estimatedHours || ''),
       Note: t.note as string,
       '関連ファイル': t.relatedFiles as string,
       '更新日時': t.updatedAt as string,
@@ -358,10 +383,8 @@ function buildAll(): void {
 function buildFromRows(rows: CsvRow[]): void {
   // Reset client registry to existing clients only
   clientRegistry.clear()
-  nextClientId = mockClients.length + 1
-  for (const c of mockClients) {
-    clientRegistry.set(c.name, c)
-  }
+  _clientRegistrySeeded = false
+  ensureClientRegistry()
 
   const tasks: TaskWithRelations[] = []
 
@@ -371,7 +394,7 @@ function buildFromRows(rows: CsvRow[]): void {
     // Build TaskWithRelations
     const clientObj = clientRegistry.get(
       [...clientRegistry.entries()].find(([, c]) => c.id === task.client_id)?.[0] ?? ''
-    ) ?? mockClients[0]
+    ) ?? BASE_CLIENTS[0]
 
     const assignedUser = task.assigned_to ? findUserById(task.assigned_to) : null
     const requester = findUserById(task.requested_by)
@@ -440,5 +463,5 @@ export function getNewUser(): MockUserWithPassword {
  * Returns all users including the new okutsu user.
  */
 export function getAllUsersWithImported(): MockUserWithPassword[] {
-  return allUsers
+  return getAllUsers()
 }

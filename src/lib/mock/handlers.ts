@@ -983,6 +983,10 @@ export function getMockIssueComments(issueId: string): IssueComment[] {
   return issueComments.filter((c) => c.issue_id === issueId)
 }
 
+export function deleteMockIssue(id: string): void {
+  issues = issues.filter((i) => i.id !== id)
+}
+
 export function addMockIssueComment(issueId: string, body: string): IssueComment {
   const userId = 'u1' // default mock current user
   const user = findUser(userId)

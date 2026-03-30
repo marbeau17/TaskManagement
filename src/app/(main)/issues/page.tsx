@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Topbar } from '@/components/layout'
 import { Avatar, FilterBar, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
-import { useIssues } from '@/hooks/useIssues'
+import { useIssues, useDeleteIssue } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -22,6 +22,7 @@ export default function IssuesPage() {
   const router = useRouter()
   const { can } = usePermission()
   const { t } = useI18n()
+  const deleteIssueMutation = useDeleteIssue()
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
   const [projectFilter, setProjectFilter] = useState('')
@@ -203,6 +204,7 @@ export default function IssuesPage() {
                     <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colAssignee')}</th>
                     <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colProject')}</th>
                     <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap">{t('issues.colCreatedAt')}</th>
+                    <th className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap w-[60px]"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,6 +251,22 @@ export default function IssuesPage() {
                       </td>
                       <td className="px-[12px] py-[10px] text-[11.5px] text-text whitespace-nowrap">
                         {formatDate(issue.created_at)}
+                      </td>
+                      <td className="px-[12px] py-[10px]">
+                        {can('issues', 'delete') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (window.confirm(t('common.deleteConfirm'))) {
+                                deleteIssueMutation.mutate(issue.id)
+                              }
+                            }}
+                            className="text-[11px] text-text3 hover:text-danger transition-colors"
+                            title={t('common.delete')}
+                          >
+                            ✕
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

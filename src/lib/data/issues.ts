@@ -264,6 +264,29 @@ export async function transitionIssueStatus(
 }
 
 // ---------------------------------------------------------------------------
+// deleteIssue
+// ---------------------------------------------------------------------------
+
+export async function deleteIssue(id: string): Promise<void> {
+  if (useMock()) {
+    const { deleteMockIssue } = await import('@/lib/mock/handlers')
+    deleteMockIssue(id)
+    return
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('issues')
+    .delete()
+    .eq('id', id)
+
+  if (error) { console.warn('[Data]', error.message) }
+}
+
+// ---------------------------------------------------------------------------
 // getIssueComments
 // ---------------------------------------------------------------------------
 
