@@ -12,12 +12,16 @@ export async function POST(request: NextRequest) {
     const supabase = await createServerSupabaseClient()
 
     // Delete related records first (FK constraints)
-    for (const table of ['comments', 'activity_logs', 'attachments', 'task_assignees', 'task_dependencies']) {
-      await supabase.from(table).delete().in('task_id', taskIds)
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+    await db.from('comments').delete().in('task_id', taskIds)
+    await db.from('activity_logs').delete().in('task_id', taskIds)
+    await db.from('attachments').delete().in('task_id', taskIds)
+    await db.from('task_assignees').delete().in('task_id', taskIds)
+    await db.from('task_dependencies').delete().in('task_id', taskIds)
 
     // Delete the tasks
-    const { error, count } = await supabase
+    const { error, count } = await db
       .from('tasks')
       .delete()
       .in('id', taskIds)
