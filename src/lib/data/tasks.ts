@@ -19,7 +19,7 @@ import type {
   PaginationParams,
   PaginatedResult,
 } from '@/types/task'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Activity log helper
@@ -70,7 +70,7 @@ export async function getTasks(
   filters?: TaskFilters,
   pagination?: PaginationParams
 ): Promise<PaginatedResult<TaskWithRelations>> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockTasks } = await import('@/lib/mock/handlers')
     const all = getMockTasks(filters)
     if (pagination) {
@@ -165,7 +165,7 @@ export async function getTasks(
 // ---------------------------------------------------------------------------
 
 export async function getWaitingTaskCount(): Promise<number> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockTasks } = await import('@/lib/mock/handlers')
     const all = getMockTasks()
     return all.filter((t) => t.status === 'waiting').length
@@ -189,7 +189,7 @@ export async function getWaitingTaskCount(): Promise<number> {
 export async function getTaskById(
   id: string
 ): Promise<TaskWithRelations | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockTaskById } = await import('@/lib/mock/handlers')
     return getMockTaskById(id)
   }
@@ -220,7 +220,7 @@ export async function createTask(
   step1: TaskFormStep1,
   step2?: TaskFormStep2
 ): Promise<Task> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { createMockTask } = await import('@/lib/mock/handlers')
     return createMockTask(step1, step2)
   }
@@ -289,7 +289,7 @@ export async function createTask(
 export async function getSubtasks(
   parentId: string
 ): Promise<TaskWithRelations[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockSubtasks } = await import('@/lib/mock/handlers')
     return getMockSubtasks(parentId)
   }
@@ -317,7 +317,7 @@ export async function updateTask(
   id: string,
   data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'template_data'>>
 ): Promise<Task> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockTask } = await import('@/lib/mock/handlers')
     return updateMockTask(id, data)
   }
@@ -353,7 +353,7 @@ export async function updateTaskProgress(
   id: string,
   update: TaskProgressUpdate
 ): Promise<Task> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockTaskProgress } = await import('@/lib/mock/handlers')
     return updateMockTaskProgress(id, update)
   }
@@ -398,7 +398,7 @@ export async function assignTask(
   id: string,
   data: TaskFormStep2
 ): Promise<Task> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { assignMockTask } = await import('@/lib/mock/handlers')
     return assignMockTask(id, data)
   }
@@ -482,7 +482,7 @@ export async function bulkUpdateTaskStatus(
   taskIds: string[],
   status: TaskStatus
 ): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { bulkUpdateMockTaskStatus } = await import('@/lib/mock/handlers')
     return bulkUpdateMockTaskStatus(taskIds, status)
   }
@@ -503,7 +503,7 @@ export async function bulkUpdateTaskStatus(
 // ---------------------------------------------------------------------------
 
 export async function bulkAssignTasks(taskIds: string[], userId: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { bulkAssignMockTasks } = await import('@/lib/mock/handlers')
     return bulkAssignMockTasks(taskIds, userId)
   }
@@ -537,7 +537,7 @@ export async function cloneTask(taskId: string): Promise<Task> {
 // ---------------------------------------------------------------------------
 
 export async function bulkDeleteTasks(taskIds: string[], force = false): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { bulkDeleteMockTasks } = await import('@/lib/mock/handlers')
     return bulkDeleteMockTasks(taskIds)
   }
@@ -558,7 +558,7 @@ export async function bulkDeleteTasks(taskIds: string[], force = false): Promise
 // ---------------------------------------------------------------------------
 
 export async function deleteAttachmentRecord(attachmentId: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockAttachment } = await import('@/lib/mock/handlers')
     deleteMockAttachment(attachmentId)
     return
@@ -574,7 +574,7 @@ export async function deleteAttachmentRecord(attachmentId: string): Promise<void
 // ---------------------------------------------------------------------------
 
 export async function getComments(taskId: string): Promise<Comment[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockComments } = await import('@/lib/mock/handlers')
     return getMockComments(taskId)
   }
@@ -600,7 +600,7 @@ export async function addComment(
   taskId: string,
   body: string
 ): Promise<Comment> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { addMockComment } = await import('@/lib/mock/handlers')
     return addMockComment(taskId, body)
   }
@@ -632,7 +632,7 @@ export async function addComment(
 // ---------------------------------------------------------------------------
 
 export async function getActivityLogs(taskId: string): Promise<ActivityLog[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockActivityLogs } = await import('@/lib/mock/handlers')
     return getMockActivityLogs(taskId)
   }
@@ -658,7 +658,7 @@ export async function addAttachmentRecord(
   taskId: string,
   file: { file_name: string; file_size: number; mime_type: string; storage_path: string }
 ): Promise<Attachment> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { addMockAttachment } = await import('@/lib/mock/handlers')
     return addMockAttachment(taskId, file)
   }
@@ -693,7 +693,7 @@ export async function addAttachmentRecord(
 // ---------------------------------------------------------------------------
 
 export async function getAttachments(taskId: string): Promise<Attachment[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockAttachments } = await import('@/lib/mock/handlers')
     return getMockAttachments(taskId)
   }
@@ -722,7 +722,7 @@ export interface ActivityLogWithTask extends ActivityLog {
 export async function getRecentActivityLogs(
   limit = 5
 ): Promise<ActivityLogWithTask[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockRecentActivityLogs } = await import('@/lib/mock/handlers')
     return getMockRecentActivityLogs(limit)
   }

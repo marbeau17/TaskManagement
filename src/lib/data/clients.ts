@@ -3,14 +3,14 @@
 // =============================================================================
 
 import type { Client } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getClients
 // ---------------------------------------------------------------------------
 
 export async function getClients(): Promise<Client[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockClients } = await import('@/lib/mock/handlers')
     return getMockClients()
   }
@@ -36,7 +36,7 @@ export async function getClients(): Promise<Client[]> {
 // ---------------------------------------------------------------------------
 
 export async function createClient(name: string): Promise<Client> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { createMockClient } = await import('@/lib/mock/handlers')
     return createMockClient(name)
   }
@@ -59,7 +59,7 @@ export async function createClient(name: string): Promise<Client> {
 // ---------------------------------------------------------------------------
 
 export async function updateClient(id: string, name: string): Promise<Client> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockClient } = await import('@/lib/mock/handlers')
     return updateMockClient(id, name)
   }
@@ -83,7 +83,7 @@ export async function updateClient(id: string, name: string): Promise<Client> {
 // ---------------------------------------------------------------------------
 
 export async function deleteClient(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockClient } = await import('@/lib/mock/handlers')
     return deleteMockClient(id)
   }
@@ -105,7 +105,7 @@ export async function deleteClient(id: string): Promise<boolean> {
 // ---------------------------------------------------------------------------
 
 export async function searchClients(query: string): Promise<Client[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { searchMockClients } = await import('@/lib/mock/handlers')
     return searchMockClients(query)
   }

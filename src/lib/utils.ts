@@ -19,7 +19,7 @@ export function cn(...inputs: ClassValue[]) {
  * has been configured.  If NEXT_PUBLIC_SUPABASE_URL is missing, empty, or
  * contains the word "placeholder", we fall back to mock data.
  */
-export function useMock(): boolean {
+export function isMockMode(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   return !url || url === '' || url.includes('placeholder')
 }

@@ -3,7 +3,7 @@
 // Switches between mock handlers and Supabase depending on Supabase URL config
 // =============================================================================
 
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import type { TaskTemplate, TemplateField } from '@/types/template'
 
 // ---------------------------------------------------------------------------
@@ -11,7 +11,7 @@ import type { TaskTemplate, TemplateField } from '@/types/template'
 // ---------------------------------------------------------------------------
 
 export async function getTemplates(): Promise<TaskTemplate[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockTemplates } = await import('@/lib/mock/handlers')
     return getMockTemplates()
   }
@@ -37,7 +37,7 @@ export async function getTemplates(): Promise<TaskTemplate[]> {
 // ---------------------------------------------------------------------------
 
 export async function getTemplateById(id: string): Promise<TaskTemplate | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockTemplateById } = await import('@/lib/mock/handlers')
     return getMockTemplateById(id)
   }
@@ -71,7 +71,7 @@ export async function createTemplate(data: {
   category: string
   fields: TemplateField[]
 }): Promise<TaskTemplate> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { createMockTemplate } = await import('@/lib/mock/handlers')
     return createMockTemplate(data)
   }
@@ -111,7 +111,7 @@ export async function updateTemplate(
   id: string,
   data: Partial<TaskTemplate>
 ): Promise<TaskTemplate> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockTemplate } = await import('@/lib/mock/handlers')
     return updateMockTemplate(id, data)
   }
@@ -145,7 +145,7 @@ export async function updateTemplate(
 // ---------------------------------------------------------------------------
 
 export async function deleteTemplate(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockTemplate } = await import('@/lib/mock/handlers')
     return deleteMockTemplate(id)
   }

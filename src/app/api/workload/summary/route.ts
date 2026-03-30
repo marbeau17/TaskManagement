@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 export async function GET() {
   try {
-    if (useMock()) {
+    if (isMockMode()) {
       const { getMockWorkloadSummaries, getMockWorkloadKpi } = await import(
         '@/lib/mock/handlers'
       )

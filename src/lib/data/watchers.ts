@@ -4,7 +4,7 @@
 // =============================================================================
 
 import type { TaskWatcher } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Mock in-memory store
@@ -18,7 +18,7 @@ let mockIdCounter = 1
 // ---------------------------------------------------------------------------
 
 export async function getWatchers(taskId: string): Promise<TaskWatcher[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { mockUsers } = await import('@/lib/mock/data')
     return mockWatchers
       .filter((w) => w.task_id === taskId)
@@ -49,7 +49,7 @@ export async function addWatcher(
   taskId: string,
   userId: string,
 ): Promise<TaskWatcher> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { mockUsers } = await import('@/lib/mock/data')
     // Prevent duplicates in mock mode
     const existing = mockWatchers.find(
@@ -89,7 +89,7 @@ export async function removeWatcher(
   taskId: string,
   userId: string,
 ): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const before = mockWatchers.length
     mockWatchers = mockWatchers.filter(
       (w) => !(w.task_id === taskId && w.user_id === userId),
@@ -118,7 +118,7 @@ export async function isWatching(
   taskId: string,
   userId: string,
 ): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     return mockWatchers.some(
       (w) => w.task_id === taskId && w.user_id === userId,
     )

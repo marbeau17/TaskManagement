@@ -1,4 +1,4 @@
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 export interface Permission {
   role: string
@@ -62,7 +62,7 @@ const DEFAULT_PERMISSIONS: Permission[] = [
 // ---------------------------------------------------------------------------
 
 export async function getPermissions(): Promise<Permission[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return DEFAULT_PERMISSIONS
   }
 

@@ -3,14 +3,14 @@
 // =============================================================================
 
 import type { Project, ProjectFilters } from '@/types/project'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getProjects
 // ---------------------------------------------------------------------------
 
 export async function getProjects(filters?: ProjectFilters): Promise<Project[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockProjects } = await import('@/lib/mock/handlers')
     return getMockProjects(filters)
   }
@@ -47,7 +47,7 @@ export async function getProjects(filters?: ProjectFilters): Promise<Project[]> 
 // ---------------------------------------------------------------------------
 
 export async function getProjectById(id: string): Promise<Project | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockProjectById } = await import('@/lib/mock/handlers')
     return getMockProjectById(id)
   }
@@ -76,7 +76,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
 export async function createProject(
   data: Omit<Project, 'id' | 'next_issue_seq' | 'created_at' | 'updated_at' | 'pm'>
 ): Promise<Project> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { createMockProject } = await import('@/lib/mock/handlers')
     return createMockProject(data)
   }
@@ -103,7 +103,7 @@ export async function updateProject(
   id: string,
   data: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'pm'>>
 ): Promise<Project> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockProject } = await import('@/lib/mock/handlers')
     return updateMockProject(id, data)
   }
@@ -128,7 +128,7 @@ export async function updateProject(
 // ---------------------------------------------------------------------------
 
 export async function deleteProject(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockProject } = await import('@/lib/mock/handlers')
     return deleteMockProject(id)
   }

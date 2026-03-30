@@ -3,7 +3,7 @@
 // =============================================================================
 
 import type { TimeLog, TimeLogSummary } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Mock data helpers
@@ -22,7 +22,7 @@ function getMockTimeLogs(taskId: string): TimeLog[] {
 // ---------------------------------------------------------------------------
 
 export async function getTimeLogs(taskId: string): Promise<TimeLog[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return getMockTimeLogs(taskId)
   }
 
@@ -52,7 +52,7 @@ export interface AddTimeLogData {
 }
 
 export async function addTimeLog(data: AddTimeLogData): Promise<TimeLog> {
-  if (useMock()) {
+  if (isMockMode()) {
     const entry: TimeLog = {
       id: crypto.randomUUID(),
       task_id: data.task_id,
@@ -90,7 +90,7 @@ export async function addTimeLog(data: AddTimeLogData): Promise<TimeLog> {
 // ---------------------------------------------------------------------------
 
 export async function deleteTimeLog(id: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const idx = mockTimeLogs.findIndex((tl) => tl.id === id)
     if (idx >= 0) mockTimeLogs.splice(idx, 1)
     return

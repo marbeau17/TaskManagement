@@ -8,7 +8,7 @@ import {
   markAllAsRead,
 } from '@/lib/data/notifications'
 import { useAuthStore } from '@/stores/authStore'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Default user id for mock mode
@@ -18,7 +18,7 @@ const MOCK_USER_ID = 'u2'
 
 function useUserId(): string | undefined {
   const { user } = useAuthStore()
-  if (useMock()) return user?.id ?? MOCK_USER_ID
+  if (isMockMode()) return user?.id ?? MOCK_USER_ID
   return user?.id
 }
 

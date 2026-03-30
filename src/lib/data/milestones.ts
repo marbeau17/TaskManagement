@@ -3,7 +3,7 @@
 // =============================================================================
 
 import type { Milestone, CreateMilestoneData, UpdateMilestoneData } from '@/types/project'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Mock storage
@@ -47,7 +47,7 @@ let mockMilestones: Milestone[] = [
 // ---------------------------------------------------------------------------
 
 export async function getMilestones(projectId: string): Promise<Milestone[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return mockMilestones
       .filter((m) => m.project_id === projectId)
       .sort((a, b) => {
@@ -76,7 +76,7 @@ export async function getMilestones(projectId: string): Promise<Milestone[]> {
 // ---------------------------------------------------------------------------
 
 export async function getMilestoneById(id: string): Promise<Milestone | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     return mockMilestones.find((m) => m.id === id) ?? null
   }
 
@@ -102,7 +102,7 @@ export async function getMilestoneById(id: string): Promise<Milestone | null> {
 // ---------------------------------------------------------------------------
 
 export async function createMilestone(input: CreateMilestoneData): Promise<Milestone> {
-  if (useMock()) {
+  if (isMockMode()) {
     const now = new Date().toISOString()
     const milestone: Milestone = {
       id: `ms-${Date.now()}`,
@@ -146,7 +146,7 @@ export async function updateMilestone(
   id: string,
   input: UpdateMilestoneData
 ): Promise<Milestone> {
-  if (useMock()) {
+  if (isMockMode()) {
     const idx = mockMilestones.findIndex((m) => m.id === id)
     if (idx === -1) throw new Error('Milestone not found')
     mockMilestones[idx] = {
@@ -177,7 +177,7 @@ export async function updateMilestone(
 // ---------------------------------------------------------------------------
 
 export async function deleteMilestone(id: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     mockMilestones = mockMilestones.filter((m) => m.id !== id)
     return
   }

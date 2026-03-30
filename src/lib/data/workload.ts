@@ -4,7 +4,7 @@
 
 import type { User, Client } from '@/types/database'
 import type { WorkloadSummary, WorkloadKpiData, ResourceLoadData, ResourceLoadEntry } from '@/types/workload'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import { getTaskWeeklyHours } from '@/lib/workload-utils'
 
 // ---------------------------------------------------------------------------
@@ -12,7 +12,7 @@ import { getTaskWeeklyHours } from '@/lib/workload-utils'
 // ---------------------------------------------------------------------------
 
 export async function getWorkloadSummaries(weekStart?: string): Promise<WorkloadSummary[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockWorkloadSummaries } = await import('@/lib/mock/handlers')
     return getMockWorkloadSummaries()
   }
@@ -104,7 +104,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
 // ---------------------------------------------------------------------------
 
 export async function getWorkloadKpi(): Promise<WorkloadKpiData> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockWorkloadKpi } = await import('@/lib/mock/handlers')
     return getMockWorkloadKpi()
   }
@@ -152,7 +152,7 @@ export async function getWorkloadKpi(): Promise<WorkloadKpiData> {
 // ---------------------------------------------------------------------------
 
 export async function getResourceLoadData(): Promise<ResourceLoadData> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockResourceLoadData } = await import('@/lib/mock/handlers')
     return getMockResourceLoadData()
   }

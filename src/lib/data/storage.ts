@@ -3,7 +3,7 @@
 // Switches between mock handlers and Supabase Storage
 // =============================================================================
 
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -59,7 +59,7 @@ export function validateFile(file: File): string | null {
 // ---------------------------------------------------------------------------
 
 export async function deleteFile(path: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     await new Promise((resolve) => setTimeout(resolve, 200))
     return
   }
@@ -83,7 +83,7 @@ export async function uploadFile(
     throw new Error(validationError)
   }
 
-  if (useMock()) {
+  if (isMockMode()) {
     // Simulate a small delay for realism
     await new Promise((resolve) => setTimeout(resolve, 500))
     return {
@@ -103,7 +103,7 @@ export async function uploadFile(
 }
 
 export async function getFileUrl(path: string): Promise<string> {
-  if (useMock()) return '#'
+  if (isMockMode()) return '#'
 
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()

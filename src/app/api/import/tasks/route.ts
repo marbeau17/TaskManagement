@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import type { Client } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (useMock()) {
+    if (isMockMode()) {
       return NextResponse.json(await handleMockImport(importTasks, importClients ?? []))
     }
 

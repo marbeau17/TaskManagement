@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (useMock()) {
+    if (isMockMode()) {
       // In mock mode, use addMockMember handler with default password
       const { addMockMember } = await import('@/lib/mock/handlers')
       const mockMember = addMockMember({

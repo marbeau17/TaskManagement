@@ -3,14 +3,14 @@
 // =============================================================================
 
 import type { IssueRelation, TaskDependency, RelationType } from '@/types/relation'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getIssueRelations
 // ---------------------------------------------------------------------------
 
 export async function getIssueRelations(issueId: string): Promise<IssueRelation[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return []
   }
 
@@ -41,7 +41,7 @@ export async function addIssueRelation(
   targetId: string,
   type: RelationType
 ): Promise<IssueRelation> {
-  if (useMock()) {
+  if (isMockMode()) {
     return {
       id: crypto.randomUUID(),
       source_issue_id: sourceId,
@@ -83,7 +83,7 @@ export async function addIssueRelation(
 // ---------------------------------------------------------------------------
 
 export async function removeIssueRelation(id: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     return
   }
 
@@ -104,7 +104,7 @@ export async function removeIssueRelation(id: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getTaskDependencies(taskId: string): Promise<TaskDependency[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return []
   }
 
@@ -135,7 +135,7 @@ export async function addTaskDependency(
   targetId: string,
   type: RelationType
 ): Promise<TaskDependency> {
-  if (useMock()) {
+  if (isMockMode()) {
     return {
       id: crypto.randomUUID(),
       source_task_id: sourceId,
@@ -172,7 +172,7 @@ export async function addTaskDependency(
 // ---------------------------------------------------------------------------
 
 export async function removeTaskDependency(id: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     return
   }
 

@@ -5,14 +5,14 @@
 import type { User } from '@/types/database'
 import type { InviteMemberForm } from '@/types/member'
 import type { Database } from '@/lib/supabase/types'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getMembers
 // ---------------------------------------------------------------------------
 
 export async function getMembers(): Promise<User[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockMembers } = await import('@/lib/mock/handlers')
     return getMockMembers()
   }
@@ -35,7 +35,7 @@ export async function getMembers(): Promise<User[]> {
 // ---------------------------------------------------------------------------
 
 export async function getMemberById(id: string): Promise<User | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockMemberById } = await import('@/lib/mock/handlers')
     return getMockMemberById(id)
   }
@@ -64,7 +64,7 @@ export async function updateMember(
   id: string,
   updates: Partial<User>
 ): Promise<User> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockMember } = await import('@/lib/mock/handlers')
     return updateMockMember(id, updates)
   }
@@ -103,7 +103,7 @@ export async function updateMember(
 // ---------------------------------------------------------------------------
 
 export async function addMember(data: InviteMemberForm): Promise<User> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { addMockMember } = await import('@/lib/mock/handlers')
     return addMockMember({ ...data, password: 'workflow2026' })
   }
@@ -147,7 +147,7 @@ export async function addMember(data: InviteMemberForm): Promise<User> {
 // ---------------------------------------------------------------------------
 
 export async function deleteMember(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockMember } = await import('@/lib/mock/handlers')
     return deleteMockMember(id)
   }
@@ -174,7 +174,7 @@ export async function changePassword(
   oldPassword: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { changeMockPassword } = await import('@/lib/mock/handlers')
     return changeMockPassword(userId, oldPassword, newPassword)
   }
@@ -216,7 +216,7 @@ export async function forceChangePassword(
   userId: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { forceChangeMockPassword } = await import('@/lib/mock/handlers')
     return forceChangeMockPassword(userId, newPassword)
   }
@@ -284,7 +284,7 @@ export async function loginUser(
   email: string,
   password: string
 ): Promise<User | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { verifyMockPassword } = await import('@/lib/mock/handlers')
     return verifyMockPassword(email, password)
   }

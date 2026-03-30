@@ -3,7 +3,7 @@
 // =============================================================================
 
 import type { Notification, NotificationType } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Mock data store (for mock mode)
@@ -50,7 +50,7 @@ export async function getNotifications(
   userId: string,
   limit = 20
 ): Promise<Notification[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return mockNotifications
       .filter((n) => n.user_id === userId)
       .sort(
@@ -83,7 +83,7 @@ export async function getNotifications(
 // ---------------------------------------------------------------------------
 
 export async function getUnreadCount(userId: string): Promise<number> {
-  if (useMock()) {
+  if (isMockMode()) {
     return mockNotifications.filter(
       (n) => n.user_id === userId && !n.is_read
     ).length
@@ -111,7 +111,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
 // ---------------------------------------------------------------------------
 
 export async function markAsRead(notificationId: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     mockNotifications = mockNotifications.map((n) =>
       n.id === notificationId ? { ...n, is_read: true } : n
     )
@@ -135,7 +135,7 @@ export async function markAsRead(notificationId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function markAllAsRead(userId: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     mockNotifications = mockNotifications.map((n) =>
       n.user_id === userId ? { ...n, is_read: true } : n
     )
@@ -170,7 +170,7 @@ export interface CreateNotificationData {
 export async function createNotification(
   data: CreateNotificationData
 ): Promise<Notification> {
-  if (useMock()) {
+  if (isMockMode()) {
     const newNotif: Notification = {
       id: `notif-${Date.now()}`,
       user_id: data.user_id,

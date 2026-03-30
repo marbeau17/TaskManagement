@@ -1,4 +1,4 @@
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 export interface CustomRole {
   id: string
@@ -7,7 +7,7 @@ export interface CustomRole {
 }
 
 export async function getCustomRoles(): Promise<CustomRole[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return [] // no custom roles in mock
   }
   const { createClient } = await import('@/lib/supabase/client')
@@ -17,7 +17,7 @@ export async function getCustomRoles(): Promise<CustomRole[]> {
 }
 
 export async function addCustomRole(name: string): Promise<CustomRole> {
-  if (useMock()) return { id: crypto.randomUUID(), name, created_at: new Date().toISOString() }
+  if (isMockMode()) return { id: crypto.randomUUID(), name, created_at: new Date().toISOString() }
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
   const { data, error } = await supabase
@@ -30,7 +30,7 @@ export async function addCustomRole(name: string): Promise<CustomRole> {
 }
 
 export async function deleteCustomRole(id: string): Promise<boolean> {
-  if (useMock()) return true
+  if (isMockMode()) return true
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
   const { error } = await supabase.from('custom_roles').delete().eq('id', id)

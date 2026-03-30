@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useComments, useAddComment } from '@/hooks/useTasks'
 import { Avatar, MentionInput, MentionText } from '@/components/shared'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import { useI18n } from '@/hooks/useI18n'
 
 interface CommentSectionProps {
@@ -30,7 +30,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
 
   // Supabase Realtime: auto-refresh comments when a new comment is inserted
   useEffect(() => {
-    if (useMock()) return
+    if (isMockMode()) return
 
     let cleanup: (() => void) | undefined
 

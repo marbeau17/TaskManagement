@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { TaskWithRelations } from '@/types/database'
 import { STATUS_LABELS } from '@/lib/constants'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import { t, type Locale } from '@/lib/i18n/translations'
 
 function escapeCsvValue(value: string): string {
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     let tasks: TaskWithRelations[]
 
-    if (useMock()) {
+    if (isMockMode()) {
       const { getMockTasks } = await import('@/lib/mock/handlers')
       tasks = getMockTasks()
     } else {

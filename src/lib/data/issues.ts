@@ -3,7 +3,7 @@
 // =============================================================================
 
 import type { Issue, IssueStatus, IssueComment, IssueFilters, CreateIssueData } from '@/types/issue'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Valid workflow transitions
@@ -26,7 +26,7 @@ export function isValidTransition(from: IssueStatus, to: IssueStatus): boolean {
 // ---------------------------------------------------------------------------
 
 export async function getIssues(filters?: IssueFilters): Promise<Issue[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockIssues } = await import('@/lib/mock/handlers')
     return getMockIssues(filters)
   }
@@ -78,7 +78,7 @@ export async function getIssues(filters?: IssueFilters): Promise<Issue[]> {
 // ---------------------------------------------------------------------------
 
 export async function getIssueById(id: string): Promise<Issue | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockIssueById } = await import('@/lib/mock/handlers')
     return getMockIssueById(id)
   }
@@ -111,7 +111,7 @@ export async function getIssueById(id: string): Promise<Issue | null> {
 // ---------------------------------------------------------------------------
 
 export async function createIssue(data: CreateIssueData): Promise<Issue> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { createMockIssue } = await import('@/lib/mock/handlers')
     return createMockIssue(data)
   }
@@ -189,7 +189,7 @@ export async function updateIssue(
   id: string,
   data: Partial<Omit<Issue, 'id' | 'created_at' | 'updated_at' | 'reporter' | 'assignee' | 'project' | 'task'>>
 ): Promise<Issue> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockIssue } = await import('@/lib/mock/handlers')
     return updateMockIssue(id, data)
   }
@@ -222,7 +222,7 @@ export async function transitionIssueStatus(
   id: string,
   newStatus: IssueStatus
 ): Promise<Issue> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { transitionMockIssueStatus } = await import('@/lib/mock/handlers')
     return transitionMockIssueStatus(id, newStatus)
   }
@@ -268,7 +268,7 @@ export async function transitionIssueStatus(
 // ---------------------------------------------------------------------------
 
 export async function deleteIssue(id: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { deleteMockIssue } = await import('@/lib/mock/handlers')
     deleteMockIssue(id)
     return
@@ -291,7 +291,7 @@ export async function deleteIssue(id: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getIssueComments(issueId: string): Promise<IssueComment[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockIssueComments } = await import('@/lib/mock/handlers')
     return getMockIssueComments(issueId)
   }
@@ -318,7 +318,7 @@ export async function addIssueComment(
   issueId: string,
   body: string
 ): Promise<IssueComment> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { addMockIssueComment } = await import('@/lib/mock/handlers')
     return addMockIssueComment(issueId, body)
   }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { changePassword } from '@/lib/data/members'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 import type { User } from '@/types/database'
 
 /** Default mock user: director */
@@ -34,7 +34,7 @@ export function useAuth() {
 
   // On mount, check for existing Supabase session (non-mock only)
   useEffect(() => {
-    if (useMock() || user) return
+    if (isMockMode() || user) return
 
     const checkSession = async () => {
       const { createClient } = await import('@/lib/supabase/client')
@@ -88,7 +88,7 @@ export function useAuth() {
 
   const login = useCallback(
     async (email: string, password: string): Promise<User | null> => {
-      if (useMock()) {
+      if (isMockMode()) {
         const { loginUser } = await import('@/lib/data/members')
         const u = await loginUser(email, password)
         if (u) setUser(u)
@@ -159,7 +159,7 @@ export function useAuth() {
   )
 
   const logout = useCallback(async () => {
-    if (!useMock()) {
+    if (!isMockMode()) {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
       await supabase.auth.signOut()
@@ -168,12 +168,12 @@ export function useAuth() {
   }, [setUser])
 
   // For mock mode, auto-init with default director
-  const currentUser = useMock() && !user ? MOCK_DIRECTOR : user
+  const currentUser = isMockMode() && !user ? MOCK_DIRECTOR : user
 
   return {
     user: currentUser,
     isLoading: false,
-    isAuthenticated: useMock() ? true : isAuthenticated,
+    isAuthenticated: isMockMode() ? true : isAuthenticated,
     login,
     logout,
   }

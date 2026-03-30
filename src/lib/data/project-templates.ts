@@ -6,14 +6,14 @@ import type {
   ProjectTemplate,
   ProjectTemplateCreateInput,
 } from '@/types/project'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getProjectTemplates
 // ---------------------------------------------------------------------------
 
 export async function getProjectTemplates(): Promise<ProjectTemplate[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     return getMockProjectTemplates()
   }
 
@@ -37,7 +37,7 @@ export async function getProjectTemplates(): Promise<ProjectTemplate[]> {
 export async function getProjectTemplateById(
   id: string
 ): Promise<ProjectTemplate | null> {
-  if (useMock()) {
+  if (isMockMode()) {
     const templates = await getMockProjectTemplates()
     return templates.find((t) => t.id === id) ?? null
   }
@@ -66,7 +66,7 @@ export async function getProjectTemplateById(
 export async function createProjectTemplate(
   input: ProjectTemplateCreateInput
 ): Promise<ProjectTemplate> {
-  if (useMock()) {
+  if (isMockMode()) {
     return {
       id: crypto.randomUUID(),
       name: input.name,
@@ -216,7 +216,7 @@ export async function createProjectFromTemplate(
 // ---------------------------------------------------------------------------
 
 export async function deleteProjectTemplate(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     return true
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 export async function POST(
   _request: NextRequest,
@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { id } = await params
 
-    if (useMock()) {
+    if (isMockMode()) {
       const { updateMockTask } = await import('@/lib/mock/handlers')
       const task = updateMockTask(id, { status: 'rejected' })
       return NextResponse.json(task)

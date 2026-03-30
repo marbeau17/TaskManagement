@@ -3,14 +3,14 @@
 // =============================================================================
 
 import type { ProjectMember } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // getProjectMembers
 // ---------------------------------------------------------------------------
 
 export async function getProjectMembers(projectName?: string): Promise<ProjectMember[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { getMockProjectMembers } = await import('@/lib/mock/handlers')
     return getMockProjectMembers(projectName)
   }
@@ -44,7 +44,7 @@ export async function addProjectMember(
   memberId: string,
   allocatedHours: number
 ): Promise<ProjectMember> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { addMockProjectMember } = await import('@/lib/mock/handlers')
     return addMockProjectMember(projectName, pmId, memberId, allocatedHours)
   }
@@ -73,7 +73,7 @@ export async function addProjectMember(
 // ---------------------------------------------------------------------------
 
 export async function removeProjectMember(id: string): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { removeMockProjectMember } = await import('@/lib/mock/handlers')
     return removeMockProjectMember(id)
   }
@@ -96,7 +96,7 @@ export async function removeProjectMember(id: string): Promise<boolean> {
 // ---------------------------------------------------------------------------
 
 export async function updateProjectMemberHours(id: string, hours: number): Promise<ProjectMember> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { updateMockProjectMemberHours } = await import('@/lib/mock/handlers')
     return updateMockProjectMemberHours(id, hours)
   }

@@ -4,7 +4,7 @@
 // =============================================================================
 
 import type { TaskAssignee } from '@/types/database'
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Mock in-memory store
@@ -22,7 +22,7 @@ function getMockAssignees(): TaskAssignee[] {
 // ---------------------------------------------------------------------------
 
 export async function getTaskAssignees(taskId: string): Promise<TaskAssignee[]> {
-  if (useMock()) {
+  if (isMockMode()) {
     // In mock mode, return assignees for this task
     // Also populate user data from mock users
     const { mockUsers } = await import('@/lib/mock/data')
@@ -55,7 +55,7 @@ export async function addTaskAssignee(
   taskId: string,
   userId: string
 ): Promise<TaskAssignee> {
-  if (useMock()) {
+  if (isMockMode()) {
     const { mockUsers } = await import('@/lib/mock/data')
     const newAssignee: TaskAssignee = {
       id: `mock-assignee-${mockIdCounter++}`,
@@ -122,7 +122,7 @@ export async function removeTaskAssignee(
   taskId: string,
   userId: string
 ): Promise<boolean> {
-  if (useMock()) {
+  if (isMockMode()) {
     const before = mockAssignees.length
     mockAssignees = mockAssignees.filter(
       (a) => !(a.task_id === taskId && a.user_id === userId)

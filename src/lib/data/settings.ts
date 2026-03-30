@@ -2,7 +2,7 @@
 // Data abstraction layer – App Settings
 // =============================================================================
 
-import { useMock } from '@/lib/utils'
+import { isMockMode } from '@/lib/utils'
 
 // localStorage-backed store for mock mode (persists across reloads)
 function getMockSettings(): Record<string, string> {
@@ -27,7 +27,7 @@ interface SettingRow {
 // ---------------------------------------------------------------------------
 
 export async function getSetting(key: string): Promise<string> {
-  if (useMock()) {
+  if (isMockMode()) {
     return getMockSettings()[key] ?? ''
   }
 
@@ -52,7 +52,7 @@ export async function getSetting(key: string): Promise<string> {
 // ---------------------------------------------------------------------------
 
 export async function setSetting(key: string, value: string): Promise<void> {
-  if (useMock()) {
+  if (isMockMode()) {
     const settings = getMockSettings()
     settings[key] = value
     setMockSettings(settings)
@@ -74,7 +74,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getAllSettings(): Promise<Record<string, string>> {
-  if (useMock()) {
+  if (isMockMode()) {
     return { ...getMockSettings() }
   }
 
