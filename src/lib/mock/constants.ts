@@ -33,4 +33,5 @@ export const BASE_CLIENTS: Client[] = [
   { id: 'c25', name: '株式会社プレブ', created_at: '2025-01-01T00:00:00' },
   { id: 'c26', name: '株式会社武居商店', created_at: '2025-01-01T00:00:00' },
   { id: 'c27', name: '葉山家具', created_at: '2025-01-01T00:00:00' },
+  { id: 'c-unset', name: '', created_at: '2020-01-01T00:00:00' },
 ]

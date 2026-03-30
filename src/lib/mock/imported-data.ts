@@ -301,7 +301,7 @@ function csvRowToTask(row: CsvRow, index: number): {
 
   const task: Task = {
     id: taskId,
-    client_id: client?.id ?? 'c1', // fallback to first client if none specified
+    client_id: client?.id ?? 'c-unset', // fallback to unset client if none specified
     project_id: null,
     title: row.タスク名 || `(無題タスク ${index + 1})`,
     description,
@@ -395,9 +395,10 @@ function buildFromRows(rows: CsvRow[]): void {
     const { task } = csvRowToTask(rows[i], i)
 
     // Build TaskWithRelations
+    const UNSET_CLIENT: Client = { id: 'c-unset', name: '', created_at: '2020-01-01T00:00:00' }
     const clientObj = clientRegistry.get(
       [...clientRegistry.entries()].find(([, c]) => c.id === task.client_id)?.[0] ?? ''
-    ) ?? BASE_CLIENTS[0]
+    ) ?? UNSET_CLIENT
 
     const assignedUser = task.assigned_to ? findUserById(task.assigned_to) : null
     const requester = findUserById(task.requested_by)
