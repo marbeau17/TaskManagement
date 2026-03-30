@@ -82,7 +82,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="h-full flex flex-col">
       <Topbar
         title={t('tasks.title')}
         subtitle={t('tasks.totalCount').replace('{count}', String(tasks.length))}

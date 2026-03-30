@@ -27,8 +27,8 @@ const COLUMN_COLORS: Record<TaskStatus, { header: string; dropHighlight: string 
     dropHighlight: 'bg-amber-50/50 dark:bg-amber-950/20',
   },
   todo: {
-    header: 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700',
-    dropHighlight: 'bg-slate-50/50 dark:bg-slate-800/20',
+    header: 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600',
+    dropHighlight: 'bg-slate-50/50 dark:bg-slate-700/20',
   },
   in_progress: {
     header: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800',
@@ -296,7 +296,6 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
   return (
     <div
       className="flex gap-[12px] overflow-x-auto pb-[8px]"
-      style={{ minHeight: 'calc(100vh - 300px)' }}
     >
       {COLUMNS.map((status) => (
         <div
