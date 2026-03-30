@@ -1,0 +1,76 @@
+TestID,Category,Feature,Test Case Name,Preconditions,Steps,Expected Result,Priority,Related Spec
+TC-001,Auth,Login,Normal Login,Login page is displayed,"1. Enter o.yasuda@meetsc.co.jp in email field 2. Enter workflow2026 in password field 3. Click Login button",Redirects to dashboard. Sidebar shows ""安田 修"" (Yasuda Osamu),High,SPEC_AUTH
+TC-002,Auth,Login,Auto-fill Button,Login page is displayed,1. Click ""Auto-fill login info"" button,Email and password fields are auto-populated,Medium,SPEC_AUTH
+TC-003,Auth,Login,Validation (Empty Fields),Login page is displayed,1. Click Login button without entering anything,Validation error messages are displayed,High,SPEC_AUTH
+TC-004,Auth,Logout,Normal Logout,Logged in to dashboard,"1. Click username at bottom of sidebar 2. Select Logout",Redirects to login page,High,SPEC_AUTH
+TC-005,Auth,Password Change,Forced Password Change,User with must_change_password=true,1. Log in with such user,Redirected to password change page. Direct URL access to other pages also redirects to change page,High,SPEC_PASSWORD_CHANGE
+TC-006,Dashboard,KPI Display,KPI Cards Display,Logged in,1. Open dashboard page,"4 KPI cards displayed (This week's tasks, Awaiting assignment, Completion rate, Overdue)",High,SPECIFICATION
+TC-007,Dashboard,Period Toggle,Period Toggle Buttons,Dashboard is displayed,"1. Click ""This Week"" ""This Month"" ""All"" in sequence",KPI numbers and displayed data change according to selected period,Medium,SPECIFICATION
+TC-008,Dashboard,Tab Switch,Creator/Client Tab Switch,Dashboard is displayed,"1. Click ""By Creator"" tab 2. Click ""By Client"" tab",Workload/task list changes according to selected tab,Medium,SPECIFICATION
+TC-009,Dashboard,Burndown,Burndown Chart Display,Dashboard is displayed,1. Scroll down to burndown chart section,Ideal line and actual line are displayed,Medium,SRS_REQ-24
+TC-010,Dashboard,Est vs Actual,Estimate vs Actual Chart,Dashboard is displayed,1. Check estimate vs actual chart section 2. Toggle between By Client / By Creator,Chart switches and displays accordingly,Medium,B-019
+TC-011,Tasks,List View,Task List Page,Logged in,"1. Click ""Task List"" in sidebar",Task list displayed in table format. Includes migrated tasks (540 items),High,SPECIFICATION
+TC-012,Tasks,View Toggle,List/Kanban/Gantt Toggle,Task list is displayed,"1. Click List button 2. Click Kanban button 3. Click Gantt button","Each view switches correctly. Kanban shows status columns, Gantt shows timeline bars",High,SRS_REQ-07/REQ-03
+TC-013,Tasks,Create,New Task Request (Step 1),Logged in,"1. Click ""+Task Request"" button 2. Enter client name, task name, description, desired deadline 3. Click ""Save Draft""",Task is created and appears in task list,High,SPECIFICATION
+TC-014,Tasks,Assign,Task Assignment (Step 2),Draft task exists,"1. Open task detail 2. Select creator in assignment settings 3. Enter confirmed deadline and estimated hours 4. Click ""Assign & Notify""","Task status changes to ""To Do"". Email notification sent to assignee",High,SPECIFICATION/EMAIL
+TC-015,Tasks,Progress Update,Update Progress Rate,Assigned task exists,"1. Open task detail 2. Set progress slider to 50% 3. Enter actual hours 4. Click Update button","Progress and actual hours are saved. Status changes to ""In Progress""",High,SPECIFICATION
+TC-016,Tasks,Complete,Complete Task,In-progress task exists,"1. Open task detail 2. Click ""Mark as Done"" button","Status changes to ""Done"". Progress becomes 100%",High,SPECIFICATION
+TC-017,Tasks,Reject,Reject Task,In-progress task exists,"1. Open task detail 2. Click ""Reject"" button","Status changes to ""Rejected""",Medium,SPECIFICATION
+TC-018,Tasks,Clone,Clone Task,Task exists,"1. Open task detail 2. Click ""Clone"" button","New task created with title ""Copy of ..."" prefix",Medium,SRS_REQ-13
+TC-019,Tasks,Bulk Operations,Bulk Status Change,Multiple tasks exist,"1. Select multiple checkboxes in task list 2. Click ""Change Status"" in bulk action bar 3. Select ""Done""",All selected tasks change to Done status,Medium,B-022
+TC-020,Tasks,Bulk Operations,Bulk Assign,Multiple tasks exist,"1. Select multiple checkboxes 2. Click ""Assign To"" 3. Select a member",All selected tasks are reassigned to the chosen member,Medium,B-022
+TC-021,Tasks,Bulk Operations,Bulk Delete,Multiple tasks exist,"1. Select multiple checkboxes 2. Click ""Delete"" 3. Click ""Delete"" in confirmation dialog",Selected tasks are deleted from the list,Medium,B-022
+TC-022,Tasks,Search,Task Search (Debounced),Task list is displayed,"1. Type ""banner"" in search field 2. Wait 300ms","Results are filtered to show only tasks containing ""banner""",Medium,B-012
+TC-023,Tasks,Filter,Client Filter,Task list is displayed,1. Select a specific client from dropdown,Only tasks for the selected client are displayed,Medium,SPECIFICATION
+TC-024,Tasks,CSV Export,Task CSV Export,Task list is displayed,"1. Click ""CSV Export"" button","CSV file downloads. No garbled Japanese characters (UTF-8 with BOM)",Medium,B-017
+TC-025,Tasks,Subtasks,Create Subtask,Task detail is displayed,"1. Click ""Add"" in subtask section 2. Enter title 3. Click Add button",Subtask is created with auto-assigned WBS code,Medium,SRS_REQ-02
+TC-026,Tasks,Dependencies,Add Dependency,Task detail is displayed,"1. Click ""Add"" in dependencies section 2. Select relation type (e.g. Blocks) 3. Search and select target task",Dependency relationship is displayed,Medium,SRS_REQ-12
+TC-027,Tasks,Watchers,Watch/Unwatch Toggle,Task detail is displayed,1. Click the eye icon (Watch) button,Icon changes to ""Watching"" state. Clicking again removes watch,Low,SRS_REQ-10
+TC-028,Tasks,Time Logs,Log Working Hours,Task detail is displayed,"1. Enter hours, date, and description in time log section 2. Click ""Log Hours""",Time entry is recorded. Total hours is updated,Medium,SRS_REQ-17
+TC-029,Tasks,Comments,Post Comment,Task detail is displayed,"1. Enter text in comment field 2. Click ""Send""",Comment is displayed with timestamp and username,Medium,SPECIFICATION
+TC-030,Tasks,@Mention,Mention Input,Comment input field is displayed,"1. Type ""@"" 2. Member name suggestions appear 3. Select a member",@membername is inserted into comment. Highlighted after posting,Medium,SRS_REQ-14
+TC-031,Tasks,Attachments,File Upload,Task detail is displayed,"1. Click ""Attach File"" button 2. Select a file",File is uploaded and shown in attachment list. Files over 10MB show error,Medium,B-004
+TC-032,Clients,List,Client List Display,Logged in,"1. Click ""Clients"" in sidebar","Client list displayed in table format. Includes migrated data (42 companies)",High,SPECIFICATION
+TC-033,Clients,Create,Add Client,Client list is displayed,"1. Click ""+Add Client"" 2. Enter client name 3. Click ""Save""",New client appears in the list,High,SPECIFICATION
+TC-034,Clients,Edit,Rename Client,Client exists,"1. Click Edit button 2. Change name 3. Click ""Save""",Client name is updated,Medium,SPECIFICATION
+TC-035,Clients,Delete,Delete Client,Client without linked tasks exists,"1. Click Delete button 2. Click ""Delete"" in confirmation dialog",Client is deleted. If client has linked tasks: error message is shown,Medium,SPECIFICATION
+TC-036,Projects,List,Project List Display,Logged in,"1. Click ""Projects"" in sidebar","Project cards displayed. Includes migrated data (11 department projects)",High,SPEC_V2
+TC-037,Projects,Create,Create Project,Project list is displayed,"1. Click ""+Create Project"" 2. Enter name, description, PM, start date 3. Click ""Create""",Project is created and appears in card list,High,SPEC_V2
+TC-038,Projects,Detail Tabs,Project Detail Tabs,Project exists,"1. Click a project card 2. Click each tab: Overview/Tasks/Issues/Milestones/Members/Workflow/Custom Fields",Each tab displays its content correctly,High,SPEC_V2
+TC-039,Projects,Milestones,Milestone CRUD,Project detail is displayed,"1. Open Milestones tab 2. Click ""+Add"" to create milestone 3. Click Edit to modify 4. Click Delete to remove",All operations work correctly. Progress bar updates,Medium,SRS_REQ-04
+TC-040,Projects,Member Management,Add/Remove Members,Project detail Members tab,"1. Click ""+Add Member"" 2. Select member and enter allocated hours 3. Add 4. Delete an existing member",Members are added/removed. KPIs update accordingly,Medium,B-006
+TC-041,Issues,List,Issue List Display,Logged in,"1. Click ""Issues"" in sidebar","Issue list displayed with filters (project, type, severity, status, assignee, source)",High,SPEC_V2
+TC-042,Issues,Create,Report Issue,Logged in,"1. Click ""+Report Issue"" 2. Enter project, type, title, severity, description 3. Submit","Issue is created and appears in list. Auto-key assigned (e.g. WEB-5)",High,SPEC_V2
+TC-043,Issues,Detail,Issue Detail View,Issue exists,1. Click an issue,"Detail page shows key, status, severity, assignee, description",Medium,SPEC_V2
+TC-044,Issues,Status Transition,Status Buttons,Issue detail is displayed,"1. Click status transition button (e.g. ""Start Working"")",Status transitions to next stage (Open→In Progress→Resolved→Verified→Closed),Medium,SPEC_V2
+TC-045,Issues,Relations,Add Issue Relation,Issue detail is displayed,"1. Click ""Add"" in related issues section 2. Select relation type 3. Search and select target issue",Relation link is displayed,Low,SRS_REQ-12
+TC-046,Members,List,Member List Display,Logged in,"1. Click ""Members"" in sidebar","Member list displayed in table format (12 members). Roles and status shown",High,SPECIFICATION
+TC-047,Members,Org Chart,Org Chart Tab,Members page is displayed,"1. Click ""Org Chart"" tab",Tree-style organization chart is displayed,Medium,SPECIFICATION
+TC-048,Members,Role Management,Role Management Tab,Members page is displayed,"1. Click ""Role Management"" tab","Built-in roles (admin/director/requester/creator) and custom roles displayed",Medium,SPECIFICATION
+TC-049,Workload,List,Workload Page,Logged in,"1. Click ""Workload"" in sidebar","KPI cards (avg utilization, actual hours, completion rate, overloaded members) and member workload table displayed",High,SPECIFICATION
+TC-050,Workload,Resource Chart,Resource Load Chart,Workload page is displayed,1. Check resource load chart section,Per-member load bars with capacity line are displayed,Medium,SRS_REQ-18
+TC-051,Reports,List,Reports Page,Logged in,"1. Click ""Reports"" in sidebar","KPI cards, completion rate chart, status distribution chart, and client task chart are displayed",High,SRS_REQ-25
+TC-052,Reports,Date Filter,Date Range Toggle,Reports page is displayed,"1. Click ""This Week"" ""This Month"" ""Last 3 Months"" in sequence",Charts and KPIs update according to selected period,Medium,SRS_REQ-25
+TC-053,Templates,List,Template List,Logged in,"1. Click ""Templates"" in sidebar",Task template cards displayed (8 types),Medium,SPEC_TASK_TEMPLATES
+TC-054,Templates,Create,Create Template,Template list is displayed,"1. Click ""+Create"" 2. Define name, category, fields 3. Click ""Save""",Template is created,Medium,SPEC_TASK_TEMPLATES
+TC-055,Settings,General,Save Org Name,Settings page General tab,"1. Change organization name 2. Click ""Save"" 3. Reload page",Changed organization name persists after reload,High,SPECIFICATION
+TC-056,Settings,Theme,Dark Mode Toggle,Settings page Theme tab,"1. Click ""Dark"" button","Entire screen switches to dark mode (background and text colors change)",High,SPECIFICATION
+TC-057,Settings,Theme,Light Mode Toggle,Dark mode is active,"1. Click ""Light"" button",Entire screen switches back to light mode,High,SPECIFICATION
+TC-058,Settings,Language,Switch to English,Settings page Language tab,"1. Select ""EN"" in language toggle","All UI switches to English (menus, labels, buttons, etc.)",High,i18n
+TC-059,Settings,Language,Switch to Japanese,English mode is active,"1. Select ""JP"" in language toggle",All UI switches back to Japanese,High,i18n
+TC-060,Settings,Email,Save SMTP Settings,Settings page Email tab,"1. Enter SMTP Host/Port/User/Password/Sender Name/From Address 2. Click ""Save""","Settings are saved. ""SMTP Configured"" indicator is shown",High,SPEC_EMAIL
+TC-061,Settings,Email,Test Send,SMTP is configured,"1. Click ""Send Test"" button",Test email is sent. Success message is displayed,High,SPEC_EMAIL
+TC-062,Navigation,Sidebar,Navigate All Pages,Logged in,"1. Click each sidebar menu item in order (Dashboard→Task Request→Task List→Issues→Clients→Projects→Workload→Reports→Templates→Members→Settings)",Each page loads correctly without errors,High,SPECIFICATION
+TC-063,Navigation,Global Search,Cmd+K Search,Any page,"1. Press Cmd+K (Mac) or Ctrl+K (Windows) 2. Type a search keyword","Search dialog appears. Results from tasks, projects, clients, etc. are shown",Medium,SRS_REQ-19
+TC-064,Navigation,Notification Bell,Notification List,Logged in,1. Click the notification bell icon in header,Notification dropdown appears. Unread count badge is shown,Medium,B-005
+TC-065,Responsive,Mobile,Mobile Layout,Mobile device or DevTools,"1. Resize to 375px width 2. Tap hamburger menu 3. Check each page","Hamburger menu appears. Tables switch to card view. Modals fit screen width",Medium,SPEC_RESPONSIVE
+TC-066,Responsive,Tablet,Tablet Layout,Tablet device or DevTools,1. Resize to 768px width 2. Check sidebar,Sidebar collapses to 56px icon-only width,Medium,SPEC_RESPONSIVE
+TC-067,Migration,Task Count,Verify Migrated Tasks,Logged in,1. Open task list page 2. Select All Periods filter,Migrated 540 tasks + existing tasks are displayed. Task titles contain SharePoint data,High,MIGRATION
+TC-068,Migration,Clients,Verify Migrated Clients,Logged in,1. Open client list,"Migrated 42 companies are displayed (Idemitsu Kosan, SPINDLE, etc.)",High,MIGRATION
+TC-069,Migration,Status,Verify Status Mapping,Migrated tasks exist,1. Check each status tab in task list,"Mapping is correct: Completed→Done, Inprogress→In Progress, NotStarted→To Do, Dropped→Rejected",Medium,MIGRATION
+TC-070,Migration,Owners,Verify Owner Mapping,Migrated tasks exist,1. Open a migrated task detail 2. Check assignment info,SharePoint Owner field is correctly mapped to system users,Medium,MIGRATION
+TC-071,Migration,Import,CSV Import Page,Logged in,"1. Click ""Import"" in sidebar 2. Upload a CSV file 3. Review column mapping 4. Click ""Import""",CSV data is correctly imported into the system,Medium,MIGRATION
+TC-072,Security,RBAC,Permission Control (Admin),Logged in as admin user,"1. Check all pages 2. Verify create/edit/delete buttons are visible",All action buttons are displayed,Medium,SRS_REQ-27
+TC-073,Security,RBAC,Permission Control (Creator),Logged in as creator user,"1. Check all pages 2. Verify admin-only buttons are hidden","Member invite/delete and other admin actions are hidden",Medium,SRS_REQ-27
+TC-074,Performance,Page Load,Skeleton Loaders,Any page,1. Open each page 2. Observe loading state,Skeleton pulse animation is shown before data loads,Low,B-014
+TC-075,Performance,Pagination,Task Pagination,Task list has many tasks,1. Open task list 2. Use pagination controls to navigate to next page,Page switches and data updates correctly,Medium,B-011
