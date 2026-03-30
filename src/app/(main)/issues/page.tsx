@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Topbar } from '@/components/layout'
-import { Avatar, FilterBar, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
+import { Avatar, FilterBar, Pagination, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
 import { useIssues, useDeleteIssue } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
@@ -31,6 +31,8 @@ export default function IssuesPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [assigneeFilter, setAssigneeFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   const filters: IssueFilters = useMemo(() => ({
     search: search || undefined,
@@ -55,6 +57,18 @@ export default function IssuesPage() {
     () => (members ?? []).filter((m) => m.is_active).map((m) => ({ label: m.name, value: m.id })),
     [members]
   )
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters])
+
+  const paginatedIssues = useMemo(() => {
+    if (!issues) return []
+    if (pageSize === 0) return issues
+    const start = (currentPage - 1) * pageSize
+    return issues.slice(start, start + pageSize)
+  }, [issues, currentPage, pageSize])
 
   return (
     <>
@@ -144,6 +158,16 @@ export default function IssuesPage() {
           />
         </div>
 
+        <div className="mb-[16px]">
+          <Pagination
+            page={currentPage}
+            pageSize={pageSize}
+            totalCount={issues?.length ?? 0}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-[40px] text-[13px] text-text3">
@@ -159,7 +183,7 @@ export default function IssuesPage() {
                 {t('issues.notFound')}
               </div>
             )}
-            {issues?.map((issue) => (
+            {paginatedIssues.map((issue) => (
               <div
                 key={issue.id}
                 onClick={() => router.push(`/issues/${issue.id}`)}
@@ -215,7 +239,7 @@ export default function IssuesPage() {
                       </td>
                     </tr>
                   )}
-                  {issues?.map((issue) => (
+                  {paginatedIssues.map((issue) => (
                     <tr
                       key={issue.id}
                       onClick={() => router.push(`/issues/${issue.id}`)}

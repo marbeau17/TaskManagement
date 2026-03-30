@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Topbar } from '@/components/layout'
+import { Pagination } from '@/components/shared'
 import {
   useClients,
   useCreateClient,
@@ -139,6 +140,9 @@ export default function ClientsPage() {
   const updateMutation = useUpdateClient()
   const deleteMutation = useDeleteClient()
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [deletingClient, setDeletingClient] = useState<Client | null>(null)
@@ -163,6 +167,13 @@ export default function ClientsPage() {
     setModalMode(null)
     setEditingClient(null)
   }
+
+  const paginatedClients = useMemo(() => {
+    if (!clients) return []
+    if (pageSize === 0) return clients
+    const start = (currentPage - 1) * pageSize
+    return clients.slice(start, start + pageSize)
+  }, [clients, currentPage, pageSize])
 
   const [deleteError, setDeleteError] = useState('')
 
@@ -203,6 +214,16 @@ export default function ClientsPage() {
           </p>
         </div>
 
+        <div className="mb-[12px]">
+          <Pagination
+            page={currentPage}
+            pageSize={pageSize}
+            totalCount={clients?.length ?? 0}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+
         <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
           {/* Header */}
           <div className="min-w-[400px] grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
@@ -217,7 +238,7 @@ export default function ClientsPage() {
               {t('common.loading')}
             </div>
           ) : (
-            clients?.map((client) => (
+            paginatedClients?.map((client) => (
               <div
                 key={client.id}
                 className="min-w-[400px] grid grid-cols-[1fr_100px_120px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"

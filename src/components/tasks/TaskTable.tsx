@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { TaskWithRelations } from '@/types/database'
-import { Avatar, ProgressBar, StatusChip } from '@/components/shared'
+import { Avatar, Pagination, ProgressBar, StatusChip } from '@/components/shared'
 import { formatDate, formatHours } from '@/lib/utils'
 import { isOverdue } from '@/lib/date-utils'
 import { isToday } from 'date-fns'
@@ -29,7 +29,6 @@ const COLUMN_KEYS = [
   'tasks.col.status',
 ] as const
 
-const PAGE_SIZE = 20
 
 /** Inline component to render subtask rows when a parent is expanded */
 function SubtaskRows({
@@ -189,6 +188,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
   const { can } = usePermission()
   const deleteTask = useBulkDeleteTasks()
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   const toggleExpand = useCallback((taskId: string, e: React.MouseEvent) => {
@@ -221,15 +221,16 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
   const selectable = !!onSelectionChange
   const selected = selectedIds ?? new Set<string>()
 
-  const totalPages = Math.max(1, Math.ceil(rootTasks.length / PAGE_SIZE))
+  const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(rootTasks.length / pageSize))
 
   // Reset to page 1 if tasks change and current page is out of bounds
   const safePage = currentPage > totalPages ? 1 : currentPage
 
   const pagedTasks = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE
-    return rootTasks.slice(start, start + PAGE_SIZE)
-  }, [rootTasks, safePage])
+    if (pageSize === 0) return rootTasks
+    const start = (safePage - 1) * pageSize
+    return rootTasks.slice(start, start + pageSize)
+  }, [rootTasks, safePage, pageSize])
 
   // Reset page when tasks array identity changes (filters applied)
   const [prevTasksLen, setPrevTasksLen] = useState(rootTasks.length)
@@ -267,6 +268,15 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
 
   return (
     <div>
+      {/* Pagination */}
+      <Pagination
+        page={safePage}
+        pageSize={pageSize}
+        totalCount={rootTasks.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
+
       {/* Mobile card view */}
       <div className="md:hidden">
         {pagedTasks.length === 0 && (
@@ -589,38 +599,6 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
         </table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-[12px] py-[12px] border-t border-wf-border">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={safePage <= 1}
-            className="
-              h-[30px] px-[12px] rounded-[6px] text-[12px] font-semibold
-              border border-wf-border text-text2
-              hover:bg-surf2 transition-colors
-              disabled:opacity-40 disabled:cursor-not-allowed
-            "
-          >
-            {t('tasks.prevPage')}
-          </button>
-          <span className="text-[12px] text-text2">
-            {t('tasks.pageInfo').replace('{current}', String(safePage)).replace('{total}', String(totalPages))}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage >= totalPages}
-            className="
-              h-[30px] px-[12px] rounded-[6px] text-[12px] font-semibold
-              border border-wf-border text-text2
-              hover:bg-surf2 transition-colors
-              disabled:opacity-40 disabled:cursor-not-allowed
-            "
-          >
-            {t('tasks.nextPage')}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

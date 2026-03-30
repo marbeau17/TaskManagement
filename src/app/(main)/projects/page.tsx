@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Topbar } from '@/components/layout'
-import { Avatar, ProgressBar, FilterBar } from '@/components/shared'
+import { Avatar, ProgressBar, FilterBar, Pagination } from '@/components/shared'
 import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { useMembers } from '@/hooks/useMembers'
 import { useTasks } from '@/hooks/useTasks'
@@ -240,6 +240,8 @@ export default function ProjectsPage() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   const { data: projects, isLoading } = useProjects()
   const { data: members } = useMembers()
@@ -267,6 +269,12 @@ export default function ProjectsPage() {
 
     return result
   }, [projects, statusFilter, search])
+
+  const paginatedProjects = useMemo(() => {
+    if (pageSize === 0) return filteredProjects
+    const start = (currentPage - 1) * pageSize
+    return filteredProjects.slice(start, start + pageSize)
+  }, [filteredProjects, currentPage, pageSize])
 
   // Compute task/issue counts per project
   const projectStats = useMemo(() => {
@@ -345,6 +353,16 @@ export default function ProjectsPage() {
           />
         </div>
 
+        <div className="mb-[12px]">
+          <Pagination
+            page={currentPage}
+            pageSize={pageSize}
+            totalCount={filteredProjects.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-[40px] text-[13px] text-text3">
@@ -361,7 +379,7 @@ export default function ProjectsPage() {
 
         {/* Project grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
-          {filteredProjects.map((project) => {
+          {paginatedProjects.map((project) => {
             const stats = projectStats[project.id] ?? { taskCount: 0, doneCount: 0, issueCount: 0 }
             const completionRate = stats.taskCount > 0
               ? Math.round((stats.doneCount / stats.taskCount) * 100)

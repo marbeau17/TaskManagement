@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Topbar } from '@/components/layout'
-import { Avatar, RoleChip } from '@/components/shared'
+import { Avatar, RoleChip, Pagination } from '@/components/shared'
 import { useMembers } from '@/hooks/useMembers'
 import { updateMember } from '@/lib/data/members'
 import { ROLE_LABELS, getRoleLabel } from '@/lib/constants'
@@ -446,6 +446,8 @@ export default function MembersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [deletingMember, setDeletingMember] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error'
     message: string
@@ -468,6 +470,13 @@ export default function MembersPage() {
       setDeletingMember(null)
     }
   }
+
+  const paginatedMembers = useMemo(() => {
+    if (!members) return []
+    if (pageSize === 0) return members
+    const start = (currentPage - 1) * pageSize
+    return members.slice(start, start + pageSize)
+  }, [members, currentPage, pageSize])
 
   const activeCount = members?.filter((m) => m.is_active).length ?? 0
   const totalCount = members?.length ?? 0
@@ -537,6 +546,16 @@ export default function MembersPage() {
               </p>
             </div>
 
+            <div className="mb-[12px]">
+              <Pagination
+                page={currentPage}
+                pageSize={pageSize}
+                totalCount={members?.length ?? 0}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </div>
+
             <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
               {/* Header */}
               <div className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
@@ -554,7 +573,7 @@ export default function MembersPage() {
                   {t('common.loading')}
                 </div>
               ) : (
-                members?.map((member) => (
+                paginatedMembers?.map((member) => (
                   <div
                     key={member.id}
                     className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
