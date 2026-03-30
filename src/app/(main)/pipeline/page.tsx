@@ -103,6 +103,34 @@ export default function PipelinePage() {
     else toast.error('削除に失敗しました')
   }
 
+  const duplicateOpp = async (source: PipelineOpportunity) => {
+    const maxSeq = opportunities.reduce((max, o) => Math.max(max, o.seq_id), 0)
+    const res = await fetch('/api/pipeline', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seq_id: maxSeq + 1, is_new: source.is_new,
+        client_name: source.client_name, referral_source: source.referral_source,
+        opportunity_name: source.opportunity_name, sub_opportunity: source.sub_opportunity,
+        status: source.status, probability: source.probability, cm_percent: source.cm_percent,
+        pm_user_id: source.pm_user_id, consultant1_user_id: source.consultant1_user_id, consultant2_user_id: source.consultant2_user_id,
+      }),
+    }).catch(() => null)
+    if (!res?.ok) { toast.error('複製に失敗しました'); return }
+    const newOpp = await res.json()
+    // Copy monthly data
+    const monthlyRows = (source.monthly ?? []).filter((m) => m.revenue > 0).map((m) => ({
+      opportunity_id: newOpp.id, month: m.month, revenue: m.revenue,
+    }))
+    if (monthlyRows.length > 0) {
+      await fetch('/api/pipeline/monthly', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(monthlyRows),
+      }).catch(() => null)
+    }
+    await fetchData()
+    toast.success('複製しました')
+  }
+
   const getMonthRevenue = (opp: PipelineOpportunity, month: string) => opp.monthly?.find((m) => m.month === month)?.revenue ?? 0
   const getTotal = (opp: PipelineOpportunity) => (opp.monthly ?? []).reduce((s, m) => s + (m.revenue ?? 0), 0)
   const activeMembers = members?.filter((m) => m.is_active) ?? []
@@ -204,8 +232,11 @@ export default function PipelinePage() {
                   <tr><td colSpan={26} className="text-center py-[20px] text-text3">{t('pipeline.noData')}</td></tr>
                 ) : opportunities.map((opp) => (
                   <tr key={opp.id} className="border-b border-border2 hover:bg-surf2/30">
-                    <td className="px-[2px] py-[3px] sticky left-0 bg-surface z-10 text-center">
-                      <button onClick={() => deleteOpp(opp.id, opp.client_name + ' ' + opp.opportunity_name)} className="text-[10px] text-text3 hover:text-danger transition-colors" title="削除">✕</button>
+                    <td className="px-[1px] py-[3px] sticky left-0 bg-surface z-10 text-center">
+                      <div className="flex items-center gap-[2px]">
+                        <button onClick={() => duplicateOpp(opp)} className="text-[10px] text-text3 hover:text-mint transition-colors" title="複製">⧉</button>
+                        <button onClick={() => deleteOpp(opp.id, opp.client_name + ' ' + opp.opportunity_name)} className="text-[10px] text-text3 hover:text-danger transition-colors" title="削除">✕</button>
+                      </div>
                     </td>
                     <td className="px-[4px] py-[3px] text-text3 sticky left-[24px] bg-surface z-10">{opp.seq_id}</td>
                     <td className="px-[6px] py-[3px]"><input type="checkbox" checked={opp.is_new} onChange={(e) => updateField(opp.id, 'is_new', e.target.checked)} className="accent-mint w-[12px] h-[12px]" /></td>
