@@ -56,10 +56,19 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  // Load saved Gemini API key from database on mount
+  // Load saved settings from database on mount
   useEffect(() => {
     getSetting('gemini_api_key').then((val) => {
       if (val) setGeminiApiKey(val)
+    })
+    getSetting('org_name').then((val) => {
+      if (val) setOrgName(val)
+    })
+    getSetting('workload_warning_threshold').then((val) => {
+      if (val) setWarningThreshold(val)
+    })
+    getSetting('workload_danger_threshold').then((val) => {
+      if (val) setDangerThreshold(val)
     })
   }, [])
 
@@ -86,10 +95,12 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Persist Gemini API key to app_settings
-      if (geminiApiKey) {
-        await setSetting('gemini_api_key', geminiApiKey)
-      }
+      await Promise.all([
+        setSetting('org_name', orgName),
+        setSetting('workload_warning_threshold', warningThreshold),
+        setSetting('workload_danger_threshold', dangerThreshold),
+        geminiApiKey ? setSetting('gemini_api_key', geminiApiKey) : Promise.resolve(),
+      ])
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
