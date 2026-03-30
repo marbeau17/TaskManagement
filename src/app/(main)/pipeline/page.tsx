@@ -180,7 +180,8 @@ export default function PipelinePage() {
             <table className="text-left text-[11px]" style={{ tableLayout: 'auto', minWidth: '1900px' }}>
               <thead>
                 <tr className="border-b border-border2 bg-surf2">
-                  <th className="px-[6px] py-[8px] font-semibold text-text2 sticky left-0 bg-surf2 z-10">ID</th>
+                  <th className="px-[4px] py-[8px] font-semibold text-text3 sticky left-0 bg-surf2 z-10 w-[24px]"></th>
+                  <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-10 w-[30px]">ID</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">新</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.client')}</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">{t('pipeline.referral')}</th>
@@ -196,7 +197,6 @@ export default function PipelinePage() {
                     <th key={MONTHS[i]} className="px-[4px] py-[8px] font-semibold text-text2 text-center min-w-[55px]">{l}</th>
                   ))}
                   <th className="px-[6px] py-[8px] font-semibold text-mint text-right">{t('pipeline.total')}</th>
-                  <th className="px-[4px] py-[8px] font-semibold text-text3 text-center w-[30px]"></th>
                 </tr>
               </thead>
               <tbody>
@@ -204,7 +204,10 @@ export default function PipelinePage() {
                   <tr><td colSpan={26} className="text-center py-[20px] text-text3">{t('pipeline.noData')}</td></tr>
                 ) : opportunities.map((opp) => (
                   <tr key={opp.id} className="border-b border-border2 hover:bg-surf2/30">
-                    <td className="px-[6px] py-[3px] text-text3 sticky left-0 bg-surface z-10">{opp.seq_id}</td>
+                    <td className="px-[2px] py-[3px] sticky left-0 bg-surface z-10 text-center">
+                      <button onClick={() => deleteOpp(opp.id, opp.client_name + ' ' + opp.opportunity_name)} className="text-[10px] text-text3 hover:text-danger transition-colors" title="削除">✕</button>
+                    </td>
+                    <td className="px-[4px] py-[3px] text-text3 sticky left-[24px] bg-surface z-10">{opp.seq_id}</td>
                     <td className="px-[6px] py-[3px]"><input type="checkbox" checked={opp.is_new} onChange={(e) => updateField(opp.id, 'is_new', e.target.checked)} className="accent-mint w-[12px] h-[12px]" /></td>
                     <td className="px-[4px] py-[3px]"><input type="text" value={opp.client_name} onChange={(e) => setOpportunities((p) => p.map((o) => o.id === opp.id ? { ...o, client_name: e.target.value } : o))} onBlur={(e) => updateField(opp.id, 'client_name', e.target.value)} className="w-full text-[11px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none" /></td>
                     <td className="px-[4px] py-[3px]"><input type="text" value={opp.referral_source} onChange={(e) => setOpportunities((p) => p.map((o) => o.id === opp.id ? { ...o, referral_source: e.target.value } : o))} onBlur={(e) => updateField(opp.id, 'referral_source', e.target.value)} className="w-full text-[11px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none" /></td>
@@ -230,15 +233,12 @@ export default function PipelinePage() {
                       </td>
                     ))}
                     <td className="px-[6px] py-[3px] text-right font-bold text-mint text-[11px]">{fmtK(getTotal(opp))}</td>
-                    <td className="px-[2px] py-[3px] text-center">
-                      <button onClick={() => deleteOpp(opp.id, opp.client_name + ' ' + opp.opportunity_name)} className="text-[10px] text-text3 hover:text-danger transition-colors" title="削除">✕</button>
-                    </td>
                   </tr>
                 ))}
                 {/* Totals */}
                 {opportunities.length > 0 && (
                   <tr className="border-t-2 border-mint bg-surf2/50 font-bold">
-                    <td colSpan={12} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}</td>
+                    <td colSpan={13} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}</td>
                     {MONTHS.map((m) => <td key={m} className="px-[2px] py-[6px] text-[10px] text-mint text-right">{fmtK(opportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))}</td>)}
                     <td className="px-[6px] py-[6px] text-right text-[12px] text-mint">{fmtK(totalRevenue)}</td>
                     <td></td>
