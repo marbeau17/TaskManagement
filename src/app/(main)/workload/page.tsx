@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useI18n } from '@/hooks/useI18n'
 import { Topbar } from '@/components/layout'
-import { PeriodToggle, TableSkeleton } from '@/components/shared'
+import { Avatar, PeriodToggle, TableSkeleton } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
 import { MemberWorkloadTable } from '@/components/workload/MemberWorkloadTable'
 import { CapacityMatrix } from '@/components/workload/CapacityMatrix'
 import { UtilizationTrend } from '@/components/workload/UtilizationTrend'
 import { useWorkloadKpi, useWorkloadSummaries, useResourceLoadData } from '@/hooks/useWorkload'
+import { useMembers } from '@/hooks/useMembers'
+import { useTasks } from '@/hooks/useTasks'
+import { formatDate } from '@/lib/utils'
 
 const ResourceLoadChart = dynamic(
   () => import('@/components/workload/ResourceLoadChart').then(mod => mod.ResourceLoadChart),
@@ -22,6 +26,9 @@ import { PERIOD_OPTIONS } from '@/lib/constants'
 
 export default function WorkloadPage() {
   const { t } = useI18n()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const creatorId = searchParams.get('creator')
   const [period, setPeriod] = useState('week')
   const [weekOffset, setWeekOffset] = useState(0)
 
@@ -43,10 +50,42 @@ export default function WorkloadPage() {
   const { data: summaries, isLoading: summariesLoading } =
     useWorkloadSummaries(weekStart)
   const { data: resourceData, isLoading: loadingResource } = useResourceLoadData()
+  const { data: members } = useMembers()
+  const { data: allTasks } = useTasks()
+
+  // Find selected member and their data
+  const selectedMember = useMemo(() => {
+    if (!creatorId || !members) return null
+    return members.find((m) => m.id === creatorId) ?? null
+  }, [creatorId, members])
+
+  const memberSummary = useMemo(() => {
+    if (!creatorId || !summaries) return null
+    return summaries.find((s) => s.user.id === creatorId) ?? null
+  }, [creatorId, summaries])
+
+  const memberTasks = useMemo(() => {
+    if (!creatorId || !allTasks) return []
+    return allTasks
+      .filter((t) => t.assigned_to === creatorId && t.status !== 'done' && t.status !== 'rejected')
+      .sort((a, b) => {
+        const da = a.confirmed_deadline ?? a.desired_deadline ?? '9999'
+        const db = b.confirmed_deadline ?? b.desired_deadline ?? '9999'
+        return da.localeCompare(db)
+      })
+  }, [creatorId, allTasks])
 
   return (
     <>
-      <Topbar title={t('workload.title')}>
+      <Topbar title={selectedMember ? `${t('workload.title')} - ${selectedMember.name}` : t('workload.title')}>
+        {creatorId && (
+          <button
+            onClick={() => router.push('/workload')}
+            className="h-[30px] px-[12px] rounded-[6px] text-[12px] font-semibold border border-wf-border text-text2 hover:bg-surf2 transition-colors"
+          >
+            {t('workload.showAll')}
+          </button>
+        )}
         <PeriodToggle
           options={PERIOD_OPTIONS}
           value={period}
@@ -55,6 +94,75 @@ export default function WorkloadPage() {
       </Topbar>
 
       <div className="flex-1 overflow-auto p-[12px] md:p-[20px] space-y-[16px]">
+        {/* Member Detail Card (when specific member selected) */}
+        {selectedMember && (
+          <div className="bg-surface border border-border2 rounded-[10px] shadow p-[16px]">
+            <div className="flex items-start gap-[12px] mb-[12px]">
+              <Avatar name_short={selectedMember.name_short} color={selectedMember.avatar_color} size="md" />
+              <div className="flex-1">
+                <h2 className="text-[16px] font-bold text-text">{selectedMember.name}</h2>
+                <p className="text-[12px] text-text2">{selectedMember.email}</p>
+                <div className="flex items-center gap-[8px] mt-[4px]">
+                  <span className="text-[10px] px-[8px] py-[1px] rounded-full font-semibold border bg-info-bg text-info border-info-b">
+                    {selectedMember.role}
+                  </span>
+                  <span className="text-[11px] text-text2">
+                    {t('workload.capacity')}: {selectedMember.weekly_capacity_hours}h/{t('workload.perWeek')}
+                  </span>
+                </div>
+              </div>
+              {memberSummary && (
+                <div className="text-right">
+                  <div className={`text-[24px] font-bold ${
+                    memberSummary.utilization_rate >= 100 ? 'text-red-500' :
+                    memberSummary.utilization_rate >= 80 ? 'text-amber-500' : 'text-emerald-500'
+                  }`}>
+                    {memberSummary.utilization_rate}%
+                  </div>
+                  <div className="text-[11px] text-text2">{t('workload.utilization')}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Member's tasks */}
+            <h3 className="text-[12px] font-bold text-text2 mb-[8px]">
+              {t('workload.assignedTasks')} ({memberTasks.length})
+            </h3>
+            <div className="max-h-[240px] overflow-y-auto">
+              {memberTasks.length === 0 ? (
+                <p className="text-[12px] text-text3 py-[8px]">{t('workload.noAssignedTasks')}</p>
+              ) : (
+                <div className="space-y-[4px]">
+                  {memberTasks.map((task) => {
+                    const deadline = task.confirmed_deadline ?? task.desired_deadline
+                    const isOverdue = deadline && new Date(deadline) < new Date()
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
+                        className={`flex items-center gap-[8px] px-[10px] py-[6px] rounded-[6px] cursor-pointer hover:bg-surf2 transition-colors ${isOverdue ? 'bg-danger-bg/30' : ''}`}
+                      >
+                        <span className={`text-[10px] font-semibold px-[5px] py-[1px] rounded-full border ${
+                          (task.priority ?? 3) <= 2 ? 'bg-danger-bg text-danger border-danger-b' :
+                          (task.priority ?? 3) >= 4 ? 'bg-ok-bg text-ok border-ok-b' :
+                          'bg-surf2 text-text2 border-wf-border'
+                        }`}>P{task.priority ?? 3}</span>
+                        <span className="text-[12px] text-text flex-1 truncate">{task.title}</span>
+                        <span className="text-[11px] text-text2">{task.progress}%</span>
+                        {deadline && (
+                          <span className={`text-[10px] ${isOverdue ? 'text-danger font-bold' : 'text-text3'}`}>
+                            {formatDate(deadline).slice(5)}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* KPI Cards */}
         {kpiLoading || !kpi ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
