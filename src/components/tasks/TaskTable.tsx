@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, Pagination, ProgressBar, StatusChip } from '@/components/shared'
@@ -20,23 +20,28 @@ interface TaskTableProps {
   onSelectionChange?: (ids: Set<string>) => void
 }
 
-const COLUMN_KEYS = [
-  'tasks.col.wbs',
-  'tasks.col.client',
-  'tasks.col.taskName',
-  'tasks.col.assignee',
-  'tasks.col.status',
-  'tasks.col.priority',
-  'tasks.col.progress',
-  'tasks.col.deadline',
-  'tasks.col.estimate',
-  'tasks.col.actual',
-] as const
-
 type SortField = 'wbs' | 'client' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
 type SortDir = 'asc' | 'desc'
 
-const SORT_FIELDS: SortField[] = ['wbs', 'client', 'title', 'assignee', 'status', 'priority', 'progress', 'deadline', 'estimate', 'actual']
+interface ColumnConfig {
+  key: string
+  field: SortField
+  defaultWidth: number
+  optional: boolean // can be toggled off
+}
+
+const ALL_COLUMNS: ColumnConfig[] = [
+  { key: 'tasks.col.wbs', field: 'wbs', defaultWidth: 80, optional: true },
+  { key: 'tasks.col.client', field: 'client', defaultWidth: 150, optional: false },
+  { key: 'tasks.col.taskName', field: 'title', defaultWidth: 250, optional: false },
+  { key: 'tasks.col.assignee', field: 'assignee', defaultWidth: 120, optional: false },
+  { key: 'tasks.col.status', field: 'status', defaultWidth: 90, optional: false },
+  { key: 'tasks.col.priority', field: 'priority', defaultWidth: 70, optional: true },
+  { key: 'tasks.col.progress', field: 'progress', defaultWidth: 120, optional: true },
+  { key: 'tasks.col.deadline', field: 'deadline', defaultWidth: 110, optional: false },
+  { key: 'tasks.col.estimate', field: 'estimate', defaultWidth: 70, optional: true },
+  { key: 'tasks.col.actual', field: 'actual', defaultWidth: 70, optional: true },
+]
 
 
 /** Inline component to render subtask rows when a parent is expanded */
@@ -45,15 +50,21 @@ function SubtaskRows({
   selected,
   selectable,
   onSelectOne,
+  visibleColumns,
+  columnWidths,
 }: {
   parentId: string
   selected: Set<string>
   selectable: boolean
   onSelectOne: (id: string) => void
+  visibleColumns: ColumnConfig[]
+  columnWidths: Record<string, number>
 }) {
   const router = useRouter()
   const { t } = useI18n()
   const { data: subtasks } = useSubtasks(parentId)
+
+  const isColVisible = (field: SortField) => visibleColumns.some((col) => col.field === field)
 
   if (!subtasks || subtasks.length === 0) return null
 
@@ -91,112 +102,132 @@ function SubtaskRows({
             )}
 
             {/* WBS */}
-            <td className="px-[12px] py-[10px]">
-              <span className="text-[10.5px] font-mono text-text3">
-                {task.wbs_code || ''}
-              </span>
-            </td>
+            {isColVisible('wbs') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.wbs'] }}>
+                <span className="text-[10.5px] font-mono text-text3">
+                  {task.wbs_code || ''}
+                </span>
+              </td>
+            )}
 
             {/* Client */}
-            <td className="px-[12px] py-[10px]">
-              <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
-                {task.client.name}
-              </span>
-            </td>
+            {isColVisible('client') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.client'] }}>
+                <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
+                  {task.client.name}
+                </span>
+              </td>
+            )}
 
             {/* Task name (indented) */}
-            <td className="px-[12px] py-[10px] min-w-[180px]">
-              <div className="text-[12.5px] font-bold text-text leading-tight pl-[16px]">
-                <span className="text-text3 mr-[4px]">{'\u2514'}</span>
-                {task.title}
-              </div>
-              {task.description && (
-                <div className="text-[11px] text-text3 mt-[2px] line-clamp-1 pl-[16px]">
-                  {task.description}
+            {isColVisible('title') && (
+              <td className="px-[12px] py-[10px] min-w-[180px]" style={{ width: columnWidths['tasks.col.taskName'] }}>
+                <div className="text-[12.5px] font-bold text-text leading-tight pl-[16px]">
+                  <span className="text-text3 mr-[4px]">{'\u2514'}</span>
+                  {task.title}
                 </div>
-              )}
-            </td>
+                {task.description && (
+                  <div className="text-[11px] text-text3 mt-[2px] line-clamp-1 pl-[16px]">
+                    {task.description}
+                  </div>
+                )}
+              </td>
+            )}
 
             {/* Assignee */}
-            <td className="px-[12px] py-[10px]">
-              {task.assigned_user ? (
-                <div className="flex items-center gap-[6px]">
-                  <Avatar
-                    name_short={task.assigned_user.name_short}
-                    color={task.assigned_user.avatar_color}
-                    size="sm"
-                  />
-                  <span className="text-[11.5px] text-text whitespace-nowrap">
-                    {task.assigned_user.name}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-[11.5px] italic text-warn">{t('tasks.unassigned')}</span>
-              )}
-            </td>
+            {isColVisible('assignee') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.assignee'] }}>
+                {task.assigned_user ? (
+                  <div className="flex items-center gap-[6px]">
+                    <Avatar
+                      name_short={task.assigned_user.name_short}
+                      color={task.assigned_user.avatar_color}
+                      size="sm"
+                    />
+                    <span className="text-[11.5px] text-text whitespace-nowrap">
+                      {task.assigned_user.name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-[11.5px] italic text-warn">{t('tasks.unassigned')}</span>
+                )}
+              </td>
+            )}
 
             {/* Status */}
-            <td className="px-[12px] py-[10px]">
-              <StatusChip status={task.status} size="sm" />
-            </td>
+            {isColVisible('status') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.status'] }}>
+                <StatusChip status={task.status} size="sm" />
+              </td>
+            )}
 
             {/* Priority */}
-            <td className="px-[12px] py-[10px]">
-              <span className={`text-[11px] font-semibold px-[6px] py-[1px] rounded-full border ${
-                (task.priority ?? 3) <= 2
-                  ? 'bg-danger-bg text-danger border-danger-b'
-                  : (task.priority ?? 3) >= 4
-                    ? 'bg-ok-bg text-ok border-ok-b'
-                    : 'bg-surf2 text-text2 border-wf-border'
-              }`}>
-                P{task.priority ?? 3}
-              </span>
-            </td>
+            {isColVisible('priority') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.priority'] }}>
+                <span className={`text-[11px] font-semibold px-[6px] py-[1px] rounded-full border ${
+                  (task.priority ?? 3) <= 2
+                    ? 'bg-danger-bg text-danger border-danger-b'
+                    : (task.priority ?? 3) >= 4
+                      ? 'bg-ok-bg text-ok border-ok-b'
+                      : 'bg-surf2 text-text2 border-wf-border'
+                }`}>
+                  P{task.priority ?? 3}
+                </span>
+              </td>
+            )}
 
             {/* Progress */}
-            <td className="px-[12px] py-[10px] min-w-[100px]">
-              <div className="flex items-center gap-[8px]">
-                <span className="text-[11px] font-semibold text-text2 w-[32px] text-right">
-                  {task.progress}%
-                </span>
-                <div className="flex-1 min-w-[50px]">
-                  <ProgressBar value={task.progress} height="sm" />
+            {isColVisible('progress') && (
+              <td className="px-[12px] py-[10px] min-w-[100px]" style={{ width: columnWidths['tasks.col.progress'] }}>
+                <div className="flex items-center gap-[8px]">
+                  <span className="text-[11px] font-semibold text-text2 w-[32px] text-right">
+                    {task.progress}%
+                  </span>
+                  <div className="flex-1 min-w-[50px]">
+                    <ProgressBar value={task.progress} height="sm" />
+                  </div>
                 </div>
-              </div>
-            </td>
+              </td>
+            )}
 
             {/* Deadline */}
-            <td className="px-[12px] py-[10px]">
-              {deadline ? (
-                <span
-                  className={`text-[11.5px] whitespace-nowrap ${
-                    taskOverdue
-                      ? 'text-danger font-semibold'
-                      : taskDueToday
-                        ? 'text-warn font-semibold'
-                        : 'text-text'
-                  }`}
-                >
-                  {formatDate(deadline)}
-                </span>
-              ) : (
-                <span className="text-[11.5px] text-text3">-</span>
-              )}
-            </td>
+            {isColVisible('deadline') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.deadline'] }}>
+                {deadline ? (
+                  <span
+                    className={`text-[11.5px] whitespace-nowrap ${
+                      taskOverdue
+                        ? 'text-danger font-semibold'
+                        : taskDueToday
+                          ? 'text-warn font-semibold'
+                          : 'text-text'
+                    }`}
+                  >
+                    {formatDate(deadline)}
+                  </span>
+                ) : (
+                  <span className="text-[11.5px] text-text3">-</span>
+                )}
+              </td>
+            )}
 
             {/* Estimate */}
-            <td className="px-[12px] py-[10px]">
-              <span className="text-[11.5px] text-text whitespace-nowrap">
-                {task.estimated_hours != null ? formatHours(task.estimated_hours) : '-'}
-              </span>
-            </td>
+            {isColVisible('estimate') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.estimate'] }}>
+                <span className="text-[11.5px] text-text whitespace-nowrap">
+                  {task.estimated_hours != null ? formatHours(task.estimated_hours) : '-'}
+                </span>
+              </td>
+            )}
 
             {/* Actual */}
-            <td className="px-[12px] py-[10px]">
-              <span className="text-[11.5px] text-text whitespace-nowrap">
-                {formatHours(task.actual_hours)}
-              </span>
-            </td>
+            {isColVisible('actual') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.actual'] }}>
+                <span className="text-[11.5px] text-text whitespace-nowrap">
+                  {formatHours(task.actual_hours)}
+                </span>
+              </td>
+            )}
           </tr>
         )
       })}
@@ -220,6 +251,51 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
   const statusLabels = useMemo(() => getStatusLabels(locale), [locale])
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    const widths: Record<string, number> = {}
+    ALL_COLUMNS.forEach((col) => { widths[col.key] = col.defaultWidth })
+    return widths
+  })
+
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set())
+  const [showColumnPicker, setShowColumnPicker] = useState(false)
+
+  const visibleColumns = useMemo(() =>
+    ALL_COLUMNS.filter((col) => !hiddenColumns.has(col.key)),
+    [hiddenColumns]
+  )
+
+  const isColVisible = useCallback((field: SortField) =>
+    visibleColumns.some((col) => col.field === field),
+    [visibleColumns]
+  )
+
+  const handleColumnResize = useCallback((colKey: string, startX: number) => {
+    const startWidth = columnWidths[colKey]
+    const onMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startX
+      const newWidth = Math.max(50, startWidth + diff)
+      setColumnWidths((prev) => ({ ...prev, [colKey]: newWidth }))
+    }
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [columnWidths])
+
+  // Close column picker on click outside
+  useEffect(() => {
+    if (!showColumnPicker) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element
+      if (!target.closest('[data-column-picker]')) setShowColumnPicker(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showColumnPicker])
 
   const handleSort = useCallback((field: SortField) => {
     if (sortField === field) {
@@ -368,6 +444,45 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
         onPageSizeChange={setPageSize}
       />
 
+      {/* Column settings */}
+      <div className="flex items-center justify-end gap-[8px] mb-[8px]">
+        <div className="relative" data-column-picker>
+          <button
+            onClick={() => setShowColumnPicker(!showColumnPicker)}
+            className="h-[30px] px-[10px] rounded-[6px] text-[11px] font-semibold border border-wf-border text-text2 hover:bg-surf2 transition-colors flex items-center gap-[4px]"
+          >
+            {t('tasks.columns')} ⚙
+          </button>
+          {showColumnPicker && (
+            <div className="absolute right-0 top-full mt-[4px] bg-surface border border-border2 rounded-[8px] shadow-lg z-30 w-[200px] py-[4px]">
+              {ALL_COLUMNS.map((col) => (
+                <label
+                  key={col.key}
+                  className="flex items-center gap-[8px] px-[10px] py-[5px] text-[12px] text-text hover:bg-surf2 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!hiddenColumns.has(col.key)}
+                    disabled={!col.optional}
+                    onChange={() => {
+                      setHiddenColumns((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(col.key)) next.delete(col.key)
+                        else next.add(col.key)
+                        return next
+                      })
+                    }}
+                    className="accent-mint w-[14px] h-[14px]"
+                  />
+                  {t(col.key)}
+                  {!col.optional && <span className="text-[9px] text-text3 ml-auto">required</span>}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Mobile card view */}
       <div className="md:hidden">
         {pagedTasks.length === 0 && (
@@ -452,7 +567,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
 
       {/* Desktop table view */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-left">
+        <table className="text-left" style={{ tableLayout: 'fixed' }}>
           <thead>
             <tr className="border-b border-wf-border">
               {selectable && (
@@ -468,17 +583,17 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   />
                 </th>
               )}
-              {COLUMN_KEYS.map((key, idx) => {
-                const field = SORT_FIELDS[idx]
-                const isActive = sortField === field
+              {visibleColumns.map((col) => {
+                const isActive = sortField === col.field
                 return (
                   <th
-                    key={key}
-                    onClick={() => handleSort(field)}
-                    className="px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap cursor-pointer hover:text-mint select-none transition-colors"
+                    key={col.key}
+                    onClick={() => handleSort(col.field)}
+                    className="relative px-[12px] py-[10px] text-[11px] font-semibold text-text2 whitespace-nowrap cursor-pointer hover:text-mint select-none transition-colors"
+                    style={{ width: columnWidths[col.key], minWidth: 50 }}
                   >
                     <span className="inline-flex items-center gap-[4px]">
-                      {t(key)}
+                      {t(col.key)}
                       {isActive && (
                         <span className="text-mint text-[10px]">
                           {sortDir === 'asc' ? '\u25B2' : '\u25BC'}
@@ -488,6 +603,14 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         <span className="text-text3/50 text-[9px]">{'\u25B4\u25BE'}</span>
                       )}
                     </span>
+                    {/* Resize handle */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-[4px] cursor-col-resize hover:bg-mint/30 transition-colors"
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        handleColumnResize(col.key, e.clientX)
+                      }}
+                    />
                   </th>
                 )
               })}
@@ -497,7 +620,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
             {pagedTasks.length === 0 && (
               <tr>
                 <td
-                  colSpan={COLUMN_KEYS.length + (selectable ? 1 : 0)}
+                  colSpan={visibleColumns.length + (selectable ? 1 : 0)}
                   className="px-[12px] py-[32px] text-center text-text3 text-[13px]"
                 >
                   {t('tasks.noTasks')}
@@ -542,7 +665,8 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                   )}
 
                   {/* WBS */}
-                  <td className="px-[12px] py-[10px]">
+                  {isColVisible('wbs') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.wbs'] }}>
                     <div className="flex items-center gap-[4px]">
                       {hasChildren && (
                         <button
@@ -560,9 +684,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       )}
                     </div>
                   </td>
+                  )}
 
                   {/* Client */}
-                  <td className="px-[12px] py-[10px]"
+                  {isColVisible('client') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.client'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'client_id', task.client_id) }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'client_id' ? (
@@ -584,9 +710,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </span>
                     )}
                   </td>
+                  )}
 
                   {/* Task name */}
-                  <td className="px-[12px] py-[10px] min-w-[180px]"
+                  {isColVisible('title') && (
+                  <td className="px-[12px] py-[10px] min-w-[180px]" style={{ width: columnWidths['tasks.col.taskName'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'title', task.title) }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'title' ? (
@@ -616,9 +744,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </>
                     )}
                   </td>
+                  )}
 
                   {/* Assignee(s) */}
-                  <td className="px-[12px] py-[10px]"
+                  {isColVisible('assignee') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.assignee'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'assigned_to', task.assigned_to ?? '') }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'assigned_to' ? (
@@ -679,9 +809,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </span>
                     )}
                   </td>
+                  )}
 
                   {/* Status */}
-                  <td className="px-[12px] py-[10px]"
+                  {isColVisible('status') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.status'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'status', task.status) }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'status' ? (
@@ -703,9 +835,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       <StatusChip status={task.status} size="sm" />
                     )}
                   </td>
+                  )}
 
                   {/* Priority */}
-                  <td className="px-[12px] py-[10px]"
+                  {isColVisible('priority') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.priority'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'priority', String(task.priority ?? 3)) }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'priority' ? (
@@ -738,9 +872,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </span>
                     )}
                   </td>
+                  )}
 
                   {/* Progress */}
-                  <td className="px-[12px] py-[10px] min-w-[100px]">
+                  {isColVisible('progress') && (
+                  <td className="px-[12px] py-[10px] min-w-[100px]" style={{ width: columnWidths['tasks.col.progress'] }}>
                     <div className="flex items-center gap-[8px]">
                       <span className="text-[11px] font-semibold text-text2 w-[32px] text-right">
                         {task.progress}%
@@ -750,9 +886,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </div>
                     </div>
                   </td>
+                  )}
 
                   {/* Deadline */}
-                  <td className="px-[12px] py-[10px]"
+                  {isColVisible('deadline') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.deadline'] }}
                     onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'confirmed_deadline', task.confirmed_deadline?.slice(0, 10) ?? '') }}
                   >
                     {editingCell?.taskId === task.id && editingCell.field === 'confirmed_deadline' ? (
@@ -783,18 +921,22 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       <span className="text-[11.5px] text-text3">-</span>
                     )}
                   </td>
+                  )}
 
                   {/* Estimate */}
-                  <td className="px-[12px] py-[10px]">
+                  {isColVisible('estimate') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.estimate'] }}>
                     <span className="text-[11.5px] text-text whitespace-nowrap">
                       {task.estimated_hours != null
                         ? formatHours(task.estimated_hours)
                         : '-'}
                     </span>
                   </td>
+                  )}
 
                   {/* Actual */}
-                  <td className="px-[12px] py-[10px]">
+                  {isColVisible('actual') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.actual'] }}>
                     <div className="flex items-center gap-[4px]">
                       <span className="text-[11.5px] text-text whitespace-nowrap">
                         {formatHours(task.actual_hours)}
@@ -806,6 +948,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       )}
                     </div>
                   </td>
+                  )}
                 </tr>
 
                 {/* Expanded subtask rows */}
@@ -815,6 +958,8 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                     selected={selected}
                     selectable={selectable}
                     onSelectOne={handleSelectOne}
+                    visibleColumns={visibleColumns}
+                    columnWidths={columnWidths}
                   />
                 )}
                 </React.Fragment>
