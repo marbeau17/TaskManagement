@@ -43,10 +43,6 @@ export function useRealtimeSubscription(options: RealtimeSubscriptionOptions) {
   useEffect(() => {
     if (!enabled) return
 
-    // Disable realtime until Supabase Realtime replication is configured
-    // To enable: go to Supabase Dashboard → Database → Replication → enable tables
-    return
-
     const supabase = createClient()
     const channelName = `realtime:${table}:${filter ?? 'all'}:${Date.now()}`
     let channel: RealtimeChannel = supabase.channel(channelName)
