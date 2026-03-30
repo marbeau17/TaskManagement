@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { Avatar } from '@/components/shared'
 import { useWorkloadSummaries } from '@/hooks/useWorkload'
 import { useI18n } from '@/hooks/useI18n'
@@ -127,7 +128,24 @@ function WorkloadRow({ summary }: { summary: WorkloadSummary }) {
 }
 
 export function CreatorWorkload() {
-  const { data: summaries, isLoading } = useWorkloadSummaries()
+  const [weekOffset, setWeekOffset] = useState(0)
+
+  // Calculate week start (Monday) based on offset
+  const weekStart = useMemo(() => {
+    const now = new Date()
+    const day = now.getDay()
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + weekOffset * 7)
+    return monday.toISOString().slice(0, 10)
+  }, [weekOffset])
+
+  const weekEnd = useMemo(() => {
+    const start = new Date(weekStart)
+    start.setDate(start.getDate() + 6)
+    return start.toISOString().slice(0, 10)
+  }, [weekStart])
+
+  const { data: summaries, isLoading } = useWorkloadSummaries(weekStart)
 
   const { t } = useI18n()
 
@@ -143,7 +161,32 @@ export function CreatorWorkload() {
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden overflow-x-auto">
       {/* Header */}
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-        <h3 className="text-[13px] font-bold text-text">{t('workload.title')}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[13px] font-bold text-text">{t('workload.title')}</h3>
+          <div className="flex items-center gap-[8px]">
+            <button
+              onClick={() => setWeekOffset((o) => o - 1)}
+              className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
+            >
+              &lsaquo;
+            </button>
+            <span className="text-[11px] text-text2 font-medium whitespace-nowrap">
+              {weekStart.replace(/-/g, '/')} - {weekEnd.replace(/-/g, '/')}
+            </span>
+            <button
+              onClick={() => setWeekOffset((o) => o + 1)}
+              className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors"
+            >
+              &rsaquo;
+            </button>
+            <button
+              onClick={() => setWeekOffset(0)}
+              className="text-[10px] text-mint hover:text-mint-d font-medium transition-colors"
+            >
+              {t('workload.thisWeek')}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Column headers */}

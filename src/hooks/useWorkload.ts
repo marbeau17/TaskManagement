@@ -3,10 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { getWorkloadSummaries, getWorkloadKpi, getResourceLoadData } from '@/lib/data/workload'
 
-export function useWorkloadSummaries() {
+export function useWorkloadSummaries(weekStart?: string) {
   return useQuery({
-    queryKey: ['workload', 'summaries'],
-    queryFn: () => getWorkloadSummaries(),
+    queryKey: ['workloadSummaries', weekStart ?? 'all'],
+    queryFn: () => getWorkloadSummaries(weekStart),
   })
 }
 

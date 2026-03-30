@@ -10,7 +10,7 @@ import { useMock } from '@/lib/utils'
 // getWorkloadSummaries
 // ---------------------------------------------------------------------------
 
-export async function getWorkloadSummaries(): Promise<WorkloadSummary[]> {
+export async function getWorkloadSummaries(weekStart?: string): Promise<WorkloadSummary[]> {
   if (useMock()) {
     const { getMockWorkloadSummaries } = await import('@/lib/mock/handlers')
     return getMockWorkloadSummaries()
@@ -28,17 +28,32 @@ export async function getWorkloadSummaries(): Promise<WorkloadSummary[]> {
   if (usersError) throw usersError
   const typedUsers = (users ?? []) as User[]
 
-  // Fetch all non-rejected tasks with an assignee
+  // Fetch only active (non-done) tasks with an assignee
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours')
+    .select('assigned_to, status, estimated_hours, actual_hours, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
-    .neq('status', 'rejected')
+    .in('status', ['todo', 'in_progress'])
 
   if (tasksError) throw tasksError
 
+  // Filter tasks by week if weekStart provided
+  let filteredTasks = tasks ?? []
+  if (weekStart) {
+    const start = new Date(weekStart)
+    const end = new Date(start)
+    end.setDate(end.getDate() + 6)
+    const startStr = start.toISOString().slice(0, 10)
+    const endStr = end.toISOString().slice(0, 10)
+    filteredTasks = filteredTasks.filter((t: any) => {
+      const deadline = t.confirmed_deadline ?? t.desired_deadline
+      if (!deadline) return true // tasks with no deadline count for current week
+      return deadline >= startStr && deadline <= endStr
+    })
+  }
+
   const summaries: WorkloadSummary[] = typedUsers.map((user) => {
-    const userTasks = (tasks ?? []).filter((t) => t.assigned_to === user.id)
+    const userTasks = filteredTasks.filter((t) => t.assigned_to === user.id)
     const completedTasks = userTasks.filter((t) => t.status === 'done')
     const estimatedHours = userTasks.reduce(
       (sum, t) => sum + (t.estimated_hours ?? 0),

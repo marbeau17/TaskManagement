@@ -59,7 +59,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   const creators = useMemo(() => {
     if (!members) return []
     return members
-      .filter((m) => m.role === 'creator' && m.is_active)
+      .filter((m) => m.is_active)
       .map((m) => ({
         id: m.id,
         name: m.name_short ? m.name.split(' ').pop() ?? m.name : m.name,
@@ -152,7 +152,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
       <div className={`${collapsed ? 'px-[4px]' : 'px-[10px]'} mt-[16px]`}>
         {!collapsed && (
           <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider px-[6px] mb-[4px]">
-            {t('sidebar.creators')}
+            {t('sidebar.members')}
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
