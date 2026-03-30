@@ -220,7 +220,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
             {/* Top row (month labels for week zoom) */}
             {headerRows.top && (
               <div className="flex border-b border-wf-border">
-                <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border" />
+                <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border sticky left-0 z-20 bg-surface" />
                 {headerRows.top.map((col, i) => (
                   <div
                     key={i}
@@ -235,9 +235,9 @@ export function GanttChart({ tasks }: GanttChartProps) {
 
             {/* Bottom row (day / week / month labels) */}
             <div className="flex">
-              <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border px-[10px] py-[4px]">
+              <div className="w-[220px] min-w-[220px] shrink-0 border-r border-wf-border px-[10px] py-[4px] sticky left-0 z-20 bg-surface">
                 <span className="text-[10px] font-semibold text-text2">
-                  {t('gantt.taskName')}
+                  {t('gantt.taskName')} / {t('gantt.assignee')}
                 </span>
               </div>
               {headerRows.bottom.map((col, i) => (

@@ -77,7 +77,7 @@ export function GanttRow({
   const colors = BAR_COLORS[task.status] ?? BAR_COLORS.todo
 
   return (
-    <div className="flex border-b border-wf-border hover:bg-surf2/40 transition-colors">
+    <div className="flex border-b border-wf-border group">
       {/* Fixed left column: task title */}
       <div
         className="
@@ -85,6 +85,7 @@ export function GanttRow({
           px-[10px] py-[6px] border-r border-wf-border
           cursor-pointer
           flex flex-col justify-center
+          sticky left-0 z-10 bg-surface group-hover:bg-surf2/40 transition-colors
         "
         onClick={() => router.push(`/tasks/${task.id}`)}
         title={task.title}
@@ -92,14 +93,20 @@ export function GanttRow({
         <div className="text-[11.5px] font-bold text-text leading-tight truncate">
           {task.title}
         </div>
-        <div className="text-[10px] text-text3 truncate">
-          {task.client.name}
+        <div className="text-[10px] text-text3 truncate flex items-center gap-[4px]">
+          <span>{task.client.name}</span>
+          {task.assigned_user && (
+            <>
+              <span className="text-text3/50">|</span>
+              <span className="text-mint font-medium">{task.assigned_user.name}</span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Timeline bar area */}
       <div
-        className="relative h-[40px] flex-1"
+        className="relative h-[40px] flex-1 group-hover:bg-surf2/40 transition-colors"
         style={{ minWidth: totalDays * dayWidth }}
       >
         {bar && (
