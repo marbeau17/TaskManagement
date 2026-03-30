@@ -4,7 +4,16 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Topbar } from '@/components/layout'
 import { useI18n } from '@/hooks/useI18n'
 import { useMembers } from '@/hooks/useMembers'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/stores/toastStore'
+
+/** Pipeline access: admin role OR specific privileged users */
+const PIPELINE_ALLOWED_NAMES = ['安田', '伊藤', '瀧宮', '渡邊', '渡辺']
+function canAccessPipeline(user: { role: string; name: string } | null): boolean {
+  if (!user) return false
+  if (user.role === 'admin' || user.role === 'director') return true
+  return PIPELINE_ALLOWED_NAMES.some((n) => user.name.includes(n))
+}
 
 interface PipelineOpportunity {
   id: string
@@ -47,10 +56,27 @@ type TabId = 'list' | 'summary'
 
 export default function PipelinePage() {
   const { t } = useI18n()
+  const { user } = useAuth()
   const { data: members } = useMembers()
   const [opportunities, setOpportunities] = useState<PipelineOpportunity[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('list')
+
+  // Access control
+  if (user && !canAccessPipeline(user)) {
+    return (
+      <>
+        <Topbar title={t('pipeline.title')} />
+        <div className="flex items-center justify-center h-[400px]">
+          <div className="text-center">
+            <div className="text-[40px] mb-[12px]">🔒</div>
+            <h2 className="text-[16px] font-bold text-text mb-[8px]">アクセス権限がありません</h2>
+            <p className="text-[12px] text-text2">パイプライン管理は管理者および特権ユーザーのみ利用可能です。</p>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   const fetchData = useCallback(async () => {
     try {

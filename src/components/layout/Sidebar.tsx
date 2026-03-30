@@ -36,8 +36,15 @@ const MAIN_NAV = [
   { id: 'clients', labelKey: 'nav.clients', icon: '🏢', href: '/clients' },
   { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
-  { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline' },
+  { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', restricted: true },
 ]
+
+const PIPELINE_ALLOWED = ['安田', '伊藤', '瀧宮', '渡邊', '渡辺']
+function canSeePipeline(u: { role: string; name: string } | null): boolean {
+  if (!u) return false
+  if (u.role === 'admin' || u.role === 'director') return true
+  return PIPELINE_ALLOWED.some((n) => u.name.includes(n))
+}
 
 const SYSTEM_NAV = [
   { id: 'reports', labelKey: 'nav.reports', icon: '📊', href: '/reports' },
@@ -109,7 +116,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
-          {MAIN_NAV.map((item) => {
+          {MAIN_NAV.filter((item) => !(item as any).restricted || canSeePipeline(user)).map((item) => {
             const isActive = activePage === item.id
             const label = t(item.labelKey)
             return (
