@@ -201,6 +201,8 @@ export function createMockTask(
     confirmed_deadline: step2?.confirmed_deadline ?? null,
     estimated_hours: step2?.estimated_hours ?? null,
     actual_hours: 0,
+    priority: 3,
+    planned_hours_per_week: 0,
     reference_url: step1.reference_url ?? null,
     is_draft: !step2,
     template_id: null,

@@ -26,16 +26,17 @@ const COLUMN_KEYS = [
   'tasks.col.taskName',
   'tasks.col.assignee',
   'tasks.col.status',
+  'tasks.col.priority',
   'tasks.col.progress',
   'tasks.col.deadline',
   'tasks.col.estimate',
   'tasks.col.actual',
 ] as const
 
-type SortField = 'wbs' | 'client' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status'
+type SortField = 'wbs' | 'client' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
 type SortDir = 'asc' | 'desc'
 
-const SORT_FIELDS: SortField[] = ['wbs', 'client', 'title', 'assignee', 'status', 'progress', 'deadline', 'estimate', 'actual']
+const SORT_FIELDS: SortField[] = ['wbs', 'client', 'title', 'assignee', 'status', 'priority', 'progress', 'deadline', 'estimate', 'actual']
 
 
 /** Inline component to render subtask rows when a parent is expanded */
@@ -137,6 +138,19 @@ function SubtaskRows({
             {/* Status */}
             <td className="px-[12px] py-[10px]">
               <StatusChip status={task.status} size="sm" />
+            </td>
+
+            {/* Priority */}
+            <td className="px-[12px] py-[10px]">
+              <span className={`text-[11px] font-semibold px-[6px] py-[1px] rounded-full border ${
+                (task.priority ?? 3) <= 2
+                  ? 'bg-danger-bg text-danger border-danger-b'
+                  : (task.priority ?? 3) >= 4
+                    ? 'bg-ok-bg text-ok border-ok-b'
+                    : 'bg-surf2 text-text2 border-wf-border'
+              }`}>
+                P{task.priority ?? 3}
+              </span>
             </td>
 
             {/* Progress */}
@@ -275,6 +289,8 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
           const statusOrder = { waiting: 0, todo: 1, in_progress: 2, done: 3, rejected: 4 }
           return dir * ((statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5))
         }
+        case 'priority':
+          return dir * ((a.priority ?? 3) - (b.priority ?? 3))
         case 'progress':
           return dir * (a.progress - b.progress)
         case 'deadline': {
@@ -685,6 +701,41 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       </select>
                     ) : (
                       <StatusChip status={task.status} size="sm" />
+                    )}
+                  </td>
+
+                  {/* Priority */}
+                  <td className="px-[12px] py-[10px]"
+                    onDoubleClick={(e) => { e.stopPropagation(); startEdit(task.id, 'priority', String(task.priority ?? 3)) }}
+                  >
+                    {editingCell?.taskId === task.id && editingCell.field === 'priority' ? (
+                      <select
+                        value={editDraft}
+                        onChange={(e) => {
+                          updateTask.mutate({ taskId: task.id, data: { priority: Number(e.target.value) } as any })
+                          setEditingCell(null)
+                        }}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
+                      >
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                        <option value={5}>5</option>
+                      </select>
+                    ) : (
+                      <span className={`text-[11px] font-semibold px-[6px] py-[1px] rounded-full border ${
+                        (task.priority ?? 3) <= 2
+                          ? 'bg-danger-bg text-danger border-danger-b'
+                          : (task.priority ?? 3) >= 4
+                            ? 'bg-ok-bg text-ok border-ok-b'
+                            : 'bg-surf2 text-text2 border-wf-border'
+                      }`}>
+                        P{task.priority ?? 3}
+                      </span>
                     )}
                   </td>
 

@@ -205,6 +205,39 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
         </div>
       </div>
 
+      {/* Priority and Weekly Hours */}
+      <div className="flex gap-6 mt-4">
+        <div>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.priority')}</span>
+          <select
+            value={task.priority ?? 3}
+            onChange={(e) => handleSave('priority', Number(e.target.value))}
+            className="text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+          >
+            <option value={1}>1 - {t('taskDetailInfo.priorityHigh')}</option>
+            <option value={2}>2</option>
+            <option value={3}>3 - {t('taskDetailInfo.priorityMedium')}</option>
+            <option value={4}>4</option>
+            <option value={5}>5 - {t('taskDetailInfo.priorityLow')}</option>
+          </select>
+        </div>
+        <div>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.plannedHoursPerWeek')}</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={0}
+              max={40}
+              step={0.5}
+              value={task.planned_hours_per_week ?? 0}
+              onChange={(e) => handleSave('planned_hours_per_week', Number(e.target.value))}
+              className="w-20 text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint"
+            />
+            <span className="text-[12px] text-text2">{t('taskDetailInfo.hoursPerWeek')}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Template data */}
       {template && task.template_data && Object.keys(task.template_data).length > 0 && (
         <div className="mt-4 pt-4 border-t border-wf-border">

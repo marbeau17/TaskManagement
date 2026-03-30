@@ -69,6 +69,8 @@ export interface Task {
   confirmed_deadline: string | null
   estimated_hours: number | null
   actual_hours: number
+  priority: number
+  planned_hours_per_week: number
   reference_url: string | null
   is_draft: boolean
   template_id: string | null

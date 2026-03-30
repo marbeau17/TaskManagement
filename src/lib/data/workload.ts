@@ -29,9 +29,10 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   const typedUsers = (users ?? []) as User[]
 
   // Fetch all non-rejected tasks with an assignee
-  const { data: tasks, error: tasksError } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('assigned_to, status, estimated_hours, actual_hours, progress, confirmed_deadline, desired_deadline')
+    .select('assigned_to, status, estimated_hours, actual_hours, progress, planned_hours_per_week, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
@@ -58,11 +59,16 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     const activeTasks = allUserTasks.filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
     const completedTasks = allUserTasks.filter((t: any) => t.status === 'done')
     const estimatedHours = activeTasks.reduce(
-      (sum, t) => sum + (t.estimated_hours ?? 0),
+      (sum: number, t: any) => {
+        // Prefer planned_hours_per_week if set, otherwise use total estimated_hours
+        const weeklyHours = t.planned_hours_per_week
+        if (weeklyHours && weeklyHours > 0) return sum + weeklyHours
+        return sum + (t.estimated_hours ?? 0)
+      },
       0
     )
     const actualHours = activeTasks.reduce(
-      (sum, t) => {
+      (sum: number, t: any) => {
         // Use actual_hours if manually entered, otherwise derive from progress
         const hours = (t.actual_hours ?? 0) > 0
           ? (t.actual_hours ?? 0)

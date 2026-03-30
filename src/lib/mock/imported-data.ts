@@ -314,6 +314,8 @@ function csvRowToTask(row: CsvRow, index: number): {
     confirmed_deadline: confirmedDeadline,
     estimated_hours: estimatedHours,
     actual_hours: 0,
+    priority: 3,
+    planned_hours_per_week: 0,
     reference_url: null,
     is_draft: false,
     template_id: null,
