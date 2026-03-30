@@ -309,25 +309,50 @@ function csvRowToTask(row: CsvRow, index: number): {
 
 let _importedTasks: TaskWithRelations[] | null = null
 let _importedClients: Client[] | null = null
-let _csvRows: CsvRow[] | null = null
+let _autoLoaded = false
+
+function autoLoadFromEmbeddedData(): void {
+  if (_autoLoaded) return
+  _autoLoaded = true
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { parsedTasks } = require('./parsed-task-data')
+    const rows: CsvRow[] = parsedTasks.map((t: Record<string, unknown>) => ({
+      'タスク名': t.taskName as string,
+      'ファンクション': t.function as string,
+      'タスクの種類': t.taskType as string,
+      '詳細タスク・アクション項目': t.description as string,
+      Status: t.status as string,
+      Owner: (t.owners as string[]).join(';'),
+      DueDate: t.dueDate as string || '',
+      '優先度': t.priority as string,
+      '顧客名': t.clientName as string,
+      '工数レベル': String(t.estimatedHours === 16 ? '大' : t.estimatedHours === 8 ? '中' : '小'),
+      Note: t.note as string,
+      '関連ファイル': t.relatedFiles as string,
+      '更新日時': t.updatedAt as string,
+    }))
+    buildFromRows(rows)
+  } catch {
+    // Data file not available, return empty
+    _importedTasks = []
+    _importedClients = []
+  }
+}
 
 /**
- * Set the raw CSV rows (parsed externally).
- * Call this once after parsing the CSV file to populate the import layer.
+ * Set the raw CSV rows (parsed externally). Optional — if not called,
+ * tasks are auto-loaded from the embedded parsed-task-data.ts module.
  */
 export function setCsvRows(rows: CsvRow[]): void {
-  _csvRows = rows
   _importedTasks = null
   _importedClients = null
+  buildFromRows(rows)
+  _autoLoaded = true
 }
 
 function buildAll(): void {
-  if (!_csvRows) {
-    throw new Error(
-      'CSV rows not loaded. Call setCsvRows() first, or use getImportedTasksFromRows().'
-    )
-  }
-  buildFromRows(_csvRows)
+  autoLoadFromEmbeddedData()
 }
 
 function buildFromRows(rows: CsvRow[]): void {
