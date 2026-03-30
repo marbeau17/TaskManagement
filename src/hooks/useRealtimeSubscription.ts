@@ -43,8 +43,9 @@ export function useRealtimeSubscription(options: RealtimeSubscriptionOptions) {
   useEffect(() => {
     if (!enabled) return
 
-    // Skip realtime in mock mode
-    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_MOCK === 'true') return
+    // Disable realtime until Supabase Realtime replication is configured
+    // To enable: go to Supabase Dashboard → Database → Replication → enable tables
+    return
 
     const supabase = createClient()
     const channelName = `realtime:${table}:${filter ?? 'all'}:${Date.now()}`
