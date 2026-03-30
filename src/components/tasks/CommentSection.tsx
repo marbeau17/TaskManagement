@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useComments, useAddComment } from '@/hooks/useTasks'
 import { Avatar, MentionInput, MentionText } from '@/components/shared'
@@ -25,6 +25,8 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
   const { data: comments, isLoading } = useComments(taskId)
   const addComment = useAddComment()
   const [body, setBody] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [attachingFile, setAttachingFile] = useState(false)
 
   // Supabase Realtime: auto-refresh comments when a new comment is inserted
   useEffect(() => {
@@ -63,6 +65,23 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
       cleanup?.()
     }
   }, [taskId, queryClient])
+
+  const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAttachingFile(true)
+    try {
+      const { uploadFile, getFileUrl } = await import('@/lib/data/storage')
+      const result = await uploadFile(taskId, file)
+      const url = await getFileUrl(result.path)
+      setBody((prev) => prev + (prev ? '\n' : '') + `📎 [${file.name}](${url})`)
+    } catch (err) {
+      console.error('File attach failed:', err)
+    } finally {
+      setAttachingFile(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSend = () => {
     const trimmed = body.trim()
@@ -110,7 +129,13 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
                 </span>
               </div>
               <p className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">
-                <MentionText text={comment.body} />
+                {comment.body.split(/(\[.*?\]\(.*?\))/).map((part, i) => {
+                  const match = part.match(/\[(.*?)\]\((.*?)\)/)
+                  if (match) {
+                    return <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-mint hover:text-mint-d underline">{match[1]}</a>
+                  }
+                  return <MentionText key={i} text={part} />
+                })}
               </p>
             </div>
           )
@@ -126,7 +151,22 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
           rows={3}
           className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-none focus:outline-none focus:border-mint"
         />
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-[8px]">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileAttach}
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={attachingFile}
+            className="px-3 py-1.5 rounded-md text-[12px] font-semibold border border-wf-border text-text2 hover:bg-surf2 transition-colors disabled:opacity-50"
+          >
+            {attachingFile ? '...' : `📎 ${t('comment.attachFile')}`}
+          </button>
           <button
             type="button"
             onClick={handleSend}

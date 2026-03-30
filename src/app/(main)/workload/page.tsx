@@ -7,6 +7,7 @@ import { Topbar } from '@/components/layout'
 import { PeriodToggle, TableSkeleton } from '@/components/shared'
 import { WorkloadKpi } from '@/components/workload/WorkloadKpi'
 import { MemberWorkloadTable } from '@/components/workload/MemberWorkloadTable'
+import { CapacityMatrix } from '@/components/workload/CapacityMatrix'
 import { useWorkloadKpi, useWorkloadSummaries, useResourceLoadData } from '@/hooks/useWorkload'
 
 const ResourceLoadChart = dynamic(
@@ -108,6 +109,9 @@ export default function WorkloadPage() {
         ) : (
           <MemberWorkloadTable summaries={summaries} />
         )}
+
+        {/* Capacity Planning Matrix */}
+        <CapacityMatrix />
       </div>
     </>
   )

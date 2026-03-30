@@ -8,8 +8,9 @@ import { useI18n } from '@/hooks/useI18n'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
+import { WebhookSettings } from '@/components/settings/WebhookSettings'
 
-type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai'
+type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook'
 
 export default function SettingsPage() {
   const { t } = useI18n()
@@ -150,6 +151,7 @@ export default function SettingsPage() {
     { id: 'notification', labelKey: 'settings.notification' },
     { id: 'email', labelKey: 'settings.email' },
     { id: 'ai', labelKey: 'settings.ai' },
+    { id: 'webhook', labelKey: 'settings.webhooks' },
   ]
 
   return (
@@ -438,6 +440,11 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Webhook Settings */}
+          {activeTab === 'webhook' && (
+            <WebhookSettings />
           )}
 
           {/* AI Settings */}
