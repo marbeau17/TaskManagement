@@ -147,13 +147,36 @@ export default function IssueDetailPage() {
     )
   }
 
-  // Possible transitions
+  const isReporter = user?.id === issue.reported_by
+
+  // Possible transitions — only the reporter can close an issue
   const possibleTransitions: IssueStatus[] = (['open', 'in_progress', 'resolved', 'verified', 'closed'] as IssueStatus[]).filter(
-    (s) => s !== issue.status && isValidTransition(issue.status, s)
+    (s) => {
+      if (s === issue.status) return false
+      if (!isValidTransition(issue.status, s)) return false
+      if (s === 'closed' && !isReporter) return false
+      return true
+    }
   )
 
-  const handleTransition = (newStatus: IssueStatus) => {
+  const handleTransition = async (newStatus: IssueStatus) => {
     transitionStatus.mutate({ id: issue.id, newStatus })
+
+    // When resolved, notify the reporter by email so they can verify & close
+    if (newStatus === 'resolved' && issue.reporter?.email) {
+      fetch('/api/email/notify-issue-resolved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueId: issue.id,
+          issueKey: issue.issue_key,
+          issueTitle: issue.title,
+          reporterEmail: issue.reporter.email,
+          reporterName: issue.reporter.name,
+          resolverName: user?.name ?? '',
+        }),
+      }).catch(() => {})
+    }
   }
 
   const handleAssigneeChange = (userId: string | null) => {
