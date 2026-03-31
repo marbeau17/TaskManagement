@@ -20,7 +20,7 @@ interface TaskTableProps {
   onSelectionChange?: (ids: Set<string>) => void
 }
 
-type SortField = 'wbs' | 'client' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
+type SortField = 'wbs' | 'client' | 'project' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
 type SortDir = 'asc' | 'desc'
 
 interface ColumnConfig {
@@ -33,6 +33,7 @@ interface ColumnConfig {
 const ALL_COLUMNS: ColumnConfig[] = [
   { key: 'tasks.col.wbs', field: 'wbs', defaultWidth: 80, optional: true },
   { key: 'tasks.col.client', field: 'client', defaultWidth: 150, optional: false },
+  { key: 'tasks.col.project', field: 'project', defaultWidth: 120, optional: true },
   { key: 'tasks.col.taskName', field: 'title', defaultWidth: 250, optional: false },
   { key: 'tasks.col.assignee', field: 'assignee', defaultWidth: 120, optional: false },
   { key: 'tasks.col.status', field: 'status', defaultWidth: 90, optional: false },
@@ -116,6 +117,13 @@ function SubtaskRows({
                 <span className="text-[11.5px] font-bold text-text whitespace-nowrap">
                   {task.client.name}
                 </span>
+              </td>
+            )}
+
+            {/* Project */}
+            {isColVisible('project') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.project'] }}>
+                <span className="text-[11px] text-text2">-</span>
               </td>
             )}
 
@@ -354,6 +362,8 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
           return dir * (a.wbs_code ?? '').localeCompare(b.wbs_code ?? '')
         case 'client':
           return dir * a.client.name.localeCompare(b.client.name, 'ja')
+        case 'project':
+          return dir * ((a as any).project?.name ?? '').localeCompare((b as any).project?.name ?? '', 'ja')
         case 'title':
           return dir * a.title.localeCompare(b.title, 'ja')
         case 'assignee': {
@@ -721,6 +731,15 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         {task.client.name}
                       </span>
                     )}
+                  </td>
+                  )}
+
+                  {/* Project */}
+                  {isColVisible('project') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.project'] }}>
+                    <span className="text-[11px] text-text2 whitespace-nowrap truncate block">
+                      {(task as any).project?.name ?? '-'}
+                    </span>
                   </td>
                   )}
 

@@ -87,7 +87,7 @@ export async function getTasks(
   let query = supabase
     .from('tasks')
     .select(
-      '*, client:clients!client_id(*), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)',
+      '*, client:clients!client_id(*), project:projects!project_id(id, name), assigned_user:users!tasks_assigned_to_fkey(*), requester:users!tasks_requested_by_fkey(*), director:users!tasks_director_id_fkey(*)',
       { count: 'exact' }
     )
 
@@ -157,7 +157,7 @@ export async function getTasks(
 
   const { data, error, count } = await query
   if (error) throw error
-  return { data: (data ?? []) as TaskWithRelations[], totalCount: count ?? 0 }
+  return { data: (data ?? []) as unknown as TaskWithRelations[], totalCount: count ?? 0 }
 }
 
 // ---------------------------------------------------------------------------
