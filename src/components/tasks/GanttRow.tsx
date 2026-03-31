@@ -28,6 +28,10 @@ const BAR_COLORS: Record<TaskStatus, { bar: string; progress: string }> = {
     bar: 'bg-red-200 dark:bg-red-800/60',
     progress: 'bg-red-400 dark:bg-red-500',
   },
+  dropped: {
+    bar: 'bg-gray-200 dark:bg-gray-700',
+    progress: 'bg-gray-400 dark:bg-gray-500',
+  },
 }
 
 interface GanttRowProps {

@@ -12,7 +12,7 @@ export type BuiltinRole = 'admin' | 'director' | 'requester' | 'creator'
  */
 export type UserRole = BuiltinRole | (string & {})
 
-export type TaskStatus = 'waiting' | 'todo' | 'in_progress' | 'done' | 'rejected'
+export type TaskStatus = 'waiting' | 'todo' | 'in_progress' | 'done' | 'rejected' | 'dropped'
 
 export type AvatarColor = 'av-a' | 'av-b' | 'av-c' | 'av-d' | 'av-e'
 

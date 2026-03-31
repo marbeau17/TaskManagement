@@ -18,6 +18,7 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   in_progress: '▶ 進行中',
   done: '✓ 完了',
   rejected: '↩ 差し戻し',
+  dropped: '⛔ ドロップ',
 }
 
 export const STATUS_LABELS_I18N: Record<Locale, Record<TaskStatus, string>> = {
@@ -28,6 +29,7 @@ export const STATUS_LABELS_I18N: Record<Locale, Record<TaskStatus, string>> = {
     in_progress: '▶ In Progress',
     done: '✓ Done',
     rejected: '↩ Rejected',
+    dropped: '⛔ Dropped',
   },
 }
 
@@ -63,6 +65,11 @@ export const STATUS_STYLES: Record<
     bg: 'bg-danger-bg',
     text: 'text-danger',
     border: 'border-danger-b',
+  },
+  dropped: {
+    bg: 'bg-gray-100 dark:bg-gray-800',
+    text: 'text-gray-500 dark:text-gray-400',
+    border: 'border-gray-300 dark:border-gray-600',
   },
 }
 

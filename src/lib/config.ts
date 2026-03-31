@@ -5,6 +5,20 @@
 
 export const APP_CONFIG = {
   // ---------------------------------------------------------------------------
+  // Branding
+  // ---------------------------------------------------------------------------
+  branding: {
+    /** Application name displayed in sidebar */
+    appName: 'WorkFlow',
+    /** Company logo URL (set to empty string to use text-only) */
+    logoUrl: '',
+    /** Logo width in pixels (only used when logoUrl is set) */
+    logoWidth: 28,
+    /** Logo height in pixels */
+    logoHeight: 28,
+  },
+
+  // ---------------------------------------------------------------------------
   // Task Management
   // ---------------------------------------------------------------------------
   task: {

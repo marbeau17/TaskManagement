@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Settings, KeyRound, LogOut, Sun, Moon, Monitor, User } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
+import { APP_CONFIG } from '@/lib/config'
 import { useAuth } from '@/hooks/useAuth'
 import { useMembers } from '@/hooks/useMembers'
 import { useWaitingTaskCount } from '@/hooks/useTasks'
@@ -102,9 +103,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
     <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none overflow-y-auto overflow-x-hidden`}>
       {/* Logo */}
       <div className={`${collapsed ? 'px-[8px] pt-[16px] pb-[12px] flex justify-center' : 'px-[16px] pt-[16px] pb-[12px]'}`}>
-        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? 'WorkFlow' : undefined}>
-          <span className="text-[18px]">✦</span>
-          {!collapsed && <span className="text-[15px] font-bold tracking-wide">WorkFlow</span>}
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? APP_CONFIG.branding.appName : undefined}>
+          {APP_CONFIG.branding.logoUrl ? (
+            <img src={APP_CONFIG.branding.logoUrl} alt={APP_CONFIG.branding.appName} width={APP_CONFIG.branding.logoWidth} height={APP_CONFIG.branding.logoHeight} className="shrink-0" />
+          ) : (
+            <span className="text-[18px]">✦</span>
+          )}
+          {!collapsed && <span className="text-[15px] font-bold tracking-wide">{APP_CONFIG.branding.appName}</span>}
         </Link>
       </div>
 

@@ -362,7 +362,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
           return dir * nameA.localeCompare(nameB, 'ja')
         }
         case 'status': {
-          const statusOrder = { waiting: 0, todo: 1, in_progress: 2, done: 3, rejected: 4 }
+          const statusOrder: Record<string, number> = { waiting: 0, todo: 1, in_progress: 2, done: 3, rejected: 4, dropped: 5 }
           return dir * ((statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5))
         }
         case 'priority':

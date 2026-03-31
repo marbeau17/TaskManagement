@@ -30,23 +30,26 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
     })
   }, [weekOffset])
 
-  const plan: Record<string, number> = (task.template_data as any)?.weekly_plan ?? {}
-  const actual: Record<string, number> = (task.template_data as any)?.weekly_actual ?? {}
-  const totalPlanned = Object.values(plan).reduce((s, v) => s + v, 0)
-  const totalActual = Object.values(actual).reduce((s, v) => s + v, 0)
+  // Use local state to avoid re-render jitter from React Query cache invalidation
+  const [localPlan, setLocalPlan] = useState<Record<string, number>>(() => (task.template_data as any)?.weekly_plan ?? {})
+  const [localActual, setLocalActual] = useState<Record<string, number>>(() => (task.template_data as any)?.weekly_actual ?? {})
+  const totalPlanned = Object.values(localPlan).reduce((s, v) => s + v, 0)
+  const totalActual = Object.values(localActual).reduce((s, v) => s + v, 0)
 
-  const handlePlanChange = (weekKey: string, hours: number) => {
-    const newPlan = { ...plan }
+  const savePlan = (weekKey: string, hours: number) => {
+    const newPlan = { ...localPlan }
     if (hours <= 0) delete newPlan[weekKey]
     else newPlan[weekKey] = hours
+    setLocalPlan(newPlan)
     const newData = { ...(task.template_data ?? {}), weekly_plan: newPlan }
     updateTask.mutate({ taskId: task.id, data: { template_data: newData } as any })
   }
 
-  const handleActualChange = (weekKey: string, hours: number) => {
-    const newActual = { ...actual }
+  const saveActual = (weekKey: string, hours: number) => {
+    const newActual = { ...localActual }
     if (hours <= 0) delete newActual[weekKey]
     else newActual[weekKey] = hours
+    setLocalActual(newActual)
     const newData = { ...(task.template_data ?? {}), weekly_actual: newActual }
     updateTask.mutate({ taskId: task.id, data: { template_data: newData } as any })
   }
@@ -79,8 +82,8 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
       {/* Week grid */}
       <div className="grid grid-cols-6 gap-[4px]">
         {weeks.map((week) => {
-          const planned = plan[week.key] ?? 0
-          const actualH = actual[week.key] ?? 0
+          const planned = localPlan[week.key] ?? 0
+          const actualH = localActual[week.key] ?? 0
           return (
             <div
               key={week.key}
@@ -97,7 +100,8 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
                   type="number" min={0} max={40} step={0.5}
                   value={planned || ''}
                   placeholder="0"
-                  onChange={(e) => handlePlanChange(week.key, Number(e.target.value))}
+                  onChange={(e) => { const v = Number(e.target.value); setLocalPlan((p) => ({ ...p, [week.key]: v })) }}
+                  onBlur={(e) => savePlan(week.key, Number(e.target.value))}
                   className="w-full text-center text-[12px] font-bold text-mint bg-surface border border-mint/30 rounded px-1 py-[2px] focus:outline-none focus:border-mint"
                   title={t('weeklyPlan.planned')}
                 />
@@ -108,7 +112,8 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
                   type="number" min={0} max={40} step={0.5}
                   value={actualH || ''}
                   placeholder="0"
-                  onChange={(e) => handleActualChange(week.key, Number(e.target.value))}
+                  onChange={(e) => { const v = Number(e.target.value); setLocalActual((p) => ({ ...p, [week.key]: v })) }}
+                  onBlur={(e) => saveActual(week.key, Number(e.target.value))}
                   className="w-full text-center text-[12px] font-bold text-blue-500 bg-surface border border-blue-300/30 rounded px-1 py-[2px] focus:outline-none focus:border-blue-500"
                   title={t('weeklyPlan.actual')}
                 />
