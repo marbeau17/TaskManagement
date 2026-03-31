@@ -158,8 +158,10 @@ export function AssignChangeModal({
   }
 
   const onSubmit = (values: FormValues) => {
-    // Use the first assignee as assigned_to for backward compat
-    const primaryAssignee = assignees && assignees.length > 0 ? assignees[0].user_id : task.assigned_to ?? ''
+    // Use the most recently added assignee, or fallback to first/existing
+    const primaryAssignee = assignees && assignees.length > 0
+      ? assignees[assignees.length - 1].user_id
+      : task.assigned_to ?? ''
 
     const step2: TaskFormStep2 = {
       assigned_to: primaryAssignee,
