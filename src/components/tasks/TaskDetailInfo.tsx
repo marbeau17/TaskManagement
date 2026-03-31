@@ -180,8 +180,17 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
         />
       </div>
 
-      {/* Deadlines */}
-      <div className="flex gap-6">
+      {/* Start date + Deadlines */}
+      <div className="flex gap-6 flex-wrap">
+        <div>
+          <span className="text-[12px] text-text2 block mb-1">開始日</span>
+          <input
+            type="date"
+            value={toInputDate(task.start_date)}
+            onChange={(e) => handleSave('start_date', e.target.value || null)}
+            className="text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+          />
+        </div>
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.desiredDeadline')}</span>
           <input
