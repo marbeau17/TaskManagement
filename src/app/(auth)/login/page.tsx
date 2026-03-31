@@ -49,7 +49,8 @@ export default function LoginPage() {
       try {
         const user = await login(data.email, data.password)
         if (user) {
-          router.push(user.must_change_password ? '/change-password' : '/dashboard')
+          const { APP_CONFIG } = await import('@/lib/config')
+          router.push(user.must_change_password ? '/change-password' : APP_CONFIG.branding.landingPage)
         } else {
           setError('auth.loginFailed')
         }

@@ -104,7 +104,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
     <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none overflow-y-auto overflow-x-hidden`}>
       {/* Logo */}
       <div className={`${collapsed ? 'px-[8px] pt-[16px] pb-[12px] flex justify-center' : 'px-[16px] pt-[16px] pb-[12px]'}`}>
-        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? APP_CONFIG.branding.appName : undefined}>
+        <Link href={APP_CONFIG.branding.landingPage} onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? APP_CONFIG.branding.appName : undefined}>
           {APP_CONFIG.branding.logoUrl ? (
             <img src={APP_CONFIG.branding.logoUrl} alt={APP_CONFIG.branding.appName} width={APP_CONFIG.branding.logoWidth} height={APP_CONFIG.branding.logoHeight} className="shrink-0" />
           ) : (

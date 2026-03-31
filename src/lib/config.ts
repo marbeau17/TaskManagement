@@ -16,6 +16,8 @@ export const APP_CONFIG = {
     logoWidth: 28,
     /** Logo height in pixels */
     logoHeight: 28,
+    /** Default landing page after login (e.g. '/news', '/dashboard', '/tasks') */
+    landingPage: '/news',
   },
 
   // ---------------------------------------------------------------------------
