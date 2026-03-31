@@ -83,6 +83,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
         name: m.name_short ? m.name.split(' ').pop() ?? m.name : m.name,
         short: m.name_short || m.name.charAt(0),
         color: m.avatar_color,
+        avatar_url: m.avatar_url,
       }))
   }, [members])
 
@@ -192,7 +193,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 hover:bg-white/[0.08] hover:text-white/[0.85]
               `}
             >
-              <Avatar name_short={creator.short} color={creator.color} size="sm" />
+              <Avatar name_short={creator.short} color={creator.color} avatar_url={creator.avatar_url} size="sm" />
               {!collapsed && <span className="flex-1">{creator.name}</span>}
               {/* Tooltip for collapsed mode */}
               {collapsed && (
@@ -263,7 +264,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 className="p-[6px] rounded-[6px] bg-white/[0.08] hover:bg-white/[0.15] transition-colors cursor-pointer"
                 title={user?.name ?? ''}
               >
-                <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
+                <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} avatar_url={user?.avatar_url} size="sm" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" sideOffset={8}>
                 <div className="px-[8px] py-[4px] text-[11px] text-muted-foreground">
@@ -302,7 +303,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
         ) : (
           /* Expanded: full user info */
           <div className="flex items-center gap-[8px] px-[10px] py-[8px] rounded-[6px] bg-white/[0.08]">
-            <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} size="sm" />
+            <Avatar name_short={user?.name_short ?? '?'} color={user?.avatar_color ?? 'av-a'} avatar_url={user?.avatar_url} size="sm" />
             <div className="flex flex-col flex-1 min-w-0">
               <span className="text-[11.5px] text-white font-semibold leading-tight truncate">
                 {user?.name ?? '...'}

@@ -77,7 +77,7 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
             <div key={comment.id} className={`rounded-md p-3 ${isOwn ? 'bg-mint-ll' : 'bg-surf2'}`}>
               <div className="flex items-center gap-2 mb-1.5">
                 {comment.user && (
-                  <Avatar name_short={comment.user.name_short} color={comment.user.avatar_color} size="sm" />
+                  <Avatar name_short={comment.user.name_short} color={comment.user.avatar_color} avatar_url={comment.user.avatar_url} size="sm" />
                 )}
                 <span className="text-[12px] font-semibold text-text">{comment.user?.name ?? t('issues.unknown')}</span>
                 <span className="text-[10px] text-text3 ml-auto">{formatDate(comment.created_at)}</span>
@@ -350,7 +350,7 @@ export default function IssueDetailPage() {
               >
                 {issue.assignee ? (
                   <>
-                    <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
+                    <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} avatar_url={issue.assignee.avatar_url} size="sm" />
                     <span className="text-[12px] text-text">{issue.assignee.name}</span>
                   </>
                 ) : (
@@ -371,7 +371,7 @@ export default function IssueDetailPage() {
                       onClick={() => handleAssigneeChange(m.id)}
                       className="w-full text-left px-[10px] py-[6px] text-[12px] text-text hover:bg-surf2 transition-colors flex items-center gap-[6px]"
                     >
-                      <Avatar name_short={m.name_short} color={m.avatar_color} size="sm" />
+                      <Avatar name_short={m.name_short} color={m.avatar_color} avatar_url={m.avatar_url} size="sm" />
                       {m.name}
                     </button>
                   ))}
@@ -384,7 +384,7 @@ export default function IssueDetailPage() {
               <div className="text-[10.5px] text-text2 mb-[3px]">{t('issues.reporter')}</div>
               {issue.reporter ? (
                 <div className="flex items-center gap-[6px]">
-                  <Avatar name_short={issue.reporter.name_short} color={issue.reporter.avatar_color} size="sm" />
+                  <Avatar name_short={issue.reporter.name_short} color={issue.reporter.avatar_color} avatar_url={issue.reporter.avatar_url} size="sm" />
                   <span className="text-[12px] text-text">{issue.reporter.name}</span>
                 </div>
               ) : (

@@ -7,6 +7,8 @@ import { useTheme } from '@/hooks/useTheme'
 import { Topbar } from '@/components/layout'
 import { Avatar } from '@/components/shared'
 import { toast } from '@/stores/toastStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 import type { AvatarColor } from '@/types/database'
 
 const AVATAR_COLORS: { value: AvatarColor; bg: string }[] = [
@@ -20,6 +22,8 @@ const AVATAR_COLORS: { value: AvatarColor; bg: string }[] = [
 export default function ProfilePage() {
   const { t, locale, setLocale } = useI18n()
   const { user } = useAuth()
+  const { setUser } = useAuthStore()
+  const queryClient = useQueryClient()
   const { theme, setTheme } = useTheme()
 
   const [name, setName] = useState('')
@@ -57,6 +61,10 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ avatar_url: url }),
       })
+      // Update auth store so sidebar and other components reflect the new avatar
+      setUser({ ...user, avatar_url: url })
+      // Invalidate members cache so sidebar member list also updates
+      queryClient.invalidateQueries({ queryKey: ['members'] })
       toast.success('写真をアップロードしました')
     } catch {
       toast.error('アップロードに失敗しました')

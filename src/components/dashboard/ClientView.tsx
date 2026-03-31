@@ -62,6 +62,7 @@ function ClientCard({ data }: { data: ClientCardData }) {
             <Avatar
               name_short={member.name_short}
               color={member.avatar_color}
+              avatar_url={member.avatar_url}
               size="sm"
             />
           </div>
@@ -102,6 +103,7 @@ function ClientTaskRow({ task }: { task: TaskWithRelations }) {
             <Avatar
               name_short={task.assigned_user.name_short}
               color={task.assigned_user.avatar_color}
+              avatar_url={task.assigned_user.avatar_url}
               size="sm"
             />
             <span className="text-[11px] text-text2 truncate">

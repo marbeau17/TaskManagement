@@ -153,6 +153,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
                     <Avatar
                       name_short={s.user.name_short}
                       color={s.user.avatar_color}
+                      avatar_url={s.user.avatar_url}
                       size="sm"
                     />
                     <span className="text-[13px] font-bold text-text truncate">
@@ -246,6 +247,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
               <Avatar
                 name_short={s.user.name_short}
                 color={s.user.avatar_color}
+                avatar_url={s.user.avatar_url}
                 size="sm"
               />
               <span className="text-[12px] font-medium truncate">

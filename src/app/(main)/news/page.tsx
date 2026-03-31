@@ -162,7 +162,7 @@ export default function NewsPage() {
                   </div>
                   <div className="flex items-center gap-[6px] mt-[4px]">
                     {article.author && (
-                      <Avatar name_short={article.author.name_short} color={article.author.avatar_color as any} size="sm" />
+                      <Avatar name_short={article.author.name_short} color={article.author.avatar_color as any} avatar_url={(article.author as any).avatar_url} size="sm" />
                     )}
                     <span className="text-[11px] text-text2">{article.author?.name ?? ''}</span>
                     <span className="text-[10px] text-text3 ml-auto">{formatDate(article.published_at)}</span>

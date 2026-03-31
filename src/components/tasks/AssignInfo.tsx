@@ -54,6 +54,7 @@ export function AssignInfo({ task }: AssignInfoProps) {
                   <Avatar
                     name_short={user.name_short}
                     color={user.avatar_color}
+                    avatar_url={user.avatar_url}
                     size="lg"
                   />
                   <div className="flex flex-col flex-1">
@@ -138,6 +139,7 @@ export function AssignInfo({ task }: AssignInfoProps) {
             <Avatar
               name_short={legacyUser.name_short}
               color={legacyUser.avatar_color}
+              avatar_url={legacyUser.avatar_url}
               size="lg"
             />
             <div className="flex flex-col">

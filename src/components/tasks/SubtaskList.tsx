@@ -170,6 +170,7 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
                     <Avatar
                       name_short={task.assigned_user.name_short}
                       color={task.assigned_user.avatar_color}
+                      avatar_url={task.assigned_user?.avatar_url}
                       size="sm"
                     />
                   ) : (

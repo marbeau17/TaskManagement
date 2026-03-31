@@ -118,6 +118,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
                   <Avatar
                     name_short={comment.user.name_short}
                     color={comment.user.avatar_color}
+                    avatar_url={comment.user.avatar_url}
                     size="sm"
                   />
                 )}

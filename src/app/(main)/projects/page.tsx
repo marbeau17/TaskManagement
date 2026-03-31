@@ -525,6 +525,7 @@ export default function ProjectsPage() {
                     <Avatar
                       name_short={project.pm.name_short}
                       color={project.pm.avatar_color}
+                      avatar_url={project.pm?.avatar_url}
                       size="sm"
                     />
                     <span className="text-[11px] text-text">

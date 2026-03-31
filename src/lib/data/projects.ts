@@ -21,7 +21,7 @@ export async function getProjects(filters?: ProjectFilters): Promise<Project[]> 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('projects')
-    .select('*, pm:users!pm_id(*)')
+    .select('*, pm:users!projects_pm_id_fkey(*)')
     .order('created_at', { ascending: false })
 
   if (filters?.status && filters.status !== 'all') {
@@ -58,7 +58,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('projects')
-    .select('*, pm:users!pm_id(*)')
+    .select('*, pm:users!projects_pm_id_fkey(*)')
     .eq('id', id)
     .single()
 
@@ -88,7 +88,7 @@ export async function createProject(
   const { data: result, error } = await (supabase as any)
     .from('projects')
     .insert(data)
-    .select('*, pm:users!pm_id(*)')
+    .select('*, pm:users!projects_pm_id_fkey(*)')
     .single()
 
   if (error) throw error
@@ -116,7 +116,7 @@ export async function updateProject(
     .from('projects')
     .update(data)
     .eq('id', id)
-    .select('*, pm:users!pm_id(*)')
+    .select('*, pm:users!projects_pm_id_fkey(*)')
     .single()
 
   if (error) throw error

@@ -219,6 +219,7 @@ export function AssignChangeModal({
                   <Avatar
                     name_short={user.name_short}
                     color={user.avatar_color}
+                    avatar_url={user.avatar_url}
                     size="sm"
                   />
                   <span className="text-[12px] font-semibold text-text flex-1">

@@ -329,7 +329,7 @@ export default function ProjectDetailPage() {
                     <div>
                       <div className="text-[10.5px] text-text2 mb-[2px]">PM</div>
                       <div className="flex items-center gap-[6px]">
-                        <Avatar name_short={project.pm.name_short} color={project.pm.avatar_color} size="sm" />
+                        <Avatar name_short={project.pm.name_short} color={project.pm.avatar_color} avatar_url={project.pm.avatar_url} size="sm" />
                         <span className="text-[12px] text-text">{project.pm.name}</span>
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export default function ProjectDetailPage() {
                       <td className="px-[12px] py-[10px]">
                         {issue.assignee ? (
                           <div className="flex items-center gap-[4px]">
-                            <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
+                            <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} avatar_url={issue.assignee.avatar_url} size="sm" />
                             <span className="text-[11px] text-text">{issue.assignee.name}</span>
                           </div>
                         ) : (
@@ -493,7 +493,7 @@ export default function ProjectDetailPage() {
                     className="grid grid-cols-[1fr_100px_80px] gap-[8px] px-[16px] py-[8px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
                   >
                     <div className="flex items-center gap-[8px]">
-                      <Avatar name_short={pm.member?.name_short ?? '?'} color={pm.member?.avatar_color ?? 'av-a'} size="sm" />
+                      <Avatar name_short={pm.member?.name_short ?? '?'} color={pm.member?.avatar_color ?? 'av-a'} avatar_url={pm.member?.avatar_url} size="sm" />
                       <div className="flex flex-col min-w-0">
                         <span className="text-[12px] font-medium truncate">{pm.member?.name ?? t('projects.unknown')}</span>
                         <span className="text-[10px] text-text3">{pm.member?.role ?? ''}</span>

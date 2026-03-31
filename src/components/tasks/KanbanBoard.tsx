@@ -115,6 +115,7 @@ function TaskCard({
                     key={a.id}
                     name_short={a.user.name_short}
                     color={a.user.avatar_color}
+                    avatar_url={a.user?.avatar_url}
                     size="sm"
                   />
                 ) : null
@@ -129,6 +130,7 @@ function TaskCard({
             <Avatar
               name_short={task.assigned_user.name_short}
               color={task.assigned_user.avatar_color}
+              avatar_url={task.assigned_user?.avatar_url}
               size="sm"
             />
           ) : (

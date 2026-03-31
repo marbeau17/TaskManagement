@@ -21,7 +21,7 @@ export async function getProjectMembers(projectName?: string): Promise<ProjectMe
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('project_members')
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
+    .select('*, pm:users!project_members_pm_id_fkey(*), member:users!project_members_member_id_fkey(*)')
     .order('created_at', { ascending: false })
 
   if (projectName) {
@@ -61,7 +61,7 @@ export async function addProjectMember(
       member_id: memberId,
       allocated_hours: allocatedHours,
     })
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
+    .select('*, pm:users!project_members_pm_id_fkey(*), member:users!project_members_member_id_fkey(*)')
     .single()
 
   if (error) throw error
@@ -109,7 +109,7 @@ export async function updateProjectMemberHours(id: string, hours: number): Promi
     .from('project_members')
     .update({ allocated_hours: hours })
     .eq('id', id)
-    .select('*, pm:users!pm_id(*), member:users!member_id(*)')
+    .select('*, pm:users!project_members_pm_id_fkey(*), member:users!project_members_member_id_fkey(*)')
     .single()
 
   if (error) throw error

@@ -98,7 +98,7 @@ export default function WorkloadPage() {
         {selectedMember && (
           <div className="bg-surface border border-border2 rounded-[10px] shadow p-[16px]">
             <div className="flex items-start gap-[12px] mb-[12px]">
-              <Avatar name_short={selectedMember.name_short} color={selectedMember.avatar_color} size="md" />
+              <Avatar name_short={selectedMember.name_short} color={selectedMember.avatar_color} avatar_url={selectedMember.avatar_url} size="md" />
               <div className="flex-1">
                 <h2 className="text-[16px] font-bold text-text">{selectedMember.name}</h2>
                 <p className="text-[12px] text-text2">{selectedMember.email}</p>

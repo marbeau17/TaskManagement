@@ -21,6 +21,7 @@ function OrgNode({ user, allUsers }: { user: User; allUsers: User[] }) {
           <Avatar
             name_short={user.name_short || user.name.charAt(0)}
             color={user.avatar_color}
+            avatar_url={user.avatar_url}
             size="md"
           />
         </div>

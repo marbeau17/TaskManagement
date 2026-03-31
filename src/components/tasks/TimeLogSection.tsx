@@ -155,6 +155,7 @@ export function TimeLogSection({ taskId, currentUserId }: TimeLogSectionProps) {
                 <Avatar
                   name_short={log.user.name_short}
                   color={log.user.avatar_color}
+                  avatar_url={log.user.avatar_url}
                   size="sm"
                 />
               )}

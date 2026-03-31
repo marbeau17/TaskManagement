@@ -96,7 +96,7 @@ export function CapacityMatrix() {
               <tr key={member.id} className="border-b border-border2 hover:bg-surf2/30 transition-colors">
                 <td className="px-[10px] py-[6px] sticky left-0 bg-surface z-10">
                   <div className="flex items-center gap-[6px]">
-                    <Avatar name_short={member.name_short} color={member.avatar_color} size="sm" />
+                    <Avatar name_short={member.name_short} color={member.avatar_color} avatar_url={member.avatar_url} size="sm" />
                     <div>
                       <div className="text-[11px] font-medium text-text truncate">{member.name}</div>
                       <div className="text-[9px] text-text3">{member.weekly_capacity_hours}h/w</div>

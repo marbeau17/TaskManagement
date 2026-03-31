@@ -588,6 +588,7 @@ export default function MembersPage() {
                       <Avatar
                         name_short={member.name_short}
                         color={member.avatar_color}
+                        avatar_url={member.avatar_url}
                         size="sm"
                       />
                       <span className="font-medium truncate">{member.name}</span>

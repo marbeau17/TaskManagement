@@ -107,7 +107,7 @@ export function UpcomingTasks() {
                   <div className="text-[10px] text-text3 truncate">{task.client.name}</div>
                 </div>
                 {task.assigned_user ? (
-                  <Avatar name_short={task.assigned_user.name_short} color={task.assigned_user.avatar_color} size="sm" />
+                  <Avatar name_short={task.assigned_user.name_short} color={task.assigned_user.avatar_color} avatar_url={task.assigned_user?.avatar_url} size="sm" />
                 ) : (
                   <span className="text-[9px] text-warn italic">{t('tasks.unassigned')}</span>
                 )}

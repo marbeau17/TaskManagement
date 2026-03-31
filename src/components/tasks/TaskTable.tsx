@@ -150,6 +150,7 @@ function SubtaskRows({
                     <Avatar
                       name_short={task.assigned_user.name_short}
                       color={task.assigned_user.avatar_color}
+                      avatar_url={task.assigned_user.avatar_url}
                       size="sm"
                     />
                     <span className="text-[11.5px] text-text whitespace-nowrap">
@@ -548,6 +549,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                               key={a.id}
                               name_short={a.user.name_short}
                               color={a.user.avatar_color}
+                              avatar_url={a.user?.avatar_url}
                               size="sm"
                             />
                           ) : null
@@ -557,6 +559,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       <Avatar
                         name_short={task.assigned_user.name_short}
                         color={task.assigned_user.avatar_color}
+                        avatar_url={task.assigned_user.avatar_url}
                         size="sm"
                       />
                     ) : (
@@ -805,6 +808,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                                 key={a.id}
                                 name_short={a.user.name_short}
                                 color={a.user.avatar_color}
+                                avatar_url={a.user?.avatar_url}
                                 size="sm"
                               />
                             ) : null
@@ -828,6 +832,7 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         <Avatar
                           name_short={task.assigned_user.name_short}
                           color={task.assigned_user.avatar_color}
+                          avatar_url={task.assigned_user.avatar_url}
                           size="sm"
                         />
                         <span className="text-[11.5px] text-text whitespace-nowrap">

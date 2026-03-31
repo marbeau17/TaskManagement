@@ -263,7 +263,7 @@ export default function IssuesPage() {
                   </div>
                   {issue.assignee ? (
                     <div className="flex items-center gap-[4px]">
-                      <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
+                      <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} avatar_url={issue.assignee.avatar_url} size="sm" />
                       <span className="text-[11px] text-text">{issue.assignee.name}</span>
                     </div>
                   ) : (
@@ -413,7 +413,7 @@ export default function IssuesPage() {
                           </select>
                         ) : issue.assignee ? (
                           <div className="flex items-center gap-[4px]">
-                            <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} size="sm" />
+                            <Avatar name_short={issue.assignee.name_short} color={issue.assignee.avatar_color} avatar_url={issue.assignee.avatar_url} size="sm" />
                             <span className="text-[11px] text-text whitespace-nowrap">{issue.assignee.name}</span>
                           </div>
                         ) : (
