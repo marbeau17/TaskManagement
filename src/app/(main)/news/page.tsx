@@ -91,7 +91,7 @@ export default function NewsPage() {
         )}
       </Topbar>
 
-      <div className="p-[12px] md:p-[20px] max-w-[800px] mx-auto">
+      <div className="p-[12px] md:p-[20px] max-w-[1200px] mx-auto">
         {/* Editor */}
         {creating && isAdmin && (
           <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow mb-[16px]">
@@ -114,7 +114,16 @@ export default function NewsPage() {
               {contentHtml && (
                 <div className="border border-border2 rounded-[6px] p-[12px]">
                   <p className="text-[10px] text-text3 mb-[6px] font-semibold">{t('news.preview')}</p>
-                  <div className="text-[13px] text-text prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+                  {contentHtml.includes('<!DOCTYPE') || contentHtml.includes('<html') ? (
+                    <iframe
+                      srcDoc={contentHtml}
+                      className="w-full border-0 rounded"
+                      style={{ minHeight: '400px' }}
+                      sandbox="allow-scripts allow-same-origin"
+                    />
+                  ) : (
+                    <div className="text-[13px] text-text prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+                  )}
                 </div>
               )}
               <div className="flex gap-[8px] justify-end">
@@ -159,7 +168,22 @@ export default function NewsPage() {
                   </div>
                 </div>
                 <div className="px-[16px] py-[14px]">
-                  <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: article.content_html }} />
+                  {article.content_html.includes('<!DOCTYPE') || article.content_html.includes('<html') ? (
+                    <iframe
+                      srcDoc={article.content_html}
+                      className="w-full border-0 rounded"
+                      style={{ minHeight: '600px' }}
+                      sandbox="allow-scripts allow-same-origin allow-popups"
+                      onLoad={(e) => {
+                        const iframe = e.target as HTMLIFrameElement
+                        if (iframe.contentDocument) {
+                          iframe.style.height = iframe.contentDocument.documentElement.scrollHeight + 'px'
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: article.content_html }} />
+                  )}
                 </div>
               </div>
             ))}
