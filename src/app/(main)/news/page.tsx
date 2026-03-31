@@ -92,7 +92,7 @@ export default function NewsPage() {
         )}
       </Topbar>
 
-      <div className="p-[12px] md:p-[20px] max-w-[1200px] mx-auto">
+      <div className="p-[12px] md:p-[20px]">
         {/* Editor */}
         {creating && isAdmin && (
           <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow mb-[16px]">
@@ -173,7 +173,7 @@ export default function NewsPage() {
                     <iframe
                       srcDoc={article.content_html}
                       className="w-full border-0 rounded"
-                      style={{ minHeight: '600px' }}
+                      style={{ minHeight: '80vh' }}
                       sandbox="allow-scripts allow-same-origin allow-popups"
                       onLoad={(e) => {
                         const iframe = e.target as HTMLIFrameElement
