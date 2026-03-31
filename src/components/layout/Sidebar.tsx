@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Settings, KeyRound, LogOut, Sun, Moon, Monitor } from 'lucide-react'
+import { Settings, KeyRound, LogOut, Sun, Moon, Monitor, User } from 'lucide-react'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useMembers } from '@/hooks/useMembers'
@@ -258,6 +258,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={() => router.push('/profile')}
+                >
+                  <User className="w-[14px] h-[14px]" />
+                  {t('profile.title')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={() => setShowPasswordModal(true)}
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
@@ -300,6 +307,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 <Settings className="w-[14px] h-[14px]" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="end" sideOffset={8}>
+                <DropdownMenuItem
+                  className="text-[12px] gap-[8px] cursor-pointer"
+                  onSelect={() => router.push('/profile')}
+                >
+                  <User className="w-[14px] h-[14px]" />
+                  {t('profile.title')}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={() => setShowPasswordModal(true)}
