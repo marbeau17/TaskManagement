@@ -274,8 +274,14 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
               min={0}
               max={40}
               step={0.5}
-              value={task.planned_hours_per_week ?? 0}
-              onChange={(e) => handleSave('planned_hours_per_week', Number(e.target.value))}
+              defaultValue={task.planned_hours_per_week ?? 0}
+              key={`phw-${task.id}-${task.planned_hours_per_week}`}
+              onBlur={(e) => {
+                const val = Number(e.target.value)
+                if (val !== (task.planned_hours_per_week ?? 0)) {
+                  handleSave('planned_hours_per_week', val)
+                }
+              }}
               className="w-20 text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint"
             />
             <span className="text-[12px] text-text2">{t('taskDetailInfo.hoursPerWeek')}</span>
