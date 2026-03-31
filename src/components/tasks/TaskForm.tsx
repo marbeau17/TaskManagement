@@ -10,7 +10,7 @@ import type { TaskTemplate } from '@/types/template'
 import { useClients } from '@/hooks/useClients'
 import { useTasks } from '@/hooks/useTasks'
 import { useTemplates } from '@/hooks/useTemplates'
-import { useProjects } from '@/hooks/useProjects'
+import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { TemplateFieldRenderer } from '@/components/tasks/TemplateFieldRenderer'
 import { useI18n } from '@/hooks/useI18n'
 
@@ -71,7 +71,12 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
   // Project state
   const { data: projectList } = useProjects()
   const { data: clientList } = useClients()
+  const createProject = useCreateProject()
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const [showNewProject, setShowNewProject] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [newProjectPrefix, setNewProjectPrefix] = useState('')
+  const [newProjectClientId, setNewProjectClientId] = useState('')
 
   // When project is selected, auto-fill client name from tasks associated with that project
   const handleProjectChange = useCallback((projectId: string) => {
@@ -85,6 +90,35 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       if (client) setValue('client_name', client.name)
     }
   }, [projectList, clientList, setValue])
+
+  const handleCreateProject = useCallback(() => {
+    if (!newProjectName.trim() || !newProjectPrefix.trim()) return
+    createProject.mutate(
+      {
+        name: newProjectName.trim(),
+        key_prefix: newProjectPrefix.trim().toUpperCase(),
+        description: '',
+        status: 'planning' as const,
+        pm_id: null,
+        client_id: newProjectClientId || null,
+        start_date: null,
+        end_date: null,
+      },
+      {
+        onSuccess: (project) => {
+          setSelectedProjectId(project.id)
+          if (newProjectClientId) {
+            const client = clientList?.find((c) => c.id === newProjectClientId)
+            if (client) setValue('client_name', client.name)
+          }
+          setShowNewProject(false)
+          setNewProjectName('')
+          setNewProjectPrefix('')
+          setNewProjectClientId('')
+        },
+      }
+    )
+  }, [newProjectName, newProjectPrefix, newProjectClientId, createProject, clientList, setValue])
 
   // Template state
   const { data: templates } = useTemplates()
@@ -162,23 +196,88 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
           >
             {t('taskForm.projectLabel')}
           </label>
-          <select
-            id="project_select"
-            value={selectedProjectId}
-            onChange={(e) => handleProjectChange(e.target.value)}
-            className="
-              w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
-              bg-surface
-              focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
-            "
-          >
-            <option value="">{t('taskForm.projectNone')}</option>
-            {(projectList ?? []).map((p) => (
-              <option key={p.id} value={p.id}>
-                [{p.key_prefix}] {p.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select
+              id="project_select"
+              value={selectedProjectId}
+              onChange={(e) => handleProjectChange(e.target.value)}
+              className="
+                flex-1 rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
+                bg-surface
+                focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
+              "
+            >
+              <option value="">{t('taskForm.projectNone')}</option>
+              {(projectList ?? []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  [{p.key_prefix}] {p.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowNewProject(!showNewProject)}
+              className="shrink-0 px-3 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors"
+            >
+              ＋ {t('taskForm.newProject')}
+            </button>
+          </div>
+
+          {/* Inline project creation form */}
+          {showNewProject && (
+            <div className="mt-3 p-4 rounded-lg border border-mint/30 bg-mint/5 space-y-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-text2 mb-1">{t('taskForm.newProjectName')} <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder={t('taskForm.newProjectNamePlaceholder')}
+                  className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-text2 mb-1">{t('taskForm.newProjectPrefix')} <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  value={newProjectPrefix}
+                  onChange={(e) => setNewProjectPrefix(e.target.value.toUpperCase().slice(0, 10))}
+                  placeholder={t('taskForm.newProjectPrefixPlaceholder')}
+                  className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint uppercase"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-text2 mb-1">{t('taskForm.newProjectClient')}</label>
+                <select
+                  value={newProjectClientId}
+                  onChange={(e) => setNewProjectClientId(e.target.value)}
+                  className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
+                >
+                  <option value="">{t('common.none')}</option>
+                  {(clientList ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowNewProject(false)}
+                  className="px-4 py-2 rounded-lg text-[12px] font-semibold text-text2 bg-surf2 border border-wf-border hover:bg-wf-border transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateProject}
+                  disabled={!newProjectName.trim() || !newProjectPrefix.trim() || createProject.isPending}
+                  className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-mint hover:bg-mint-d transition-colors disabled:opacity-50"
+                >
+                  {createProject.isPending ? t('common.loading') : t('taskForm.createProject')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

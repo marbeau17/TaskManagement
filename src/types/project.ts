@@ -6,6 +6,7 @@ export interface Project {
   description: string
   status: ProjectStatus
   pm_id: string | null
+  client_id: string | null
   key_prefix: string
   next_issue_seq: number
   start_date: string | null
