@@ -183,6 +183,7 @@ export interface UpdateCustomFieldDefinition {
 
 export interface TaskWithRelations extends Task {
   client: Client
+  project?: { id: string; name: string } | null
   assigned_user: User | null
   requester: User
   director: User | null

@@ -6,6 +6,7 @@ import { useTemplates } from '@/hooks/useTemplates'
 import { useI18n } from '@/hooks/useI18n'
 import { useUpdateTask } from '@/hooks/useTasks'
 import { useClients } from '@/hooks/useClients'
+import { useProjects } from '@/hooks/useProjects'
 
 interface TaskDetailInfoProps {
   task: TaskWithRelations & {
@@ -110,11 +111,13 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
   const { t } = useI18n()
   const { data: templates } = useTemplates()
   const { data: clients } = useClients()
+  const { data: projects } = useProjects()
   const updateTask = useUpdateTask()
   const deadline = task.confirmed_deadline ?? task.desired_deadline
   const overdue = task.status !== 'done' && isOverdue(deadline)
 
   const [editingClient, setEditingClient] = useState(false)
+  const [editingProject, setEditingProject] = useState(false)
 
   const template = task.template_id && templates
     ? templates.find((t) => t.id === task.template_id) ?? null
@@ -155,6 +158,36 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
             title="Click to edit"
           >
             {'🏢 '}{task.client.name}
+          </span>
+        )}
+      </div>
+
+      {/* Project name */}
+      <div className="mb-3">
+        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.project') ?? 'プロジェクト'}</span>
+        {editingProject ? (
+          <select
+            value={task.project_id ?? ''}
+            onChange={(e) => {
+              handleSave('project_id', e.target.value || null)
+              setEditingProject(false)
+            }}
+            onBlur={() => setEditingProject(false)}
+            autoFocus
+            className="text-[13px] text-text bg-surface border border-mint rounded-md px-2 py-1 focus:outline-none w-full"
+          >
+            <option value="">{t('common.none') ?? '未設定'}</option>
+            {projects?.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        ) : (
+          <span
+            onClick={() => setEditingProject(true)}
+            className="text-[13px] font-bold text-text cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors inline-block"
+            title="Click to edit"
+          >
+            {'📁 '}{task.project?.name ?? t('common.none') ?? '未設定'}
           </span>
         )}
       </div>
