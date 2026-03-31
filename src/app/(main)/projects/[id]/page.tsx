@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useProject } from '@/hooks/useProjects'
+import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProjects'
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
 import { useMembers } from '@/hooks/useMembers'
@@ -137,6 +137,8 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [showAddMember, setShowAddMember] = useState(false)
   const [removingMember, setRemovingMember] = useState<ProjectMember | null>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
 
   const { data: project, isLoading: projectLoading } = useProject(params.id)
   const { data: allTasks } = useTasks()
@@ -145,6 +147,8 @@ export default function ProjectDetailPage() {
   const { data: users } = useMembers()
   const addMutation = useAddProjectMember()
   const removeMutation = useRemoveProjectMember()
+  const updateProject = useUpdateProject()
+  const deleteProject = useDeleteProject()
 
   // Tasks for this project
   const projectTasks = useMemo(() => {
@@ -242,12 +246,43 @@ export default function ProjectDetailPage() {
         <span className="text-[10px] font-bold text-mint bg-mint-ll dark:bg-mint-dd/30 px-[7px] py-[2px] rounded-[4px]">
           {project.key_prefix}
         </span>
-        <h1 className="text-[15px] font-bold text-text truncate max-w-[400px]">
-          {project.name}
-        </h1>
+        {editingName ? (
+          <input
+            type="text" value={nameDraft} autoFocus
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => {
+              if (nameDraft.trim() && nameDraft !== project.name) {
+                updateProject.mutate({ id: project.id, data: { name: nameDraft.trim() } })
+              }
+              setEditingName(false)
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingName(false) }}
+            className="text-[15px] font-bold text-text bg-surface border border-mint rounded-md px-2 py-0.5 focus:outline-none max-w-[300px]"
+          />
+        ) : (
+          <h1
+            className="text-[15px] font-bold text-text truncate max-w-[400px] cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors"
+            onClick={() => { setNameDraft(project.name); setEditingName(true) }}
+            title={t('common.edit')}
+          >
+            {project.name}
+          </h1>
+        )}
         <span className={`${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} text-[10px] px-[8px] py-[1px] rounded-full font-semibold border`}>
           {t(statusConfig.key)}
         </span>
+        <div className="flex-1" />
+        <button
+          onClick={() => {
+            if (window.confirm(`「${project.name}」を削除しますか？`)) {
+              deleteProject.mutate(project.id, { onSuccess: () => router.push('/projects') })
+            }
+          }}
+          disabled={deleteProject.isPending}
+          className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-danger-b text-danger bg-surface hover:bg-danger-bg transition-colors disabled:opacity-50"
+        >
+          {t('common.delete')}
+        </button>
       </div>
 
       {/* Tabs */}
