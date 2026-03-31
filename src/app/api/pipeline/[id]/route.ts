@@ -12,9 +12,16 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
 
+    // Filter to known columns only to prevent errors from missing columns
+    const KNOWN_COLS = ['seq_id','is_new','client_type','client_name','referral_source','opportunity_name','sub_opportunity','status','probability','cm_percent','pm_user_id','consultant1_user_id','consultant2_user_id']
+    const filtered: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    for (const key of KNOWN_COLS) {
+      if (key in body) filtered[key] = body[key]
+    }
+
     const { data, error } = await db
       .from('pipeline_opportunities')
-      .update({ ...body, updated_at: new Date().toISOString() })
+      .update(filtered)
       .eq('id', id)
       .select()
       .single()
