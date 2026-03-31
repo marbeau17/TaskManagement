@@ -61,7 +61,11 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   const { data: members } = useMembers()
   const { data: waitingCount = 0 } = useWaitingTaskCount()
   const router = useRouter()
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showPasswordModal, _setShowPasswordModal] = useState(false)
+  const setShowPasswordModal = (val: boolean) => {
+    console.log('[PasswordModal] setShowPasswordModal called with:', val, 'stack:', new Error().stack?.split('\n').slice(1, 4).join(' | '))
+    _setShowPasswordModal(val)
+  }
   const [appName, setAppName] = useState(APP_CONFIG.branding.appName)
   const { theme, setTheme } = useTheme()
   const { t } = useI18n()
@@ -352,9 +356,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
       </div>
 
       {/* Password change modal */}
+      {showPasswordModal && (() => { console.log('[PasswordModal] Rendering modal, open=true'); return null })()}
       <PasswordChangeModal
         open={showPasswordModal}
-        onOpenChange={setShowPasswordModal}
+        onOpenChange={(val) => {
+          console.log('[PasswordModal] onOpenChange called with:', val)
+          setShowPasswordModal(val)
+        }}
       />
     </aside>
   )

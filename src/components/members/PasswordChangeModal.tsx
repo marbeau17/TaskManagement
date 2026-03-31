@@ -94,6 +94,7 @@ export function PasswordChangeModal({
   }
 
   const handleClose = (nextOpen: boolean) => {
+    console.log('[PasswordModal] handleClose called with:', nextOpen)
     if (!nextOpen) {
       reset()
       setServerError(null)
@@ -106,6 +107,8 @@ export function PasswordChangeModal({
   const inputClass =
     'w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint placeholder:text-text3'
   const errorClass = 'text-[10px] text-danger mt-[2px]'
+
+  console.log('[PasswordModal] render, open=', open)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
