@@ -164,7 +164,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
 
       {/* Project name */}
       <div className="mb-3">
-        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.project') ?? 'プロジェクト'}</span>
+        <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.project')}</span>
         {editingProject ? (
           <select
             value={task.project_id ?? ''}
@@ -176,7 +176,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
             autoFocus
             className="text-[13px] text-text bg-surface border border-mint rounded-md px-2 py-1 focus:outline-none w-full"
           >
-            <option value="">{t('common.none') ?? '未設定'}</option>
+            <option value="">{t('common.none')}</option>
             {projects?.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -216,13 +216,16 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
       {/* Start date + Deadlines */}
       <div className="flex gap-6 flex-wrap">
         <div>
-          <span className="text-[12px] text-text2 block mb-1">開始日</span>
+          <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.startDate')}</span>
           <input
             type="date"
             value={toInputDate(task.start_date)}
             onChange={(e) => handleSave('start_date', e.target.value || null)}
-            className="text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
+            className={`text-[13px] text-text bg-surface border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer ${!task.start_date ? 'border-danger bg-danger/5' : 'border-wf-border'}`}
           />
+          {!task.start_date && (
+            <span className="text-[11px] text-danger block mt-1">⚠ {t('taskDetailInfo.startDateRequired')}</span>
+          )}
         </div>
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.desiredDeadline')}</span>
