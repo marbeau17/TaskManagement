@@ -277,7 +277,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 </a>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => setShowPasswordModal(true)}
+                  onSelect={(e) => { e.preventDefault(); setShowPasswordModal(true) }}
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
@@ -325,7 +325,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 </a>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => setShowPasswordModal(true)}
+                  onSelect={(e) => { e.preventDefault(); setShowPasswordModal(true) }}
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
