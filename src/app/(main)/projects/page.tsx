@@ -10,6 +10,7 @@ import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
 import { useDebounce } from '@/hooks/useDebounce'
 import { usePermission } from '@/hooks/usePermission'
+import { useClients } from '@/hooks/useClients'
 import { useI18n } from '@/hooks/useI18n'
 import type { Project, ProjectStatus } from '@/types/project'
 
@@ -71,17 +72,20 @@ function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
 
 function CreateProjectModal({
   members,
+  clients,
   onClose,
   onSubmit,
   saving,
 }: {
   members: { id: string; name: string; role: string }[]
+  clients: { id: string; name: string }[]
   onClose: () => void
   onSubmit: (data: {
     name: string
     description: string
     key_prefix: string
     pm_id: string | null
+    client_id: string | null
     status: ProjectStatus
     start_date: string | null
     end_date: string | null
@@ -93,6 +97,7 @@ function CreateProjectModal({
   const [description, setDescription] = useState('')
   const [keyPrefix, setKeyPrefix] = useState('')
   const [pmId, setPmId] = useState('')
+  const [clientId, setClientId] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
@@ -107,6 +112,7 @@ function CreateProjectModal({
       description: description.trim(),
       key_prefix: keyPrefix.trim().toUpperCase(),
       pm_id: pmId || null,
+      client_id: clientId || null,
       status: 'planning',
       start_date: startDate || null,
       end_date: endDate || null,
@@ -182,6 +188,22 @@ function CreateProjectModal({
             </select>
           </div>
 
+          <div>
+            <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+              クライアント
+            </label>
+            <select
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            >
+              <option value="">未設定</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-[10px]">
             <div>
               <label className="text-[11px] text-text2 font-medium block mb-[4px]">
@@ -245,6 +267,7 @@ export default function ProjectsPage() {
 
   const { data: projects, isLoading } = useProjects()
   const { data: members } = useMembers()
+  const { data: clientsList } = useClients()
   const { data: allTasks } = useTasks()
   const { data: allIssues } = useIssues()
   const createProjectMutation = useCreateProject()
@@ -536,6 +559,7 @@ export default function ProjectsPage() {
       {showCreateModal && (
         <CreateProjectModal
           members={membersList}
+          clients={(clientsList ?? []).map((c) => ({ id: c.id, name: c.name }))}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateProject}
           saving={createProjectMutation.isPending}
