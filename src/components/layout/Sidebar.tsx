@@ -50,10 +50,10 @@ function canSeePipeline(u: { role: string; name: string } | null): boolean {
 
 const SYSTEM_NAV = [
   { id: 'reports', labelKey: 'nav.reports', icon: '📊', href: '/reports' },
-  { id: 'templates', labelKey: 'nav.templates', icon: '📝', href: '/templates' },
-  { id: 'import', labelKey: 'nav.import', icon: '📥', href: '/import' },
-  { id: 'members', labelKey: 'nav.members', icon: '👥', href: '/members' },
-  { id: 'settings', labelKey: 'nav.settings', icon: '⚙', href: '/settings' },
+  { id: 'templates', labelKey: 'nav.templates', icon: '📝', href: '/templates', adminOnly: true },
+  { id: 'import', labelKey: 'nav.import', icon: '📥', href: '/import', adminOnly: true },
+  { id: 'members', labelKey: 'nav.members', icon: '👥', href: '/members', adminOnly: true },
+  { id: 'settings', labelKey: 'nav.settings', icon: '⚙', href: '/settings', adminOnly: true },
 ]
 
 export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarProps) {
@@ -205,7 +205,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
-          {SYSTEM_NAV.map((item) => {
+          {SYSTEM_NAV.filter((item) => !(item as any).adminOnly || (user?.role === 'admin' || user?.role === 'director')).map((item) => {
             const isActive = activePage === item.id
             const label = t(item.labelKey)
             return (
