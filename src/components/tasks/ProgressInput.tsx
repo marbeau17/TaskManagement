@@ -5,6 +5,7 @@ import type { TaskWithRelations, TaskStatus } from '@/types/database'
 import { useUpdateTaskProgress } from '@/hooks/useTasks'
 import { StatusChip } from '@/components/shared'
 import { useI18n } from '@/hooks/useI18n'
+import { toast } from '@/stores/toastStore'
 
 interface ProgressInputProps {
   task: TaskWithRelations
@@ -26,10 +27,10 @@ export function ProgressInput({ task }: ProgressInputProps) {
   const mutation = useUpdateTaskProgress()
 
   const handleSubmit = () => {
-    mutation.mutate({
-      taskId: task.id,
-      update: { progress, status, actual_hours: actualHours },
-    })
+    mutation.mutate(
+      { taskId: task.id, update: { progress, status, actual_hours: actualHours } },
+      { onSuccess: () => { toast.success('更新しました') } }
+    )
   }
 
   return (
