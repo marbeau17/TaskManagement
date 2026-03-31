@@ -70,6 +70,7 @@ function EditMemberModal({
   const { t } = useI18n()
   const [name, setName] = useState(member.name)
   const [nameShort, setNameShort] = useState(member.name_short ?? '')
+  const [email, setEmail] = useState(member.email)
   const [role, setRole] = useState<UserRole>(member.role)
   const [capacity, setCapacity] = useState(
     String(member.weekly_capacity_hours)
@@ -90,6 +91,7 @@ function EditMemberModal({
       await updateMember(member.id, {
         name: name.trim() || member.name,
         name_short: nameShort.trim() || undefined,
+        email: email.trim() || member.email,
         role,
         weekly_capacity_hours: parseFloat(capacity) || 16,
         manager_id: managerId || null,
@@ -160,14 +162,17 @@ function EditMemberModal({
             />
           </div>
 
-          {/* Email (read-only) */}
+          {/* Email */}
           <div>
             <label className="text-[11px] text-text2 font-medium block mb-[4px]">
               {t('members.email')}
             </label>
-            <div className="text-[13px] text-text px-[10px] py-[7px] bg-surf2 rounded-[6px]">
-              {member.email}
-            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            />
           </div>
 
           {/* Role */}
