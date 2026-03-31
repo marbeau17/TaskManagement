@@ -312,7 +312,17 @@ export default function ProjectDetailPage() {
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <div className="text-[10.5px] text-text2 mb-[2px]">{t('projects.description')}</div>
-                  <div className="text-[12.5px] text-text">{project.description || t('projects.noDescription')}</div>
+                  <textarea
+                    defaultValue={project.description ?? ''}
+                    onBlur={(e) => {
+                      if (e.target.value !== (project.description ?? '')) {
+                        updateProject.mutate({ id: project.id, data: { description: e.target.value } })
+                      }
+                    }}
+                    placeholder={t('projects.noDescription')}
+                    rows={3}
+                    className="w-full text-[12.5px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none resize-y"
+                  />
                 </div>
                 <div className="space-y-[8px]">
                   {project.pm && (
