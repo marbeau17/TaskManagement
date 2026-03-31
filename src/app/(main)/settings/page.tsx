@@ -20,6 +20,7 @@ export default function SettingsPage() {
 
   // Organization settings
   const [orgName, setOrgName] = useState('ワークフロー株式会社')
+  const [appDisplayName, setAppDisplayName] = useState('WorkFlow')
 
   // Workload thresholds
   const [warningThreshold, setWarningThreshold] = useState('80')
@@ -64,6 +65,9 @@ export default function SettingsPage() {
     getSetting('org_name').then((val) => {
       if (val) setOrgName(val)
     })
+    getSetting('app_name').then((val) => {
+      if (val) setAppDisplayName(val)
+    })
     getSetting('workload_warning_threshold').then((val) => {
       if (val) setWarningThreshold(val)
     })
@@ -97,6 +101,7 @@ export default function SettingsPage() {
     try {
       await Promise.all([
         setSetting('org_name', orgName),
+        setSetting('app_name', appDisplayName),
         setSetting('workload_warning_threshold', warningThreshold),
         setSetting('workload_danger_threshold', dangerThreshold),
         geminiApiKey ? setSetting('gemini_api_key', geminiApiKey) : Promise.resolve(),
@@ -197,16 +202,30 @@ export default function SettingsPage() {
               <h2 className="text-[14px] font-bold text-text mb-[12px]">
                 {t('settings.general')}
               </h2>
-              <div>
-                <label className="text-[11px] text-text2 font-medium block mb-[4px]">
-                  {t('settings.orgName')}
-                </label>
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-                />
+              <div className="space-y-[12px]">
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+                    {t('settings.orgName')}
+                  </label>
+                  <input
+                    type="text"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] text-text2 font-medium block mb-[4px]">
+                    アプリ表示名（左上ロゴ横）
+                  </label>
+                  <input
+                    type="text"
+                    value={appDisplayName}
+                    onChange={(e) => setAppDisplayName(e.target.value)}
+                    className="w-full text-[13px] text-text px-[10px] py-[7px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+                    placeholder="WorkFlow"
+                  />
+                </div>
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Settings, KeyRound, LogOut, Sun, Moon, Monitor, User } from 'lucide-react'
@@ -62,8 +62,16 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
   const { data: waitingCount = 0 } = useWaitingTaskCount()
   const router = useRouter()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [appName, setAppName] = useState(APP_CONFIG.branding.appName)
   const { theme, setTheme } = useTheme()
   const { t } = useI18n()
+
+  // Load app name from settings
+  useEffect(() => {
+    fetch('/api/settings?key=app_name').then(r => r.json()).then(d => {
+      if (d.value) setAppName(d.value)
+    }).catch(() => {})
+  }, [])
 
   // Derive creator list dynamically from members data
   const creators = useMemo(() => {
@@ -104,13 +112,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
     <aside className={`${collapsed ? 'w-[56px]' : 'w-[192px]'} bg-mint-dd flex flex-col h-full shrink-0 select-none overflow-y-auto overflow-x-hidden`}>
       {/* Logo */}
       <div className={`${collapsed ? 'px-[8px] pt-[16px] pb-[12px] flex justify-center' : 'px-[16px] pt-[16px] pb-[12px]'}`}>
-        <Link href={APP_CONFIG.branding.landingPage} onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? APP_CONFIG.branding.appName : undefined}>
+        <Link href={APP_CONFIG.branding.landingPage} onClick={onNavigate} className="flex items-center gap-[7px] text-white no-underline" title={collapsed ? appName : undefined}>
           {APP_CONFIG.branding.logoUrl ? (
-            <img src={APP_CONFIG.branding.logoUrl} alt={APP_CONFIG.branding.appName} width={APP_CONFIG.branding.logoWidth} height={APP_CONFIG.branding.logoHeight} className="shrink-0" />
+            <img src={APP_CONFIG.branding.logoUrl} alt={appName} width={APP_CONFIG.branding.logoWidth} height={APP_CONFIG.branding.logoHeight} className="shrink-0" />
           ) : (
             <span className="text-[18px]">✦</span>
           )}
-          {!collapsed && <span className="text-[15px] font-bold tracking-wide">{APP_CONFIG.branding.appName}</span>}
+          {!collapsed && <span className="text-[15px] font-bold tracking-wide">{appName}</span>}
         </Link>
       </div>
 
@@ -264,7 +272,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { setTimeout(() => { window.location.href = '/profile' }, 100) }}
+                  onSelect={() => { console.log('[Profile] Menu clicked, navigating...'); setTimeout(() => { console.log('[Profile] Navigating to /profile'); window.location.href = '/profile' }, 150) }}
                 >
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
@@ -315,7 +323,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
               <DropdownMenuContent side="top" align="end" sideOffset={8}>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { setTimeout(() => { window.location.href = '/profile' }, 100) }}
+                  onSelect={() => { console.log('[Profile] Menu clicked, navigating...'); setTimeout(() => { console.log('[Profile] Navigating to /profile'); window.location.href = '/profile' }, 150) }}
                 >
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
