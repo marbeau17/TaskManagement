@@ -54,6 +54,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm<Step1FormValues>({
     resolver: zodResolver(step1Schema),
@@ -69,7 +70,21 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
 
   // Project state
   const { data: projectList } = useProjects()
+  const { data: clientList } = useClients()
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+
+  // When project is selected, auto-fill client name from tasks associated with that project
+  const handleProjectChange = useCallback((projectId: string) => {
+    setSelectedProjectId(projectId)
+    if (!projectId || !clientList) return
+    // Find tasks with this project_id to get the client
+    // Or use project's client association if available
+    const project = projectList?.find((p) => p.id === projectId)
+    if (project && (project as any).client_id) {
+      const client = clientList.find((c) => c.id === (project as any).client_id)
+      if (client) setValue('client_name', client.name)
+    }
+  }, [projectList, clientList, setValue])
 
   // Template state
   const { data: templates } = useTemplates()
@@ -150,7 +165,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
           <select
             id="project_select"
             value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
+            onChange={(e) => handleProjectChange(e.target.value)}
             className="
               w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
               bg-surface
