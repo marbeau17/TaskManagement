@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useTask, useUpdateTaskProgress, useCloneTask, useBulkDeleteTasks } from '@/hooks/useTasks'
+import { useTask, useUpdateTaskProgress, useCloneTask } from '@/hooks/useTasks'
+import { bulkDeleteTasks } from '@/lib/data/tasks'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermission } from '@/hooks/usePermission'
 import { StatusChip } from '@/components/shared'
@@ -26,7 +28,7 @@ export default function TaskDetailPage() {
   const { data: task, isLoading } = useTask(params.id)
   const updateProgress = useUpdateTaskProgress()
   const cloneTask = useCloneTask()
-  const deleteTask = useBulkDeleteTasks()
+  const [deleting, setDeleting] = useState(false)
   const { can } = usePermission()
   const { t } = useI18n()
 
@@ -144,14 +146,16 @@ export default function TaskDetailPage() {
         {can('tasks', 'delete') && (
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (window.confirm(t('common.deleteConfirm'))) {
-                deleteTask.mutate([task.id], {
-                  onSuccess: () => router.push('/tasks'),
-                })
+                setDeleting(true)
+                try {
+                  await bulkDeleteTasks([task.id], true)
+                  router.push('/tasks')
+                } catch { setDeleting(false) }
               }
             }}
-            disabled={deleteTask.isPending}
+            disabled={deleting}
             className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-danger-b text-danger bg-surface hover:bg-danger-bg transition-colors disabled:opacity-50"
           >
             {t('common.delete')}
