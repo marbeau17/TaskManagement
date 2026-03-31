@@ -51,7 +51,7 @@
   /* WorkFlow Design System Colors — use CSS variables for dark mode */
   --color-mint: #6FB5A3;
   --color-mint-l: #A8D5CA;
-  --color-mint-ll: #E2F2EE;
+  --color-mint-ll: var(--wf-mint-ll, #E2F2EE);
   --color-mint-d: #4A9482;
   --color-mint-dd: var(--wf-mint-dd, #2E6B5A);
   --color-wf-bg: var(--wf-bg, #F0F4F3);
@@ -181,6 +181,7 @@
     --wf-text3: #6B7D75;
     --wf-border: #3A4D45;
     --wf-border2: #2F4038;
+    --wf-mint-ll: #253D35;
     --wf-mint-dd: #1A3D30;
     --wf-warn-bg: #3D3520;
     --wf-danger-bg: #3D2020;
