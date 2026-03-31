@@ -64,7 +64,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     const endStr = end.toISOString().slice(0, 10)
     filteredTasks = filteredTasks.filter((t: any) => {
       const deadline = t.confirmed_deadline ?? t.desired_deadline
-      if (!deadline) return true // no deadline = include
+      if (!deadline) return false // no deadline = exclude from workload calculation
       // Include tasks with deadline up to end of this week
       // (tasks are being worked on until their deadline)
       return deadline <= endStr

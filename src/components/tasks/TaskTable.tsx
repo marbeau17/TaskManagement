@@ -953,6 +953,8 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         {taskDueToday && !taskOverdue && '⚠ '}
                         {formatDate(deadline)}
                       </span>
+                    ) : task.status !== 'done' ? (
+                      <span className="text-[11px] text-danger font-semibold">⚠ 未設定</span>
                     ) : (
                       <span className="text-[11.5px] text-text3">-</span>
                     )}
