@@ -132,24 +132,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Hint text */}
-        <p className="text-[10px] text-text3 text-center mt-[12px]">
-          {t('auth.initialPassword')}
-        </p>
-
-        {/* Quick login button */}
-        <div className="mt-[16px] pt-[16px] border-t border-border2">
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            className="w-full py-[10px] text-[13px] text-mint bg-surf2 rounded-[6px] hover:bg-border2 transition-colors font-medium border border-border2"
-          >
-            {t('auth.autoFillLogin')}
-          </button>
-          <p className="text-[10px] text-text3 text-center mt-[8px]">
-            {t('auth.autoFillDescription')}
-          </p>
-        </div>
       </div>
     </div>
   )
