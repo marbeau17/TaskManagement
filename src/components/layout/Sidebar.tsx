@@ -286,21 +286,21 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
                 </button>
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={nextTheme}
+                <button
+                  onClick={nextTheme}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left"
                 >
                   <ThemeIcon className="w-[14px] h-[14px]" />
                   {t('settings.theme')}: {theme === 'light' ? t('settings.light') : theme === 'dark' ? t('settings.dark') : t('settings.system')}
-                </DropdownMenuItem>
+                </button>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
-                  onSelect={handleLogout}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left text-red-500"
                 >
                   <LogOut className="w-[14px] h-[14px]" />
                   {t('auth.logout')}
-                </DropdownMenuItem>
+                </button>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -328,27 +328,27 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   {t('profile.title')}
                 </a>
                 <button
-                  onClick={() => { console.log('[PasswordModal] button clicked'); setTimeout(() => setShowPasswordModal(true), 150) }}
+                  onClick={() => setTimeout(() => setShowPasswordModal(true), 150)}
                   className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left"
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
                 </button>
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={nextTheme}
+                <button
+                  onClick={nextTheme}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left"
                 >
                   <ThemeIcon className="w-[14px] h-[14px]" />
                   {t('settings.theme')}: {theme === 'light' ? t('settings.light') : theme === 'dark' ? t('settings.dark') : t('settings.system')}
-                </DropdownMenuItem>
+                </button>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer text-red-500 focus:text-red-500"
-                  onSelect={handleLogout}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left text-red-500"
                 >
                   <LogOut className="w-[14px] h-[14px]" />
                   {t('auth.logout')}
-                </DropdownMenuItem>
+                </button>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
