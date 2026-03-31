@@ -80,10 +80,10 @@ export function AssignChangeModal({
 
   type FormValues = z.infer<typeof schema>
 
-  // Filter to creator-role members only
+  // All active members can be assigned
   const creators = useMemo(() => {
     if (!members) return []
-    return members.filter((m) => m.role === 'creator' && m.is_active)
+    return members.filter((m) => m.is_active)
   }, [members])
 
   // IDs of currently assigned users
