@@ -247,12 +247,12 @@ export default function PipelinePage() {
           <div className="text-center py-[40px] text-[13px] text-text3">Loading...</div>
         ) : activeTab === 'list' ? (
           /* ===== LIST TAB ===== */
-          <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-x-auto">
+          <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
             <table className="text-left text-[11px]" style={{ tableLayout: 'auto', minWidth: '1900px' }}>
-              <thead>
+              <thead className="sticky top-0 z-20">
                 <tr className="border-b border-border2 bg-surf2">
-                  <th className="px-[4px] py-[8px] font-semibold text-text3 sticky left-0 bg-surf2 z-10 w-[24px]"></th>
-                  <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-10 w-[30px]">ID</th>
+                  <th className="px-[4px] py-[8px] font-semibold text-text3 sticky left-0 bg-surf2 z-30 w-[24px]"></th>
+                  <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-30 w-[30px]">ID</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">新</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">区分</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.client')}</th>
