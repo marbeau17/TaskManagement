@@ -6,6 +6,9 @@ import { useIssue, useUpdateIssue, useTransitionIssueStatus, useIssueComments, u
 import { useMembers } from '@/hooks/useMembers'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, SeverityBadge, IssueTypeBadge, IssueStatusBadge } from '@/components/shared'
+import { MentionInput } from '@/components/shared/MentionInput'
+import { MentionText } from '@/components/shared/MentionText'
+import { parseMentions } from '@/lib/mention-utils'
 import { formatDate } from '@/lib/utils'
 import { isValidTransition } from '@/lib/data/issues'
 import { IssueRelations } from '@/components/issues/IssueRelations'
@@ -52,16 +55,41 @@ function CollapsibleSection({ title, children, defaultOpen = false }: { title: s
 // Comment section for issues
 // ---------------------------------------------------------------------------
 
-function IssueCommentSection({ issueId, currentUserId }: { issueId: string; currentUserId: string }) {
+function IssueCommentSection({ issueId, issueKey, issueTitle, currentUserId, currentUserName }: { issueId: string; issueKey: string; issueTitle: string; currentUserId: string; currentUserName: string }) {
   const { t } = useI18n()
   const { data: comments, isLoading } = useIssueComments(issueId)
+  const { data: members } = useMembers()
   const addComment = useAddIssueComment()
   const [body, setBody] = useState('')
 
   const handleSend = () => {
     const trimmed = body.trim()
     if (!trimmed) return
-    addComment.mutate({ issueId, body: trimmed }, { onSuccess: () => setBody('') })
+    addComment.mutate({ issueId, body: trimmed }, {
+      onSuccess: () => {
+        // Send mention notifications
+        if (members) {
+          const mentionedUserIds = parseMentions(trimmed, members)
+          if (mentionedUserIds.length > 0) {
+            fetch('/api/email/notify-mention', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mentionedUserIds,
+                commentBody: trimmed,
+                entityType: 'issue',
+                entityId: issueId,
+                entityKey: issueKey,
+                entityTitle: issueTitle,
+                commenterName: currentUserName,
+                commenterId: currentUserId,
+              }),
+            }).catch(() => {})
+          }
+        }
+        setBody('')
+      },
+    })
   }
 
   return (
@@ -82,16 +110,18 @@ function IssueCommentSection({ issueId, currentUserId }: { issueId: string; curr
                 <span className="text-[12px] font-semibold text-text">{comment.user?.name ?? t('issues.unknown')}</span>
                 <span className="text-[10px] text-text3 ml-auto">{formatDate(comment.created_at)}</span>
               </div>
-              <p className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">{comment.body}</p>
+              <div className="text-[12.5px] text-text whitespace-pre-wrap leading-relaxed">
+                <MentionText text={comment.body} />
+              </div>
             </div>
           )
         })}
       </div>
 
       <div className="flex flex-col gap-2">
-        <textarea
+        <MentionInput
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={setBody}
           placeholder={t('issues.commentPlaceholder')}
           rows={3}
           className="w-full border border-wf-border rounded-md px-3 py-2 text-[12.5px] text-text bg-surface resize-none focus:outline-none focus:border-mint"
@@ -320,7 +350,7 @@ export default function IssueDetailPage() {
           )}
 
           {/* Comments */}
-          <IssueCommentSection issueId={issue.id} currentUserId={user?.id ?? ''} />
+          <IssueCommentSection issueId={issue.id} issueKey={issue.issue_key} issueTitle={issue.title} currentUserId={user?.id ?? ''} currentUserName={user?.name ?? ''} />
         </div>
 
         {/* Right column */}
