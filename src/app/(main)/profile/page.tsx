@@ -101,18 +101,18 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow mb-[16px]">
           <div className="flex items-center gap-[16px] mb-[20px]">
-            <div className="relative group">
+            <div className="flex flex-col items-center gap-[6px]">
               {avatarUrl ? (
-                <img src={avatarUrl} alt={name} className="w-[48px] h-[48px] rounded-full object-cover" />
+                <img src={avatarUrl} alt={name} className="w-[56px] h-[56px] rounded-full object-cover border-2 border-mint" />
               ) : (
                 <Avatar name_short={nameShort || name.charAt(0)} color={avatarColor} size="lg" />
               )}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="absolute inset-0 rounded-full bg-black/50 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                className="text-[10px] text-mint hover:text-mint-d font-medium transition-colors"
               >
-                {uploading ? '...' : '📷'}
+                {uploading ? 'アップロード中...' : '📷 写真を変更'}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
             </div>
