@@ -279,13 +279,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
                 </a>
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { setTimeout(() => setShowPasswordModal(true), 150) }}
+                <button
+                  onClick={() => { console.log('[PasswordModal] button clicked'); setTimeout(() => setShowPasswordModal(true), 150) }}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left"
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
-                </DropdownMenuItem>
+                </button>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={nextTheme}
@@ -327,13 +327,13 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
                 </a>
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { setTimeout(() => setShowPasswordModal(true), 150) }}
+                <button
+                  onClick={() => { console.log('[PasswordModal] button clicked'); setTimeout(() => setShowPasswordModal(true), 150) }}
+                  className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors w-full text-left"
                 >
                   <KeyRound className="w-[14px] h-[14px]" />
                   {t('auth.changePassword')}
-                </DropdownMenuItem>
+                </button>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={nextTheme}
