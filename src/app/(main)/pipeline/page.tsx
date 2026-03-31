@@ -62,6 +62,27 @@ export default function PipelinePage() {
   const [opportunities, setOpportunities] = useState<PipelineOpportunity[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('list')
+  const [sortKey, setSortKey] = useState<string>('seq_id')
+  const [sortAsc, setSortAsc] = useState(true)
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortAsc(!sortAsc)
+    } else {
+      setSortKey(key)
+      setSortAsc(true)
+    }
+  }
+
+  const sortedOpportunities = useMemo(() => {
+    const sorted = [...opportunities].sort((a, b) => {
+      const av = (a as any)[sortKey] ?? ''
+      const bv = (b as any)[sortKey] ?? ''
+      if (typeof av === 'number' && typeof bv === 'number') return av - bv
+      return String(av).localeCompare(String(bv), 'ja')
+    })
+    return sortAsc ? sorted : sorted.reverse()
+  }, [opportunities, sortKey, sortAsc])
 
   // Access control
   if (user && !canAccessPipeline(user)) {
@@ -252,16 +273,16 @@ export default function PipelinePage() {
               <thead className="sticky top-0 z-20">
                 <tr className="border-b border-border2 bg-surf2">
                   <th className="px-[4px] py-[8px] font-semibold text-text3 sticky left-0 bg-surf2 z-30 w-[24px]"></th>
-                  <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-30 w-[30px]">ID</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">新</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">区分</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.client')}</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">{t('pipeline.referral')}</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px]">{t('pipeline.opportunity')}</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">{t('pipeline.subOpp')}</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">{t('pipeline.status')}</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">勝率</th>
-                  <th className="px-[6px] py-[8px] font-semibold text-text2">CM%</th>
+                  <th className="px-[4px] py-[8px] font-semibold text-text2 sticky left-[24px] bg-surf2 z-30 w-[30px] cursor-pointer hover:text-mint select-none" onClick={() => handleSort('seq_id')}>ID{sortKey === 'seq_id' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('is_new')}>新{sortKey === 'is_new' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('client_type')}>区分{sortKey === 'client_type' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px] cursor-pointer hover:text-mint select-none" onClick={() => handleSort('client_name')}>{t('pipeline.client')}{sortKey === 'client_name' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('referral_source')}>{t('pipeline.referral')}{sortKey === 'referral_source' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 min-w-[120px] cursor-pointer hover:text-mint select-none" onClick={() => handleSort('opportunity_name')}>{t('pipeline.opportunity')}{sortKey === 'opportunity_name' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('sub_opportunity')}>{t('pipeline.subOpp')}{sortKey === 'sub_opportunity' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('status')}>{t('pipeline.status')}{sortKey === 'status' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('probability')}>勝率{sortKey === 'probability' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+                  <th className="px-[6px] py-[8px] font-semibold text-text2 cursor-pointer hover:text-mint select-none" onClick={() => handleSort('cm_percent')}>CM%{sortKey === 'cm_percent' ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">PM</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">C1</th>
                   <th className="px-[6px] py-[8px] font-semibold text-text2">C2</th>
@@ -272,9 +293,9 @@ export default function PipelinePage() {
                 </tr>
               </thead>
               <tbody>
-                {opportunities.length === 0 ? (
+                {sortedOpportunities.length === 0 ? (
                   <tr><td colSpan={26} className="text-center py-[20px] text-text3">{t('pipeline.noData')}</td></tr>
-                ) : opportunities.map((opp) => (
+                ) : sortedOpportunities.map((opp) => (
                   <tr key={opp.id} className="border-b border-border2 hover:bg-surf2/30">
                     <td className="px-[1px] py-[3px] sticky left-0 bg-surface z-10 text-center">
                       <div className="flex items-center gap-[2px]">
