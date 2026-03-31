@@ -394,6 +394,7 @@ export function addMockMember(data: InviteMemberForm & { password?: string }): U
     name_short: data.name_short,
     role: data.role,
     avatar_color: avatarColors[users.length % avatarColors.length],
+    avatar_url: null,
     weekly_capacity_hours: data.weekly_capacity_hours,
     is_active: true,
     manager_id: null,

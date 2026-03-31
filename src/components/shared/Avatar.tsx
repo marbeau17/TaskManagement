@@ -7,6 +7,7 @@ interface AvatarProps {
   name_short: string
   color: AvatarColor
   size?: 'sm' | 'md' | 'lg'
+  avatar_url?: string | null
 }
 
 const SIZES = {
@@ -15,9 +16,20 @@ const SIZES = {
   lg: { box: 38, font: 13 },
 } as const
 
-export function Avatar({ name_short, color, size = 'md' }: AvatarProps) {
+export function Avatar({ name_short, color, size = 'md', avatar_url }: AvatarProps) {
   const colors = AVATAR_COLORS[color]
   const s = SIZES[size]
+
+  if (avatar_url) {
+    return (
+      <img
+        src={avatar_url}
+        alt={name_short}
+        className="rounded-full shrink-0 object-cover"
+        style={{ width: s.box, height: s.box }}
+      />
+    )
+  }
 
   return (
     <div

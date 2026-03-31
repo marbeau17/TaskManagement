@@ -37,6 +37,7 @@ export interface User {
   name_short: string
   role: UserRole
   avatar_color: AvatarColor
+  avatar_url: string | null
   weekly_capacity_hours: number
   is_active: boolean
   must_change_password: boolean

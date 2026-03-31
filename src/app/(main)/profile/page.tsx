@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { useTheme } from '@/hooks/useTheme'
@@ -25,6 +25,9 @@ export default function ProfilePage() {
   const [name, setName] = useState('')
   const [nameShort, setNameShort] = useState('')
   const [avatarColor, setAvatarColor] = useState<AvatarColor>('av-a')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [notifyAssigned, setNotifyAssigned] = useState(true)
   const [notifyDeadline, setNotifyDeadline] = useState(true)
   const [notifyComment, setNotifyComment] = useState(true)
@@ -36,8 +39,32 @@ export default function ProfilePage() {
       setName(user.name)
       setNameShort(user.name_short ?? '')
       setAvatarColor(user.avatar_color)
+      setAvatarUrl((user as any).avatar_url ?? null)
     }
   }, [user])
+
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploading(true)
+    try {
+      const { uploadFile, getFileUrl } = await import('@/lib/data/storage')
+      const result = await uploadFile(`avatars-${user.id}`, file)
+      const url = await getFileUrl(result.path)
+      setAvatarUrl(url)
+      await fetch(`/api/members/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: url }),
+      })
+      toast.success('写真をアップロードしました')
+    } catch {
+      toast.error('アップロードに失敗しました')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSave = async () => {
     if (!user) return
@@ -74,7 +101,21 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow mb-[16px]">
           <div className="flex items-center gap-[16px] mb-[20px]">
-            <Avatar name_short={nameShort || name.charAt(0)} color={avatarColor} size="lg" />
+            <div className="relative group">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={name} className="w-[48px] h-[48px] rounded-full object-cover" />
+              ) : (
+                <Avatar name_short={nameShort || name.charAt(0)} color={avatarColor} size="lg" />
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute inset-0 rounded-full bg-black/50 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+              >
+                {uploading ? '...' : '📷'}
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
+            </div>
             <div>
               <h2 className="text-[18px] font-bold text-text">{name}</h2>
               <p className="text-[12px] text-text2">{user.email}</p>

@@ -126,7 +126,7 @@ export const okutsuUser: MockUserWithPassword = {
   name: '奥津',
   name_short: '奥',
   role: 'requester',
-  avatar_color: 'av-b',
+  avatar_url: null, avatar_color: 'av-b',
   email: 'y.okutsu@meetsc.co.jp',
   weekly_capacity_hours: 40,
   is_active: true,
