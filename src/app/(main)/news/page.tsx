@@ -29,6 +29,7 @@ export default function NewsPage() {
   const [contentHtml, setContentHtml] = useState('')
 
   const isAdmin = user?.role === 'admin' || user?.role === 'director'
+  const canEdit = (article: NewsArticle) => isAdmin || article.author_id === user?.id
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -152,7 +153,7 @@ export default function NewsPage() {
                 <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2/50">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-text">{article.title}</h2>
-                    {isAdmin && (
+                    {canEdit(article) && (
                       <div className="flex gap-[6px]">
                         <button onClick={() => startEdit(article)} className="text-[11px] text-mint hover:text-mint-d font-medium">{t('common.edit')}</button>
                         <button onClick={() => handleDelete(article.id)} className="text-[11px] text-danger hover:opacity-80 font-medium">{t('common.delete')}</button>
