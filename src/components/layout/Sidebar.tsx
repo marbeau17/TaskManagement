@@ -264,7 +264,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { window.location.href = '/profile' }}
+                  onSelect={() => { setTimeout(() => { window.location.href = '/profile' }, 100) }}
                 >
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
@@ -315,7 +315,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
               <DropdownMenuContent side="top" align="end" sideOffset={8}>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { window.location.href = '/profile' }}
+                  onSelect={() => { setTimeout(() => { window.location.href = '/profile' }, 100) }}
                 >
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
