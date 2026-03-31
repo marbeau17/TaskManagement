@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTask, useUpdateTaskProgress, useCloneTask } from '@/hooks/useTasks'
 import { bulkDeleteTasks } from '@/lib/data/tasks'
 import { useAuth } from '@/hooks/useAuth'
@@ -24,6 +25,7 @@ import { useI18n } from '@/hooks/useI18n'
 export default function TaskDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { user } = useAuth()
   const { data: task, isLoading } = useTask(params.id)
   const updateProgress = useUpdateTaskProgress()
@@ -151,6 +153,7 @@ export default function TaskDetailPage() {
                 setDeleting(true)
                 try {
                   await bulkDeleteTasks([task.id], true)
+                  queryClient.invalidateQueries({ queryKey: ['tasks'] })
                   router.push('/tasks')
                 } catch { setDeleting(false) }
               }
