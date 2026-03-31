@@ -118,6 +118,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
 
   const [editingClient, setEditingClient] = useState(false)
   const [editingProject, setEditingProject] = useState(false)
+  const [localProjectId, setLocalProjectId] = useState<string | null>(task.project_id ?? null)
 
   const template = task.template_id && templates
     ? templates.find((t) => t.id === task.template_id) ?? null
@@ -167,9 +168,11 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
         <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.project')}</span>
         {editingProject ? (
           <select
-            value={task.project_id ?? ''}
+            value={localProjectId ?? ''}
             onChange={(e) => {
-              handleSave('project_id', e.target.value || null)
+              const newId = e.target.value || null
+              setLocalProjectId(newId)
+              handleSave('project_id', newId)
               setEditingProject(false)
             }}
             onBlur={() => setEditingProject(false)}
@@ -187,7 +190,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
             className="text-[13px] font-bold text-text cursor-pointer hover:bg-surf2 rounded px-1 -mx-1 transition-colors inline-block"
             title="Click to edit"
           >
-            {'📁 '}{task.project?.name ?? t('common.none') ?? '未設定'}
+            {'📁 '}{(localProjectId ? projects?.find(p => p.id === localProjectId)?.name : null) ?? t('common.none')}
           </span>
         )}
       </div>
