@@ -63,10 +63,10 @@ export function AssignForm({
 
   type Step2FormValues = z.infer<typeof step2Schema>
 
-  // Filter to creator-role members only
+  // All active members can be assigned
   const creators = useMemo(() => {
     if (!members) return []
-    return members.filter((m) => m.role === 'creator' && m.is_active)
+    return members.filter((m) => m.is_active)
   }, [members])
 
   // Workload lookup by user id
