@@ -270,13 +270,10 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                   {user?.name ?? '...'} - {user ? roleLabel(user.role) : ''}
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { console.log('[Profile] Menu clicked, navigating...'); setTimeout(() => { console.log('[Profile] Navigating to /profile'); window.location.href = '/profile' }, 150) }}
-                >
+                <a href="/profile" className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors">
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
-                </DropdownMenuItem>
+                </a>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={() => setShowPasswordModal(true)}
@@ -321,13 +318,10 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
                 <Settings className="w-[14px] h-[14px]" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="end" sideOffset={8}>
-                <DropdownMenuItem
-                  className="text-[12px] gap-[8px] cursor-pointer"
-                  onSelect={() => { console.log('[Profile] Menu clicked, navigating...'); setTimeout(() => { console.log('[Profile] Navigating to /profile'); window.location.href = '/profile' }, 150) }}
-                >
+                <a href="/profile" className="flex items-center gap-[8px] px-[8px] py-[6px] text-[12px] cursor-pointer hover:bg-accent rounded-sm transition-colors">
                   <User className="w-[14px] h-[14px]" />
                   {t('profile.title')}
-                </DropdownMenuItem>
+                </a>
                 <DropdownMenuItem
                   className="text-[12px] gap-[8px] cursor-pointer"
                   onSelect={() => setShowPasswordModal(true)}
