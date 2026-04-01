@@ -32,6 +32,7 @@ export default function WorkloadPage() {
   const [period, setPeriod] = useState('week')
   const [weekOffset, setWeekOffset] = useState(0)
 
+  // Calculate date range based on period
   const weekStart = useMemo(() => {
     const now = new Date()
     const day = now.getDay()
@@ -46,10 +47,20 @@ export default function WorkloadPage() {
     return start.toISOString().slice(0, 10)
   }, [weekStart])
 
-  const { data: kpi, isLoading: kpiLoading } = useWorkloadKpi()
+  // periodStart: the date range start used for all data queries
+  const periodStart = useMemo(() => {
+    if (period === 'week') return weekStart
+    if (period === 'month') {
+      const now = new Date()
+      return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+    }
+    return undefined // 'all' = no filter
+  }, [period, weekStart])
+
+  const { data: kpi, isLoading: kpiLoading } = useWorkloadKpi(periodStart)
   const { data: summaries, isLoading: summariesLoading } =
-    useWorkloadSummaries(weekStart)
-  const { data: resourceData, isLoading: loadingResource } = useResourceLoadData()
+    useWorkloadSummaries(periodStart)
+  const { data: resourceData, isLoading: loadingResource } = useResourceLoadData(periodStart)
   const { data: members } = useMembers()
   const { data: allTasks } = useTasks()
 

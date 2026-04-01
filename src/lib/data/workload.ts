@@ -55,19 +55,31 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
     // task_assignees table might not exist yet - graceful fallback
   }
 
-  // Filter tasks by week if weekStart provided
+  // Filter tasks by period if weekStart provided
   let filteredTasks = tasks ?? []
   if (weekStart) {
     const start = new Date(weekStart)
-    const end = new Date(start)
-    end.setDate(end.getDate() + 6)
+    // Determine end date: if weekStart is 1st of month → month filter, else week filter
+    let end: Date
+    if (start.getDate() === 1) {
+      // Month filter: last day of that month
+      end = new Date(start.getFullYear(), start.getMonth() + 1, 0)
+    } else {
+      // Week filter: +6 days
+      end = new Date(start)
+      end.setDate(end.getDate() + 6)
+    }
     const endStr = end.toISOString().slice(0, 10)
     filteredTasks = filteredTasks.filter((t: any) => {
       const deadline = t.confirmed_deadline ?? t.desired_deadline
       if (!deadline) return false // no deadline = exclude from workload calculation
-      // Include tasks with deadline up to end of this week
-      // (tasks are being worked on until their deadline)
       return deadline <= endStr
+    })
+  } else {
+    // All period: still exclude tasks without deadline
+    filteredTasks = filteredTasks.filter((t: any) => {
+      const deadline = t.confirmed_deadline ?? t.desired_deadline
+      return !!deadline
     })
   }
 
@@ -136,14 +148,14 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
 // getWorkloadKpi
 // ---------------------------------------------------------------------------
 
-export async function getWorkloadKpi(): Promise<WorkloadKpiData> {
+export async function getWorkloadKpi(periodStart?: string): Promise<WorkloadKpiData> {
   if (isMockMode()) {
     const { getMockWorkloadKpi } = await import('@/lib/mock/handlers')
     return getMockWorkloadKpi()
   }
 
   // Leverage summaries to derive KPIs
-  const summaries = await getWorkloadSummaries()
+  const summaries = await getWorkloadSummaries(periodStart)
 
   const totalEstimated = summaries.reduce(
     (sum, s) => sum + s.estimated_hours,
@@ -184,7 +196,7 @@ export async function getWorkloadKpi(): Promise<WorkloadKpiData> {
 // getResourceLoadData — per-member hours broken down by client
 // ---------------------------------------------------------------------------
 
-export async function getResourceLoadData(): Promise<ResourceLoadData> {
+export async function getResourceLoadData(periodStart?: string): Promise<ResourceLoadData> {
   if (isMockMode()) {
     const { getMockResourceLoadData } = await import('@/lib/mock/handlers')
     return getMockResourceLoadData()
@@ -238,6 +250,21 @@ export async function getResourceLoadData(): Promise<ResourceLoadData> {
     // task_assignees table might not exist yet - graceful fallback
   }
 
+  // Calculate period end date for filtering
+  let periodEndStr: string | null = null
+  if (periodStart) {
+    const start = new Date(periodStart)
+    if (start.getDate() === 1) {
+      // Month: last day of month
+      periodEndStr = new Date(start.getFullYear(), start.getMonth() + 1, 0).toISOString().slice(0, 10)
+    } else {
+      // Week: +6 days
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      periodEndStr = end.toISOString().slice(0, 10)
+    }
+  }
+
   const allClientNames = new Set<string>()
 
   const entries: ResourceLoadEntry[] = typedUsers.map((user) => {
@@ -253,6 +280,8 @@ export async function getResourceLoadData(): Promise<ResourceLoadData> {
       // Exclude tasks without deadline (consistent with weekly workload)
       const deadline = (t as any).confirmed_deadline ?? (t as any).desired_deadline
       if (!deadline) continue
+      // Apply period filter
+      if (periodEndStr && deadline > periodEndStr) continue
       const clientName = clientNameMap.get(t.client_id) ?? '未分類'
       allClientNames.add(clientName)
       // Divide by number of assignees for multi-assignee tasks
