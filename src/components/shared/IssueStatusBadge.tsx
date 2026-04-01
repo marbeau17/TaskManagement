@@ -38,6 +38,24 @@ const STATUS_CONFIG: Record<IssueStatus, { label: string; bg: string; text: stri
     text: 'text-gray-700 dark:text-gray-300',
     border: 'border-gray-400 dark:border-gray-600',
   },
+  not_a_bug: {
+    label: '問題なし',
+    bg: 'bg-orange-100 dark:bg-orange-950/40',
+    text: 'text-orange-700 dark:text-orange-400',
+    border: 'border-orange-300 dark:border-orange-800',
+  },
+  duplicate: {
+    label: '重複',
+    bg: 'bg-gray-100 dark:bg-gray-800/60',
+    text: 'text-gray-500 dark:text-gray-400',
+    border: 'border-gray-300 dark:border-gray-600',
+  },
+  deferred: {
+    label: '対応保留',
+    bg: 'bg-cyan-100 dark:bg-cyan-950/40',
+    text: 'text-cyan-700 dark:text-cyan-400',
+    border: 'border-cyan-300 dark:border-cyan-800',
+  },
 }
 
 export function IssueStatusBadge({ status, size = 'md' }: IssueStatusBadgeProps) {

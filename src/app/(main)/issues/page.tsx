@@ -198,6 +198,9 @@ export default function IssuesPage() {
                   { label: t('issues.resolved'), value: 'resolved' },
                   { label: t('issues.verified'), value: 'verified' },
                   { label: t('issues.closed'), value: 'closed' },
+                  { label: t('issues.transitionNotABug'), value: 'not_a_bug' },
+                  { label: t('issues.transitionDuplicate'), value: 'duplicate' },
+                  { label: t('issues.transitionDeferred'), value: 'deferred' },
                 ],
                 onChange: setStatusFilter,
               },
@@ -389,6 +392,9 @@ export default function IssuesPage() {
                             <option value="resolved">{t('issues.resolved')}</option>
                             <option value="verified">{t('issues.verified')}</option>
                             <option value="closed">{t('issues.closed')}</option>
+                            <option value="not_a_bug">{t('issues.transitionNotABug')}</option>
+                            <option value="duplicate">{t('issues.transitionDuplicate')}</option>
+                            <option value="deferred">{t('issues.transitionDeferred')}</option>
                           </select>
                         ) : (
                           <IssueStatusBadge status={issue.status} size="sm" />

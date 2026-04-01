@@ -25,6 +25,9 @@ const TRANSITION_KEYS: Record<IssueStatus, string> = {
   resolved: 'issues.transitionResolved',
   verified: 'issues.transitionVerified',
   closed: 'issues.transitionClosed',
+  not_a_bug: 'issues.transitionNotABug',
+  duplicate: 'issues.transitionDuplicate',
+  deferred: 'issues.transitionDeferred',
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +279,9 @@ export default function IssueDetailPage() {
         {possibleTransitions.map((status) => {
           const isClose = status === 'closed'
           const isReopen = status === 'open'
+          const isNotABug = status === 'not_a_bug'
+          const isDuplicate = status === 'duplicate'
+          const isDeferred = status === 'deferred'
           return (
             <button
               key={status}
@@ -286,7 +292,13 @@ export default function IssueDetailPage() {
                   ? 'border border-danger-b text-danger bg-danger-bg hover:bg-danger hover:text-white'
                   : isReopen
                     ? 'border border-warn-b text-warn bg-warn-bg hover:bg-warn hover:text-white'
-                    : 'bg-mint text-white hover:bg-mint-d'
+                    : isNotABug
+                      ? 'border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-900/40'
+                      : isDuplicate
+                        ? 'border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                        : isDeferred
+                          ? 'border border-cyan-300 dark:border-cyan-700 text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/30 hover:bg-cyan-100 dark:hover:bg-cyan-900/40'
+                          : 'bg-mint text-white hover:bg-mint-d'
               }`}
             >
               {t(TRANSITION_KEYS[status])}

@@ -831,11 +831,14 @@ export function deleteMockProject(id: string): boolean {
 // ---------------------------------------------------------------------------
 
 const VALID_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
-  open: ['in_progress', 'closed'],
-  in_progress: ['resolved', 'open', 'closed'],
+  open: ['in_progress', 'not_a_bug', 'duplicate', 'deferred', 'closed'],
+  in_progress: ['resolved', 'not_a_bug', 'deferred', 'open', 'closed'],
   resolved: ['verified', 'open'],
   verified: ['closed', 'open'],
   closed: ['open'],
+  not_a_bug: ['open'],
+  duplicate: ['open'],
+  deferred: ['open', 'in_progress'],
 }
 
 export function getMockIssues(filters?: IssueFilters): Issue[] {

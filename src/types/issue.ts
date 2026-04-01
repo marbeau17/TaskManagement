@@ -2,7 +2,7 @@ import type { Project } from './project'
 
 export type IssueType = 'bug' | 'improvement' | 'question' | 'incident'
 export type IssueSeverity = 'critical' | 'high' | 'medium' | 'low'
-export type IssueStatus = 'open' | 'in_progress' | 'resolved' | 'verified' | 'closed'
+export type IssueStatus = 'open' | 'in_progress' | 'resolved' | 'verified' | 'closed' | 'not_a_bug' | 'duplicate' | 'deferred'
 
 export interface Issue {
   id: string
