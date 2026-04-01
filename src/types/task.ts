@@ -25,6 +25,7 @@ export interface TaskFormStep1 {
   reference_url?: string
   template_id?: string
   template_data?: Record<string, any>
+  project_id?: string
   parent_task_id?: string
   wbs_code?: string
 }

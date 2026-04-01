@@ -175,6 +175,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
         selectedTemplateId && Object.keys(templateData).length > 0
           ? templateData
           : undefined,
+      project_id: selectedProjectId || undefined,
       parent_task_id: parentTaskId || undefined,
     }
     onSubmit(data)

@@ -268,6 +268,7 @@ export async function createTask(
     assigned_to: step2?.assigned_to ?? null,
     confirmed_deadline: step2?.confirmed_deadline ?? null,
     estimated_hours: step2?.estimated_hours ?? null,
+    project_id: step1.project_id ?? null,
     parent_task_id: step1.parent_task_id ?? null,
     wbs_code: step1.wbs_code ?? '',
   }
