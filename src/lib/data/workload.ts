@@ -212,10 +212,10 @@ export async function getResourceLoadData(): Promise<ResourceLoadData> {
     ((clientRows ?? []) as Client[]).map((c) => [c.id, c.name])
   )
 
-  // Fetch active tasks with assignees
+  // Fetch active tasks with assignees (exclude tasks without deadline)
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
-    .select('id, assigned_to, client_id, status, estimated_hours')
+    .select('id, assigned_to, client_id, status, estimated_hours, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
     .neq('status', 'done')
@@ -250,6 +250,9 @@ export async function getResourceLoadData(): Promise<ResourceLoadData> {
 
     const clientHours: Record<string, number> = {}
     for (const t of userTasks) {
+      // Exclude tasks without deadline (consistent with weekly workload)
+      const deadline = (t as any).confirmed_deadline ?? (t as any).desired_deadline
+      if (!deadline) continue
       const clientName = clientNameMap.get(t.client_id) ?? '未分類'
       allClientNames.add(clientName)
       // Divide by number of assignees for multi-assignee tasks

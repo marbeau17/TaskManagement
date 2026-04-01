@@ -37,23 +37,49 @@ export function CapacityMatrix() {
     })
   }, [weekOffset])
 
-  // Calculate hours per member per week
+  // Calculate hours per member per week (aligned with getWorkloadSummaries logic)
   const matrix = useMemo(() => {
     if (!members || !tasks) return []
     const activeMembers = members.filter((m) => m.is_active)
+    const allTasks = tasks as any[]
+
+    // Build task_assignees lookup: taskId -> userId[]
+    const taskAssigneeMap: Record<string, string[]> = {}
+    allTasks.forEach((t) => {
+      const ids: string[] = []
+      if (t.assigned_to) ids.push(t.assigned_to)
+      if (t.assignees && Array.isArray(t.assignees)) {
+        t.assignees.forEach((a: any) => {
+          if (a.user_id && !ids.includes(a.user_id)) ids.push(a.user_id)
+        })
+      }
+      if (ids.length > 0) taskAssigneeMap[t.id] = ids
+    })
 
     return activeMembers.map((member) => {
-      const memberTasks = tasks.filter(
-        (t) => t.assigned_to === member.id && t.status !== 'done' && t.status !== 'rejected'
-      )
+      // Include tasks where member is primary or multi-assignee
+      const memberTasks = allTasks.filter((t) => {
+        if (t.status === 'done' || t.status === 'rejected') return false
+        if (t.assigned_to === member.id) return true
+        const assignees = taskAssigneeMap[t.id]
+        return assignees?.includes(member.id) ?? false
+      })
 
       const weekHours: Record<string, number> = {}
       weeks.forEach((w) => { weekHours[w.key] = 0 })
 
       memberTasks.forEach((task) => {
+        // Exclude tasks without deadline (consistent with workload.ts)
+        const deadline = task.confirmed_deadline ?? task.desired_deadline
+        if (!deadline) return
+
         weeks.forEach((w) => {
           if (taskOverlapsWeek(task, w.monday, w.sunday)) {
-            weekHours[w.key] += getTaskWeeklyHours(task, w.key)
+            const rawHours = getTaskWeeklyHours(task, w.key)
+            // Divide by assignee count
+            const assignees = taskAssigneeMap[task.id]
+            const assigneeCount = assignees ? assignees.length : 1
+            weekHours[w.key] += rawHours / assigneeCount
           }
         })
       })
@@ -61,7 +87,10 @@ export function CapacityMatrix() {
       return {
         member,
         weekHours,
-        taskCount: memberTasks.length,
+        taskCount: memberTasks.filter((t) => {
+          const deadline = t.confirmed_deadline ?? t.desired_deadline
+          return !!deadline
+        }).length,
       }
     })
   }, [members, tasks, weeks])
