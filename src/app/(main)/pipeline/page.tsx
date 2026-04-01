@@ -64,6 +64,29 @@ export default function PipelinePage() {
   const [activeTab, setActiveTab] = useState<TabId>('list')
   const [sortKey, setSortKey] = useState<string>('seq_id')
   const [sortAsc, setSortAsc] = useState(true)
+  const [filterClient, setFilterClient] = useState('')
+  const [filterReferral, setFilterReferral] = useState('')
+  const [filterOpportunity, setFilterOpportunity] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+
+  // Unique referral sources for dropdown
+  const uniqueReferrals = useMemo(() => {
+    const set = new Set(opportunities.map(o => o.referral_source).filter(Boolean))
+    return [...set].sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [opportunities])
+
+  // Filtered opportunities (applied before sort)
+  const filteredOpportunities = useMemo(() => {
+    return opportunities.filter(o => {
+      if (filterClient && !o.client_name.toLowerCase().includes(filterClient.toLowerCase())) return false
+      if (filterReferral && o.referral_source !== filterReferral) return false
+      if (filterOpportunity && !o.opportunity_name.toLowerCase().includes(filterOpportunity.toLowerCase())) return false
+      if (filterStatus && o.status !== filterStatus) return false
+      return true
+    })
+  }, [opportunities, filterClient, filterReferral, filterOpportunity, filterStatus])
+
+  const hasActiveFilter = filterClient || filterReferral || filterOpportunity || filterStatus
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -75,14 +98,14 @@ export default function PipelinePage() {
   }
 
   const sortedOpportunities = useMemo(() => {
-    const sorted = [...opportunities].sort((a, b) => {
+    const sorted = [...filteredOpportunities].sort((a, b) => {
       const av = (a as any)[sortKey] ?? ''
       const bv = (b as any)[sortKey] ?? ''
       if (typeof av === 'number' && typeof bv === 'number') return av - bv
       return String(av).localeCompare(String(bv), 'ja')
     })
     return sortAsc ? sorted : sorted.reverse()
-  }, [opportunities, sortKey, sortAsc])
+  }, [filteredOpportunities, sortKey, sortAsc])
 
   // Access control
   if (user && !canAccessPipeline(user)) {
@@ -186,14 +209,14 @@ export default function PipelinePage() {
   // ===== Summary calculations =====
   const summary = useMemo(() => {
     // Monthly totals
-    const monthlyRevenue = MONTHS.map((m) => opportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))
-    const monthlyWeighted = MONTHS.map((m) => opportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.probability / 100), 0))
-    const monthlyCM = MONTHS.map((m, i) => opportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.cm_percent / 100), 0))
-    const monthlyWeightedCM = MONTHS.map((m) => opportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.probability / 100) * (o.cm_percent / 100), 0))
+    const monthlyRevenue = MONTHS.map((m) => filteredOpportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))
+    const monthlyWeighted = MONTHS.map((m) => filteredOpportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.probability / 100), 0))
+    const monthlyCM = MONTHS.map((m, _i) => filteredOpportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.cm_percent / 100), 0))
+    const monthlyWeightedCM = MONTHS.map((m) => filteredOpportunities.reduce((s, o) => s + getMonthRevenue(o, m) * (o.probability / 100) * (o.cm_percent / 100), 0))
 
     // By status
     const byStatus = STATUS_OPTIONS.filter(Boolean).map((status) => {
-      const filtered = opportunities.filter((o) => o.status === status)
+      const filtered = filteredOpportunities.filter((o) => o.status === status)
       const rev = filtered.reduce((s, o) => s + getTotal(o), 0)
       const weighted = filtered.reduce((s, o) => s + getTotal(o) * (o.probability / 100), 0)
       const cm = filtered.reduce((s, o) => s + getTotal(o) * (o.cm_percent / 100), 0)
@@ -201,9 +224,9 @@ export default function PipelinePage() {
     })
 
     // By PM
-    const pmIds = [...new Set(opportunities.map((o) => o.pm_user_id).filter(Boolean))] as string[]
+    const pmIds = [...new Set(filteredOpportunities.map((o) => o.pm_user_id).filter(Boolean))] as string[]
     const byPM = pmIds.map((pmId) => {
-      const filtered = opportunities.filter((o) => o.pm_user_id === pmId)
+      const filtered = filteredOpportunities.filter((o) => o.pm_user_id === pmId)
       const name = members?.find((m) => m.id === pmId)?.name ?? pmId
       const rev = filtered.reduce((s, o) => s + getTotal(o), 0)
       const weighted = filtered.reduce((s, o) => s + getTotal(o) * (o.probability / 100), 0)
@@ -212,12 +235,12 @@ export default function PipelinePage() {
     }).sort((a, b) => b.revenue - a.revenue)
 
     return { monthlyRevenue, monthlyWeighted, monthlyCM, monthlyWeightedCM, byStatus, byPM }
-  }, [opportunities, members])
+  }, [filteredOpportunities, members])
 
-  const totalRevenue = opportunities.reduce((s, o) => s + getTotal(o), 0)
-  const totalWeighted = opportunities.reduce((s, o) => s + getTotal(o) * (o.probability / 100), 0)
-  const totalCM = opportunities.reduce((s, o) => s + getTotal(o) * (o.cm_percent / 100), 0)
-  const totalWeightedCM = opportunities.reduce((s, o) => s + getTotal(o) * (o.probability / 100) * (o.cm_percent / 100), 0)
+  const totalRevenue = filteredOpportunities.reduce((s, o) => s + getTotal(o), 0)
+  const totalWeighted = filteredOpportunities.reduce((s, o) => s + getTotal(o) * (o.probability / 100), 0)
+  const totalCM = filteredOpportunities.reduce((s, o) => s + getTotal(o) * (o.cm_percent / 100), 0)
+  const totalWeightedCM = filteredOpportunities.reduce((s, o) => s + getTotal(o) * (o.probability / 100) * (o.cm_percent / 100), 0)
 
   const fmtK = (v: number) => Math.round(v).toLocaleString()
 
@@ -232,7 +255,7 @@ export default function PipelinePage() {
         <button onClick={() => {
           const memberName = (uid: string | null) => { if (!uid || !members) return ''; return members.find((m) => m.id === uid)?.name ?? '' }
           const header = ['ID','新/既','区分','クライアント','紹介先','案件名','サブ案件','状況','勝率%','CM%','PM','コンサル1','コンサル2',...MONTH_LABELS,'合計','加重合計','粗利'].join(',')
-          const rows = opportunities.map((o) => {
+          const rows = filteredOpportunities.map((o) => {
             const total = getTotal(o)
             return [o.seq_id, o.is_new ? '新' : '既', o.client_type ?? 'Customer', `"${o.client_name}"`, `"${o.referral_source}"`, `"${o.opportunity_name}"`, `"${o.sub_opportunity}"`, o.status, o.probability, o.cm_percent, `"${memberName(o.pm_user_id)}"`, `"${memberName(o.consultant1_user_id)}"`, `"${memberName(o.consultant2_user_id)}"`, ...MONTHS.map((m) => getMonthRevenue(o, m)), total, Math.round(total * o.probability / 100), Math.round(total * o.cm_percent / 100)].join(',')
           })
@@ -290,6 +313,41 @@ export default function PipelinePage() {
                     <th key={MONTHS[i]} className="px-[4px] py-[8px] font-semibold text-text2 text-center min-w-[55px]">{l}</th>
                   ))}
                   <th className="px-[6px] py-[8px] font-semibold text-mint text-right">{t('pipeline.total')}</th>
+                </tr>
+                {/* Filter row */}
+                <tr className="border-b border-border2 bg-surf2/50">
+                  <th className="sticky left-0 bg-surf2/50 z-30"></th>
+                  <th className="sticky left-[24px] bg-surf2/50 z-30"></th>
+                  <th></th>
+                  <th></th>
+                  <th className="px-[4px] py-[4px]">
+                    <input type="text" value={filterClient} onChange={(e) => setFilterClient(e.target.value)} placeholder="絞り込み..." className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1.5 py-1 focus:outline-none focus:border-mint" />
+                  </th>
+                  <th className="px-[4px] py-[4px]">
+                    <select value={filterReferral} onChange={(e) => setFilterReferral(e.target.value)} className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1 py-1 focus:outline-none focus:border-mint">
+                      <option value="">すべて</option>
+                      {uniqueReferrals.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </th>
+                  <th className="px-[4px] py-[4px]">
+                    <input type="text" value={filterOpportunity} onChange={(e) => setFilterOpportunity(e.target.value)} placeholder="絞り込み..." className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1.5 py-1 focus:outline-none focus:border-mint" />
+                  </th>
+                  <th></th>
+                  <th className="px-[4px] py-[4px]">
+                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1 py-1 focus:outline-none focus:border-mint">
+                      <option value="">すべて</option>
+                      <option value="Firm">Firm</option>
+                      <option value="Namelikly">Namelikly</option>
+                      <option value="Win">Win</option>
+                      <option value="Lost">Lost</option>
+                    </select>
+                  </th>
+                  <th colSpan={5}></th>
+                  <th colSpan={13} className="px-[4px] py-[4px] text-right">
+                    {hasActiveFilter && (
+                      <button onClick={() => { setFilterClient(''); setFilterReferral(''); setFilterOpportunity(''); setFilterStatus('') }} className="text-[10px] text-mint hover:text-mint-d font-semibold">クリア</button>
+                    )}
+                  </th>
                 </tr>
               </thead>
               <tbody>
