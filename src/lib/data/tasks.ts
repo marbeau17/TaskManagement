@@ -340,6 +340,47 @@ export async function updateTask(
       const { data: { user: authUser } } = await supabase.auth.getUser()
       const fields = Object.keys(data).join(', ')
       await logActivity(supabase, id, authUser?.id ?? null, 'updated', `Fields: ${fields}`)
+
+      // Send email notification when assigned_to changes (reassignment)
+      if (data.assigned_to && authUser) {
+        const { data: assignee } = await supabase
+          .from('users')
+          .select('id, name, email')
+          .eq('id', data.assigned_to)
+          .single()
+        const { data: task } = await supabase
+          .from('tasks')
+          .select('title, description, confirmed_deadline, estimated_hours, client:clients(name)')
+          .eq('id', id)
+          .single() as { data: any; error: any }
+        const { data: director } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', authUser.id)
+          .single()
+
+        if (assignee?.email && task) {
+          fetch('/api/email/notify-assign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskId: id,
+              taskTitle: task.title ?? '',
+              clientName: task.client?.name ?? '',
+              confirmedDeadline: task.confirmed_deadline ?? null,
+              estimatedHours: task.estimated_hours ?? null,
+              directorName: director?.name ?? '',
+              description: task.description ?? null,
+              assigneeEmail: assignee.email,
+              assigneeName: assignee.name,
+              assignerId: authUser.id,
+              assigneeId: assignee.id,
+            }),
+          }).catch((err) => {
+            console.error('[updateTask] Reassignment email failed:', err)
+          })
+        }
+      }
     } catch {}
   }
 
