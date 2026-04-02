@@ -44,7 +44,8 @@ export async function getIssues(filters?: IssueFilters): Promise<Issue[]> {
       *,
       reporter:users!reported_by(*),
       assignee:users!assigned_to(*),
-      project:projects!project_id(*)
+      project:projects!project_id(*),
+      task:tasks!task_id(id, title)
     `)
     .order('created_at', { ascending: false })
 

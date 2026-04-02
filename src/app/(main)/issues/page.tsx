@@ -27,7 +27,7 @@ type SortDir = 'asc' | 'desc'
 export default function IssuesPage() {
   const router = useRouter()
   const { can } = usePermission()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const deleteIssueMutation = useDeleteIssue()
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
@@ -137,7 +137,7 @@ export default function IssuesPage() {
       <Topbar title={t('issues.title')}>
         <button
           onClick={() => {
-            if (sortedIssues.length > 0) exportIssuesCsv(sortedIssues)
+            if (sortedIssues.length > 0) exportIssuesCsv(sortedIssues, locale)
           }}
           disabled={sortedIssues.length === 0}
           className="px-[14px] py-[6px] text-[12px] font-semibold text-text bg-surf2 border border-wf-border rounded-[6px] hover:bg-wf-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
