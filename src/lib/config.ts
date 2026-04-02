@@ -82,6 +82,8 @@ export const APP_CONFIG = {
   alerts: {
     /** Days before deadline to show "soon" warning */
     deadlineSoonDays: 3,
+    /** Days without update to flag task as stale */
+    staleTaskDays: 7,
     /** Days to look back for velocity calculation */
     velocityWindowDays: 7,
     /** Notification refetch interval (ms) */

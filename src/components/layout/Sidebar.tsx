@@ -31,6 +31,7 @@ interface SidebarProps {
 
 const MAIN_NAV = [
   { id: 'news', labelKey: 'nav.news', icon: '📢', href: '/news' },
+  { id: 'mypage', labelKey: 'nav.mypage', icon: '👤', href: '/mypage' },
   { id: 'dashboard', labelKey: 'nav.dashboard', icon: '📊', href: '/dashboard' },
   { id: 'request', labelKey: 'nav.taskRequest', icon: '📝', href: '/tasks/new' },
   { id: 'tasks', labelKey: 'nav.taskList', icon: '📋', href: '/tasks', badgeDynamic: true },
