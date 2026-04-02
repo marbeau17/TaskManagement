@@ -235,16 +235,16 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
   const activities = activitiesResult.data ?? []
   const capacityHours = userResult.data?.weekly_capacity_hours ?? 40
 
-  // Today tasks: deadline = today OR status = in_progress
+  // Today tasks: all in_progress tasks + tasks with deadline today + todo with deadline today
   const todayTasks = tasks.filter(t => {
     const dl = getDeadline(t)
-    return (dl && dl === todayStr) || t.status === 'in_progress'
+    return t.status === 'in_progress' || (dl && dl === todayStr)
   }).sort((a, b) => a.priority - b.priority)
 
-  // Week tasks: tasks that overlap with this week
+  // Week tasks: all in_progress/todo tasks + tasks overlapping this week
   const { taskOverlapsWeek, getTaskWeeklyHours } = await import('@/lib/workload-utils')
   const weekTasks = tasks.filter(t =>
-    taskOverlapsWeek(t, weekStart, weekEnd)
+    t.status === 'in_progress' || t.status === 'todo' || taskOverlapsWeek(t, weekStart, weekEnd)
   ).sort((a, b) => a.priority - b.priority)
 
   // Utilization rate: sum of weekly hours for tasks overlapping this week
