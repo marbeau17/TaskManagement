@@ -13,6 +13,7 @@ import { MyTodayTasks } from '@/components/mypage/MyTodayTasks'
 import { MyWeekTasks } from '@/components/mypage/MyWeekTasks'
 import { MyIssues } from '@/components/mypage/MyIssues'
 import { MyRecentActivity } from '@/components/mypage/MyRecentActivity'
+import { ReleaseNoteBanner } from '@/components/mypage/ReleaseNoteBanner'
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -47,6 +48,9 @@ export default function MyPagePage() {
       </Topbar>
 
       <div className="flex-1 overflow-y-auto p-[12px] md:p-[20px] flex flex-col gap-[16px]">
+        {/* Release Notes */}
+        <ReleaseNoteBanner />
+
         {/* Summary Cards */}
         <MyPageSummaryCards summary={pageData.summary} isLoading={isLoading} />
 

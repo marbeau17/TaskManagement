@@ -12,10 +12,18 @@ interface NewsArticle {
   id: string
   title: string
   content_html: string
+  category: string
   author_id: string | null
   published_at: string
   updated_at: string
   author?: { name: string; name_short: string; avatar_color: string } | null
+}
+
+const CATEGORY_STYLES: Record<string, string> = {
+  general: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  release: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400',
+  important: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
+  maintenance: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
 }
 
 export default function NewsPage() {
@@ -27,6 +35,8 @@ export default function NewsPage() {
   const [creating, setCreating] = useState(false)
   const [title, setTitle] = useState('')
   const [contentHtml, setContentHtml] = useState('')
+  const [activeTab, setActiveTab] = useState<string>('all')
+  const [articleCategory, setArticleCategory] = useState('general')
 
   const isAdmin = user?.role === 'admin' || user?.role === 'director'
   const canEdit = (article: NewsArticle) => isAdmin || article.author_id === user?.id
@@ -47,7 +57,7 @@ export default function NewsPage() {
         const res = await fetch(`/api/news/${editing.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content_html: contentHtml }),
+          body: JSON.stringify({ title, content_html: contentHtml, category: articleCategory }),
         })
         if (res.ok) { toast.success('更新しました'); await fetchArticles() }
         else toast.error('更新に失敗しました')
@@ -55,7 +65,7 @@ export default function NewsPage() {
         const res = await fetch('/api/news', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content_html: contentHtml, author_id: user?.id }),
+          body: JSON.stringify({ title, content_html: contentHtml, category: articleCategory, author_id: user?.id }),
         })
         if (res.ok) { toast.success('投稿しました'); await fetchArticles() }
         else toast.error('投稿に失敗しました')
@@ -74,11 +84,13 @@ export default function NewsPage() {
   const startEdit = (article: NewsArticle) => {
     setEditing(article); setCreating(true)
     setTitle(article.title); setContentHtml(article.content_html)
+    setArticleCategory(article.category || 'general')
   }
 
   const startCreate = () => {
     setEditing(null); setCreating(true)
     setTitle(''); setContentHtml('')
+    setArticleCategory('general')
   }
 
   return (
@@ -93,6 +105,28 @@ export default function NewsPage() {
       </Topbar>
 
       <div className="p-[12px] md:p-[20px]">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-[4px] mb-[16px] border-b border-border2 pb-[1px]">
+          {[
+            { id: 'all', label: t('news.tab.all') },
+            { id: 'release', label: t('news.tab.release') },
+            { id: 'important', label: t('news.tab.important') },
+            { id: 'maintenance', label: t('news.tab.maintenance') },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-[14px] py-[7px] text-[12px] font-semibold rounded-t-[8px] transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-surface text-mint-dd border border-border2 border-b-surface -mb-[1px]'
+                  : 'text-text2 hover:text-text hover:bg-surf2'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Editor */}
         {creating && isAdmin && (
           <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow mb-[16px]">
@@ -105,6 +139,16 @@ export default function NewsPage() {
                 placeholder={t('news.titlePlaceholder')}
                 className="w-full text-[14px] text-text px-[10px] py-[8px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint font-bold"
               />
+              <select
+                value={articleCategory}
+                onChange={(e) => setArticleCategory(e.target.value)}
+                className="w-full text-[13px] text-text px-[10px] py-[8px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+              >
+                <option value="general">{t('news.category.general')}</option>
+                <option value="release">{t('news.category.release')}</option>
+                <option value="important">{t('news.category.important')}</option>
+                <option value="maintenance">{t('news.category.maintenance')}</option>
+              </select>
               <textarea
                 value={contentHtml} onChange={(e) => setContentHtml(e.target.value)}
                 placeholder={t('news.contentPlaceholder')}
@@ -142,17 +186,26 @@ export default function NewsPage() {
         )}
 
         {/* Article List */}
-        {loading ? (
+        {(() => {
+          const filteredArticles = activeTab === 'all'
+            ? articles
+            : articles.filter(a => a.category === activeTab)
+          return loading ? (
           <div className="text-center py-[40px] text-[13px] text-text3">{t('common.loading')}</div>
-        ) : articles.length === 0 ? (
+        ) : filteredArticles.length === 0 ? (
           <div className="text-center py-[40px] text-[13px] text-text3">{t('news.noArticles')}</div>
         ) : (
           <div className="space-y-[16px]">
-            {articles.map((article) => (
+            {filteredArticles.map((article) => (
               <div key={article.id} className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
                 <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2/50">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-[15px] font-bold text-text">{article.title}</h2>
+                    <div className="flex items-center gap-[6px]">
+                      <span className={`text-[9px] font-bold px-[6px] py-[1px] rounded-full ${CATEGORY_STYLES[article.category] ?? CATEGORY_STYLES.general}`}>
+                        {t(`news.category.${article.category}`) || article.category}
+                      </span>
+                      <h2 className="text-[15px] font-bold text-text">{article.title}</h2>
+                    </div>
                     {canEdit(article) && (
                       <div className="flex gap-[6px]">
                         <button onClick={() => startEdit(article)} className="text-[11px] text-mint hover:text-mint-d font-medium">{t('common.edit')}</button>
@@ -189,7 +242,8 @@ export default function NewsPage() {
               </div>
             ))}
           </div>
-        )}
+        )
+        })()}
       </div>
     </>
   )

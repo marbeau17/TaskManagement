@@ -10,9 +10,9 @@ interface Props {
 }
 
 const SEVERITY_STYLES = {
-  critical: 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20',
-  warning: 'border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/20',
-  caution: 'border-l-4 border-l-orange-400 bg-orange-50 dark:bg-orange-950/20',
+  critical: 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-500/10',
+  warning: 'border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-500/10',
+  caution: 'border-l-4 border-l-orange-400 bg-orange-50 dark:bg-orange-400/10',
 } as const
 
 const TYPE_ICONS = {
@@ -38,7 +38,7 @@ export function MyPageWarnings({ warnings }: Props) {
         <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
           <h3 className="text-[13px] font-bold text-text">{t('mypage.warnings.title')}</h3>
         </div>
-        <div className="flex items-center gap-[8px] px-[16px] py-[14px] border-l-4 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20">
+        <div className="flex items-center gap-[8px] px-[16px] py-[14px] border-l-4 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/10">
           <CheckCircle className="w-[16px] h-[16px] text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span className="text-[12px] text-emerald-700 dark:text-emerald-300 font-medium">
             {t('mypage.warnings.none')}
@@ -67,10 +67,10 @@ export function MyPageWarnings({ warnings }: Props) {
             >
               <div className={`${SEVERITY_STYLES[w.severity]} flex items-center gap-[10px] flex-1 -my-[10px] -ml-[14px] py-[10px] pl-[14px]`}>
                 <div className={`w-[6px] h-[6px] rounded-full shrink-0 ${SEVERITY_DOT[w.severity]}`} />
-                <Icon className="w-[14px] h-[14px] shrink-0 text-text2" />
+                <Icon className="w-[14px] h-[14px] shrink-0 text-text" />
                 <div className="flex-1 min-w-0">
                   <span className="text-[12px] font-semibold text-text truncate block">{w.title}</span>
-                  <span className="text-[11px] text-text2">{w.description}</span>
+                  <span className="text-[11px] text-text2 dark:text-text/70">{w.description}</span>
                 </div>
               </div>
             </Link>

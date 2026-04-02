@@ -11,11 +11,11 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<number, string> = {
-  1: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-  2: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400',
-  3: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-  4: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
-  5: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  1: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
+  2: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
+  3: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  4: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+  5: 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300',
 }
 
 function DeadlineLabel({ deadline }: { deadline: string | null }) {
