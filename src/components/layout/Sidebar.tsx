@@ -40,6 +40,7 @@ const MAIN_NAV = [
   { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
   { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', restricted: true },
+  { id: 'crm', labelKey: 'nav.crm', icon: '🤝', href: '/crm', restricted: true },
 ]
 
 const PIPELINE_ALLOWED = ['安田', '伊藤', '瀧宮', '渡邊', '渡辺']
