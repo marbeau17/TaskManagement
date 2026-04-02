@@ -203,7 +203,7 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
       .from('tasks')
       .select(taskSelect)
       .eq('assigned_to', userId)
-      .not('status', 'in', '("done","dropped","rejected")')
+      .not('status', 'in', '(done,rejected)')
       .order('priority', { ascending: true }),
 
     // Tasks where user is in task_assignees (fetch by IDs)
@@ -212,7 +212,7 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
           .from('tasks')
           .select(taskSelect)
           .in('id', [...assigneeTaskIds])
-          .not('status', 'in', '("done","dropped","rejected")')
+          .not('status', 'in', '(done,rejected)')
           .order('priority', { ascending: true })
       : Promise.resolve({ data: [] }),
 
