@@ -180,16 +180,22 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
   const staleDateStr = format(staleDate, 'yyyy-MM-dd')
 
   // Parallel queries
-  const [tasksResult, issuesResult, activitiesResult, userResult] = await Promise.all([
+  const [tasksResult, assigneesResult, issuesResult, activitiesResult, userResult] = await Promise.all([
+    // Fetch ALL active tasks (not just assigned_to = userId) so we can merge with task_assignees
     db
       .from('tasks')
       .select(`*, client:clients(id, name), project:projects(id, name),
                assigned_user:users!tasks_assigned_to_fkey(id, name, name_short, avatar_color, avatar_url),
                requester:users!tasks_requested_by_fkey(id, name, name_short, avatar_color),
                director:users!tasks_director_id_fkey(id, name, name_short)`)
-      .eq('assigned_to', userId)
       .not('status', 'in', '("done","dropped","rejected")')
       .order('priority', { ascending: true }),
+
+    // Fetch task_assignees for this user (multi-assignee support)
+    db
+      .from('task_assignees')
+      .select('task_id')
+      .eq('user_id', userId),
 
     db
       .from('issues')
@@ -214,7 +220,17 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
       .single(),
   ])
 
-  const tasks: TaskWithRelations[] = tasksResult.data ?? []
+  // Build set of task IDs assigned to this user via task_assignees
+  const assigneeTaskIds = new Set<string>(
+    (assigneesResult.data ?? []).map((r: { task_id: string }) => r.task_id)
+  )
+
+  // Filter tasks: assigned_to = userId OR in task_assignees
+  const allTasks: TaskWithRelations[] = tasksResult.data ?? []
+  const tasks = allTasks.filter(t =>
+    t.assigned_to === userId || assigneeTaskIds.has(t.id)
+  )
+
   const issues: Issue[] = issuesResult.data ?? []
   const activities = activitiesResult.data ?? []
   const capacityHours = userResult.data?.weekly_capacity_hours ?? 40
@@ -225,15 +241,17 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
     return (dl && dl === todayStr) || t.status === 'in_progress'
   }).sort((a, b) => a.priority - b.priority)
 
-  // Week tasks: deadline within this week OR status = in_progress
-  const weekTasks = tasks.filter(t => {
-    const dl = getDeadline(t)
-    return (dl && dl >= weekStartStr && dl <= weekEndStr) || t.status === 'in_progress'
-  }).sort((a, b) => a.priority - b.priority)
+  // Week tasks: tasks that overlap with this week
+  const { taskOverlapsWeek, getTaskWeeklyHours } = await import('@/lib/workload-utils')
+  const weekTasks = tasks.filter(t =>
+    taskOverlapsWeek(t, weekStart, weekEnd)
+  ).sort((a, b) => a.priority - b.priority)
 
-  // Utilization rate
-  const totalActualHours = tasks.reduce((sum, t) => sum + (t.actual_hours || 0), 0)
-  const utilizationRate = capacityHours > 0 ? Math.round((totalActualHours / capacityHours) * 100) : 0
+  // Utilization rate: sum of weekly hours for tasks overlapping this week
+  const weeklyHoursTotal = weekTasks.reduce((sum, t) => {
+    return sum + getTaskWeeklyHours(t, weekStartStr)
+  }, 0)
+  const utilizationRate = capacityHours > 0 ? Math.round((weeklyHoursTotal / capacityHours) * 100) : 0
 
   // Warnings
   const warnings = buildWarnings(tasks, issues, utilizationRate, todayStr, soonDateStr, staleDateStr)
