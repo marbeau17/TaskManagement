@@ -83,7 +83,7 @@ function buildWarnings(
   // W4: Stale tasks
   for (const t of tasks) {
     if (t.status !== 'in_progress') continue
-    if (t.updated_at >= staleDateStr) continue
+    if (t.updated_at.slice(0, 10) >= staleDateStr) continue
     const days = differenceInCalendarDays(new Date(todayStr), new Date(t.updated_at.slice(0, 10)))
     warnings.push({
       id: `stale-${t.id}`,
@@ -173,29 +173,44 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 })
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 })
   const weekStartStr = format(weekStart, 'yyyy-MM-dd')
-  const weekEndStr = format(weekEnd, 'yyyy-MM-dd')
   const soonDate = new Date(today.getTime() + APP_CONFIG.alerts.deadlineSoonDays * 86400000)
   const soonDateStr = format(soonDate, 'yyyy-MM-dd')
   const staleDate = new Date(today.getTime() - APP_CONFIG.alerts.staleTaskDays * 86400000)
   const staleDateStr = format(staleDate, 'yyyy-MM-dd')
 
-  // Parallel queries
-  const [tasksResult, assigneesResult, issuesResult, activitiesResult, userResult] = await Promise.all([
-    // Fetch ALL active tasks (not just assigned_to = userId) so we can merge with task_assignees
-    db
-      .from('tasks')
-      .select(`*, client:clients(id, name), project:projects(id, name),
+  const taskSelect = `*, client:clients(id, name), project:projects(id, name),
                assigned_user:users!tasks_assigned_to_fkey(id, name, name_short, avatar_color, avatar_url),
                requester:users!tasks_requested_by_fkey(id, name, name_short, avatar_color),
-               director:users!tasks_director_id_fkey(id, name, name_short)`)
+               director:users!tasks_director_id_fkey(id, name, name_short)`
+
+  // Step 1: Get task IDs from task_assignees for this user
+  const { data: assigneeRows } = await db
+    .from('task_assignees')
+    .select('task_id')
+    .eq('user_id', userId)
+  const assigneeTaskIds = new Set<string>(
+    (assigneeRows ?? []).map((r: { task_id: string }) => r.task_id)
+  )
+
+  // Step 2: Parallel queries — tasks filtered by assigned_to=userId at DB level
+  const [tasksResult, assigneeTasksResult, issuesResult, activitiesResult, userResult] = await Promise.all([
+    // Tasks where user is primary assignee
+    db
+      .from('tasks')
+      .select(taskSelect)
+      .eq('assigned_to', userId)
       .not('status', 'in', '("done","dropped","rejected")')
       .order('priority', { ascending: true }),
 
-    // Fetch task_assignees for this user (multi-assignee support)
-    db
-      .from('task_assignees')
-      .select('task_id')
-      .eq('user_id', userId),
+    // Tasks where user is in task_assignees (fetch by IDs)
+    assigneeTaskIds.size > 0
+      ? db
+          .from('tasks')
+          .select(taskSelect)
+          .in('id', [...assigneeTaskIds])
+          .not('status', 'in', '("done","dropped","rejected")')
+          .order('priority', { ascending: true })
+      : Promise.resolve({ data: [] }),
 
     db
       .from('issues')
@@ -220,16 +235,14 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
       .single(),
   ])
 
-  // Build set of task IDs assigned to this user via task_assignees
-  const assigneeTaskIds = new Set<string>(
-    (assigneesResult.data ?? []).map((r: { task_id: string }) => r.task_id)
-  )
-
-  // Filter tasks: assigned_to = userId OR in task_assignees
-  const allTasks: TaskWithRelations[] = tasksResult.data ?? []
-  const tasks = allTasks.filter(t =>
-    t.assigned_to === userId || assigneeTaskIds.has(t.id)
-  )
+  // Merge and deduplicate tasks from both sources
+  const primaryTasks: TaskWithRelations[] = tasksResult.data ?? []
+  const extraTasks: TaskWithRelations[] = assigneeTasksResult.data ?? []
+  const seenIds = new Set<string>(primaryTasks.map(t => t.id))
+  const tasks = [
+    ...primaryTasks,
+    ...extraTasks.filter(t => !seenIds.has(t.id)),
+  ]
 
   const issues: Issue[] = issuesResult.data ?? []
   const activities = activitiesResult.data ?? []
@@ -251,7 +264,9 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
   const weeklyHoursTotal = weekTasks.reduce((sum, t) => {
     return sum + getTaskWeeklyHours(t, weekStartStr)
   }, 0)
-  const utilizationRate = capacityHours > 0 ? Math.round((weeklyHoursTotal / capacityHours) * 100) : 0
+  const utilizationRate = capacityHours > 0
+    ? Math.round((weeklyHoursTotal / capacityHours) * 100)
+    : (weeklyHoursTotal > 0 ? 999 : 0) // capacity=0 with work = overloaded
 
   // Warnings
   const warnings = buildWarnings(tasks, issues, utilizationRate, todayStr, soonDateStr, staleDateStr)

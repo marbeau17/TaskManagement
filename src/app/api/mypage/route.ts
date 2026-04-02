@@ -15,6 +15,6 @@ export async function GET() {
     return NextResponse.json(data)
   } catch (error) {
     console.error('[MyPage API]', error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch mypage data' }, { status: 500 })
   }
 }
