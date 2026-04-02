@@ -83,10 +83,87 @@
   --color-gold-b: #D8C040;
 }
 
+/* ================================================================
+   Color Theme Presets — selected via data-theme attribute on <html>
+   Overrides --color-mint-* via CSS variable cascade
+   ================================================================ */
+
+/* Default: Meets brand */
+[data-theme="meets"] {
+  --color-mint: #2a4575;
+  --color-mint-l: #3d5a8a;
+  --color-mint-d: #1a2d51;
+  --color-mint-dd: #1a2d51;
+  --wf-mint-dd: #1a2d51;
+  --wf-mint-ll: #e8edf5;
+  --color-gold: #8a6a20;
+  --color-gold-b: #c5a059;
+  --color-gold-bg: #fdf6e8;
+}
+[data-theme="meets"].dark, .dark[data-theme="meets"] {
+  --color-mint: #3d5a8a;
+  --color-mint-l: #4a6b9e;
+  --color-mint-d: #2a4575;
+  --color-mint-dd: #1a2d51;
+  --wf-mint-dd: #0f1b33;
+  --wf-mint-ll: #1a2d45;
+  --color-gold-bg: #3d3218;
+}
+
+/* Mint (original/legacy) — no overrides needed, uses defaults */
+
+[data-theme="ocean"] {
+  --color-mint: #3a8bc2;
+  --color-mint-l: #6aaedc;
+  --color-mint-d: #1e6091;
+  --color-mint-dd: #1e6091;
+  --wf-mint-dd: #1e6091;
+  --wf-mint-ll: #e6f0f8;
+}
+[data-theme="ocean"].dark, .dark[data-theme="ocean"] {
+  --color-mint: #3a8bc2;
+  --color-mint-d: #2a7ab0;
+  --color-mint-dd: #1e6091;
+  --wf-mint-dd: #0d3d5c;
+  --wf-mint-ll: #1a3050;
+}
+
+[data-theme="forest"] {
+  --color-mint: #52b788;
+  --color-mint-l: #74c69d;
+  --color-mint-d: #2d6a4f;
+  --color-mint-dd: #2d6a4f;
+  --wf-mint-dd: #2d6a4f;
+  --wf-mint-ll: #e8f5ee;
+}
+[data-theme="forest"].dark, .dark[data-theme="forest"] {
+  --color-mint: #52b788;
+  --color-mint-d: #40916c;
+  --color-mint-dd: #2d6a4f;
+  --wf-mint-dd: #1b4332;
+  --wf-mint-ll: #1a3528;
+}
+
+[data-theme="slate"] {
+  --color-mint: #94a3b8;
+  --color-mint-l: #b0bec5;
+  --color-mint-d: #475569;
+  --color-mint-dd: #475569;
+  --wf-mint-dd: #475569;
+  --wf-mint-ll: #f1f5f9;
+}
+[data-theme="slate"].dark, .dark[data-theme="slate"] {
+  --color-mint: #94a3b8;
+  --color-mint-d: #64748b;
+  --color-mint-dd: #475569;
+  --wf-mint-dd: #1e293b;
+  --wf-mint-ll: #1e293b;
+}
+
 /* Light/Dark CSS variables are defined in @layer base below */
 :root {
-  --chart-1: #6FB5A3;
-  --chart-2: #4A9482;
+  --chart-1: var(--color-mint, #6FB5A3);
+  --chart-2: var(--color-mint-d, #4A9482);
   --chart-3: #7A5E18;
   --chart-4: #1E4A7A;
   --chart-5: #8A2A5A;
@@ -114,7 +191,7 @@
     --card-foreground: #2A3A36;
     --popover: #FAFCFB;
     --popover-foreground: #2A3A36;
-    --primary: #6FB5A3;
+    --primary: var(--color-mint, #6FB5A3);
     --primary-foreground: #FFFFFF;
     --secondary: #EEF3F1;
     --secondary-foreground: #2A3A36;
@@ -125,8 +202,8 @@
     --destructive: #7A3030;
     --border: #CCDDD8;
     --input: #CCDDD8;
-    --ring: #6FB5A3;
-    --sidebar: #2E6B5A;
+    --ring: var(--color-mint, #6FB5A3);
+    --sidebar: var(--color-mint-dd, #2E6B5A);
     --sidebar-foreground: rgba(255, 255, 255, 0.68);
     --sidebar-primary: #FFFFFF;
     --sidebar-primary-foreground: #2E6B5A;
@@ -146,7 +223,7 @@
     --card-foreground: #E8F0EC;
     --popover: #1F2E28;
     --popover-foreground: #E8F0EC;
-    --primary: #6FB5A3;
+    --primary: var(--color-mint, #6FB5A3);
     --primary-foreground: #FFFFFF;
     --secondary: #253530;
     --secondary-foreground: #E8F0EC;
@@ -157,8 +234,8 @@
     --destructive: #D08888;
     --border: #3A4D45;
     --input: #3A4D45;
-    --ring: #6FB5A3;
-    --sidebar: #152018;
+    --ring: var(--color-mint, #6FB5A3);
+    --sidebar: var(--wf-mint-dd, #152018);
     --sidebar-foreground: rgba(255, 255, 255, 0.68);
     --sidebar-primary: #FFFFFF;
     --sidebar-primary-foreground: #152018;

@@ -50,6 +50,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
     { value: 'number', labelKey: 'templates.fieldTypeNumber' },
     { value: 'url', labelKey: 'templates.fieldTypeUrl' },
     { value: 'multiselect', labelKey: 'templates.fieldTypeMultiselect' },
+    { value: 'button_group', labelKey: 'templates.fieldTypeButtonGroup' },
   ]
 
   const addField = () => setFields((prev) => [...prev, blankField()])
@@ -206,7 +207,7 @@ function TemplateEditor({ initial, onSave, onCancel, isSaving }: EditorProps) {
                 </div>
 
                 {/* Options for select / multiselect */}
-                {(field.type === 'select' || field.type === 'multiselect') && (
+                {(field.type === 'select' || field.type === 'multiselect' || field.type === 'button_group') && (
                   <div>
                     <label className="block text-[11px] text-text3 mb-1">
                       {t('templates.selectOptions')}

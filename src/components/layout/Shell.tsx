@@ -63,20 +63,22 @@ export function Shell({ children }: ShellProps) {
 
       <div className="flex-1 flex flex-col min-h-0 overflow-auto">
         {/* Mobile hamburger bar (<768px) */}
-        <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0 sticky top-0 z-30">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="p-[6px] rounded-[6px] text-text2 hover:bg-surf2 transition-colors"
-            aria-label={t('shell.openMenu')}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-          <div className="ml-auto">
-            <GlobalSearch />
+        {!mobileOpen && (
+          <div className="md:hidden flex items-center h-[44px] px-[12px] bg-surface border-b border-border2 shrink-0 sticky top-0 z-30">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="p-[6px] rounded-[6px] text-text2 hover:bg-surf2 transition-colors"
+              aria-label={t('shell.openMenu')}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+            <div className="ml-auto">
+              <GlobalSearch />
+            </div>
           </div>
-        </div>
+        )}
         {children}
       </div>
       <ToastContainer />

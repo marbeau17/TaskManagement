@@ -8,6 +8,7 @@ import { Topbar } from '@/components/layout'
 import { Avatar } from '@/components/shared'
 import { toast } from '@/stores/toastStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useUiStore } from '@/stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
 import type { AvatarColor } from '@/types/database'
 
@@ -25,6 +26,7 @@ export default function ProfilePage() {
   const { setUser } = useAuthStore()
   const queryClient = useQueryClient()
   const { theme, setTheme } = useTheme()
+  const { colorTheme, setColorTheme } = useUiStore()
 
   const [name, setName] = useState('')
   const [nameShort, setNameShort] = useState('')
@@ -186,6 +188,41 @@ export default function ProfilePage() {
                   }`}
                 >
                   {opt === 'light' ? '☀ ' + t('profile.light') : opt === 'dark' ? '🌙 ' + t('profile.dark') : '💻 ' + t('profile.system')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Theme */}
+          <div className="mt-[16px]">
+            <label className="block text-[12.5px] font-semibold text-text2 mb-[8px]">
+              {t('settings.colorTheme')}
+            </label>
+            <div className="flex flex-wrap gap-[8px]">
+              {[
+                { id: 'meets', label: 'Meets', color: '#1a2d51' },
+                { id: 'mint', label: t('settings.colorTheme.mint'), color: '#6FB5A3' },
+                { id: 'ocean', label: t('settings.colorTheme.ocean'), color: '#1e6091' },
+                { id: 'forest', label: t('settings.colorTheme.forest'), color: '#2d6a4f' },
+                { id: 'slate', label: t('settings.colorTheme.slate'), color: '#475569' },
+              ].map((ct) => (
+                <button
+                  key={ct.id}
+                  onClick={() => setColorTheme(ct.id)}
+                  className={`flex flex-col items-center gap-[4px] px-[12px] py-[8px] rounded-[8px] border-2 transition-all ${
+                    colorTheme === ct.id
+                      ? 'border-current shadow-sm scale-105'
+                      : 'border-transparent hover:border-border2'
+                  }`}
+                >
+                  <div
+                    className="w-[32px] h-[32px] rounded-full shadow-inner"
+                    style={{ backgroundColor: ct.color }}
+                  />
+                  <span className="text-[10px] font-medium text-text2">{ct.label}</span>
+                  {colorTheme === ct.id && (
+                    <span className="text-[9px] font-bold" style={{ color: ct.color }}>✓</span>
+                  )}
                 </button>
               ))}
             </div>

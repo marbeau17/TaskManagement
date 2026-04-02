@@ -32,6 +32,8 @@ export default function RootLayout({
               var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
               if (dark) document.documentElement.classList.add('dark');
               else document.documentElement.classList.remove('dark');
+              var colorTheme = localStorage.getItem('workflow-color-theme') || 'meets';
+              document.documentElement.setAttribute('data-theme', colorTheme);
             } catch(e) {}
           })();
         `}} />

@@ -143,6 +143,48 @@ export function TemplateFieldRenderer({ field, value, onChange }: Props) {
       )
     }
 
+    case 'button_group': {
+      const selected = field.multiSelect
+        ? (Array.isArray(value) ? value : [])
+        : value
+      return (
+        <div>
+          {label}
+          <div className="flex flex-wrap gap-2 mt-1">
+            {(field.options ?? []).map((opt) => {
+              const isSelected = field.multiSelect
+                ? (selected as string[]).includes(opt)
+                : selected === opt
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    if (field.multiSelect) {
+                      const arr = Array.isArray(value) ? value : []
+                      onChange(isSelected ? arr.filter((v: string) => v !== opt) : [...arr, opt])
+                    } else {
+                      onChange(opt)
+                    }
+                  }}
+                  aria-pressed={isSelected}
+                  className={`
+                    px-4 py-2 rounded-lg text-[12.5px] font-medium border transition-colors
+                    ${isSelected
+                      ? 'bg-mint-dd text-white border-mint-dd'
+                      : 'bg-surface text-text2 border-wf-border hover:border-mint hover:bg-surf2'
+                    }
+                  `}
+                >
+                  {opt}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )
+    }
+
     default:
       return null
   }

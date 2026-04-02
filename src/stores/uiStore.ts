@@ -28,6 +28,9 @@ interface UiState {
 
   locale: Locale
   setLocale: (locale: Locale) => void
+
+  colorTheme: string
+  setColorTheme: (theme: string) => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -59,5 +62,16 @@ export const useUiStore = create<UiState>((set) => ({
       localStorage.setItem('workflow-locale', locale)
     }
     set({ locale })
+  },
+
+  colorTheme: (typeof window !== 'undefined'
+    ? localStorage.getItem('workflow-color-theme') || 'meets'
+    : 'meets'),
+  setColorTheme: (colorTheme) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('workflow-color-theme', colorTheme)
+      document.documentElement.setAttribute('data-theme', colorTheme)
+    }
+    set({ colorTheme })
   },
 }))

@@ -5,10 +5,11 @@
 export interface TemplateField {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'url' | 'multiselect'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'url' | 'multiselect' | 'button_group'
   options?: string[]
   placeholder?: string
   required?: boolean
+  multiSelect?: boolean  // for button_group — allow multiple selection
 }
 
 export interface TaskTemplate {
