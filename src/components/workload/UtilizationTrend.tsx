@@ -51,7 +51,8 @@ export function UtilizationTrend() {
         const start = t.start_date ? new Date(t.start_date) : new Date(t.created_at)
         const end = new Date(deadline)
         const totalWeeks = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)))
-        return s + est / totalWeeks
+        const assigneeCount = t.assignees?.length || 1
+        return s + (est / totalWeeks) / assigneeCount
       }, 0)
 
       const utilization = Math.round((totalEstimated / totalCapacity) * 100)

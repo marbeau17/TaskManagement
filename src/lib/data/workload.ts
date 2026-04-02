@@ -131,7 +131,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
 
     return {
       user,
-      task_count: allUserTasks.length,
+      task_count: activeTasks.length,
       completed_count: completedTasks.length,
       estimated_hours: Math.round(estimatedHours * 10) / 10,
       actual_hours: Math.round(actualHours * 10) / 10,
@@ -230,7 +230,6 @@ export async function getResourceLoadData(periodStart?: string): Promise<Resourc
     .select('id, assigned_to, client_id, status, estimated_hours, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
-    .neq('status', 'done')
 
   if (tasksError) throw tasksError
 
@@ -277,6 +276,8 @@ export async function getResourceLoadData(periodStart?: string): Promise<Resourc
 
     const clientHours: Record<string, number> = {}
     for (const t of userTasks) {
+      // Only count active tasks (todo/in_progress) for chart hours, matching getWorkloadSummaries
+      if ((t as any).status !== 'todo' && (t as any).status !== 'in_progress') continue
       // Exclude tasks without deadline (consistent with weekly workload)
       const deadline = (t as any).confirmed_deadline ?? (t as any).desired_deadline
       if (!deadline) continue

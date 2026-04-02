@@ -78,13 +78,34 @@ export default function WorkloadPage() {
   const memberTasks = useMemo(() => {
     if (!creatorId || !allTasks) return []
     return allTasks
-      .filter((t) => t.assigned_to === creatorId && t.status !== 'done' && t.status !== 'rejected')
+      .filter((t) => {
+        if (t.assigned_to !== creatorId) return false
+        if (t.status === 'done' || t.status === 'rejected' || t.status === 'dropped') return false
+        // Apply period filter matching getWorkloadSummaries
+        if (period !== 'all') {
+          const deadline = t.confirmed_deadline ?? t.desired_deadline
+          if (!deadline) return false
+          if (periodStart) {
+            const start = new Date(periodStart)
+            let end: Date
+            if (start.getDate() === 1) {
+              end = new Date(start.getFullYear(), start.getMonth() + 1, 0)
+            } else {
+              end = new Date(start)
+              end.setDate(end.getDate() + 6)
+            }
+            const endStr = end.toISOString().slice(0, 10)
+            if (deadline > endStr) return false
+          }
+        }
+        return true
+      })
       .sort((a, b) => {
         const da = a.confirmed_deadline ?? a.desired_deadline ?? '9999'
         const db = b.confirmed_deadline ?? b.desired_deadline ?? '9999'
         return da.localeCompare(db)
       })
-  }, [creatorId, allTasks])
+  }, [creatorId, allTasks, period, periodStart])
 
   return (
     <>

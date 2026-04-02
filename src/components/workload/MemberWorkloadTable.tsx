@@ -185,7 +185,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
                 <div className="flex items-center justify-between text-[11px]">
                   <div className="flex items-center gap-[12px] text-text2">
                     <span>
-                      {s.actual_hours.toFixed(1)}h / {s.estimated_hours.toFixed(1)}h
+                      {s.estimated_hours.toFixed(1)}h / {s.capacity_hours.toFixed(1)}h
                     </span>
                     <span>
                       {t('workload.taskCount')}: {s.task_count}
@@ -280,7 +280,7 @@ export function MemberWorkloadTable({ summaries }: MemberWorkloadTableProps) {
 
             {/* Actual / Estimated */}
             <div className="text-right text-[11px] text-text2">
-              {s.actual_hours.toFixed(1)}h / {s.estimated_hours.toFixed(1)}h
+              {s.estimated_hours.toFixed(1)}h / {s.capacity_hours.toFixed(1)}h
             </div>
 
             {/* Task count */}
