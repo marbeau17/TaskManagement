@@ -55,19 +55,19 @@ export default function MyPagePage() {
         <MyPageSummaryCards summary={pageData.summary} isLoading={isLoading} />
 
         {/* Warnings */}
-        <MyPageWarnings warnings={pageData.warnings} />
+        <MyPageWarnings warnings={pageData.warnings} isLoading={isLoading} />
 
         {/* Today Tasks + Issues (2-col on desktop) */}
         <div className="flex flex-col lg:grid lg:grid-cols-[1.2fr_1fr] gap-[16px]">
-          <MyTodayTasks tasks={pageData.today_tasks} />
-          <MyIssues issues={pageData.my_issues} />
+          <MyTodayTasks tasks={pageData.today_tasks} isLoading={isLoading} />
+          <MyIssues issues={pageData.my_issues} isLoading={isLoading} />
         </div>
 
         {/* Week Tasks */}
-        <MyWeekTasks tasks={pageData.week_tasks} />
+        <MyWeekTasks tasks={pageData.week_tasks} isLoading={isLoading} />
 
         {/* Recent Activity */}
-        <MyRecentActivity activities={pageData.recent_activities} />
+        <MyRecentActivity activities={pageData.recent_activities} isLoading={isLoading} />
       </div>
     </>
   )

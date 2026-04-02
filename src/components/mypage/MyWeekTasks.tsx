@@ -9,6 +9,7 @@ import type { TaskWithRelations } from '@/types/database'
 
 interface Props {
   tasks: TaskWithRelations[]
+  isLoading?: boolean
 }
 
 const PRIORITY_STYLES: Record<number, string> = {
@@ -21,16 +22,31 @@ const PRIORITY_STYLES: Record<number, string> = {
 
 const INITIAL_SHOW = 10
 
-export function MyWeekTasks({ tasks }: Props) {
+export function MyWeekTasks({ tasks, isLoading }: Props) {
   const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
   const weekRange = getWeekRange()
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-week-tasks">
+        <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+          <h3 className="text-[13px] font-bold text-text">{t('mypage.weekTasks.title').replace('{start}', '').replace('{end}', '')}</h3>
+        </div>
+        <div className="p-[12px] space-y-[8px] animate-pulse">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-[32px] bg-surf2 rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const visible = expanded ? tasks : tasks.slice(0, INITIAL_SHOW)
   const hasMore = tasks.length > INITIAL_SHOW
 
   return (
-    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-week-tasks">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center justify-between">
         <h3 className="text-[13px] font-bold text-text">
           {t('mypage.weekTasks.title').replace('{start}', weekRange.label.split('\uFF5E')[0] ?? '').replace('{end}', weekRange.label.split('\uFF5E')[1] ?? '')}

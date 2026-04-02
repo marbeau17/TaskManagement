@@ -22,6 +22,8 @@ export interface MyPageWarning {
   entity_type: 'task' | 'issue' | 'workload'
   entity_id?: string
   days?: number
+  deadline?: string
+  rate?: number
 }
 
 // ---------------------------------------------------------------------------

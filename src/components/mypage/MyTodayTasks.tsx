@@ -8,6 +8,7 @@ import type { TaskWithRelations } from '@/types/database'
 
 interface Props {
   tasks: TaskWithRelations[]
+  isLoading?: boolean
 }
 
 const PRIORITY_STYLES: Record<number, string> = {
@@ -33,11 +34,26 @@ function DeadlineLabel({ deadline }: { deadline: string | null }) {
   return <span className="text-[11px] text-text2">{dateStr}</span>
 }
 
-export function MyTodayTasks({ tasks }: Props) {
+export function MyTodayTasks({ tasks, isLoading }: Props) {
   const { t } = useI18n()
 
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-today-tasks">
+        <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+          <h3 className="text-[13px] font-bold text-text">{t('mypage.todayTasks.title')}</h3>
+        </div>
+        <div className="p-[12px] space-y-[8px] animate-pulse">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-[32px] bg-surf2 rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-today-tasks">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center justify-between">
         <h3 className="text-[13px] font-bold text-text">{t('mypage.todayTasks.title')}</h3>
         <span className="text-[10px] bg-mint-dd/10 text-mint-dd px-[6px] py-[1px] rounded-full font-bold">

@@ -8,6 +8,18 @@ import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/stores/toastStore'
 import { formatDate } from '@/lib/utils'
 
+/** Basic sanitization: strip dangerous tags/attributes while keeping safe HTML */
+function sanitizeHtml(html: string): string {
+  // Remove script tags and their content
+  let clean = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  // Remove event handlers (onclick, onerror, onload, etc.)
+  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  // Remove javascript: URLs
+  clean = clean.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
+  clean = clean.replace(/src\s*=\s*["']javascript:[^"']*["']/gi, 'src=""')
+  return clean
+}
+
 interface NewsArticle {
   id: string
   title: string
@@ -236,7 +248,7 @@ export default function NewsPage() {
                       }}
                     />
                   ) : (
-                    <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: article.content_html }} />
+                    <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content_html) }} />
                   )}
                 </div>
               </div>

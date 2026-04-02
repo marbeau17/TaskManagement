@@ -14,7 +14,7 @@ export function MyPageSummaryCards({ summary, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]" data-testid="mypage-summary">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="bg-surface border border-border2 rounded-[10px] p-[13px] shadow h-[88px] animate-pulse" />
         ))}
@@ -23,7 +23,7 @@ export function MyPageSummaryCards({ summary, isLoading }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]" data-testid="mypage-summary" role="region" aria-label="Summary">
       <KpiCard
         label={t('mypage.summary.todayTasks')}
         value={summary.today_task_count}

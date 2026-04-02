@@ -36,7 +36,7 @@ export function ReleaseNoteBanner() {
   useEffect(() => {
     setDismissedState(getDismissed())
     fetch('/api/news?category=release')
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : [])
       .then(data => {
         if (Array.isArray(data)) setNotes(data.slice(0, 3))
       })
@@ -55,13 +55,19 @@ export function ReleaseNoteBanner() {
   if (!loaded || visible.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-[8px]">
+    <div data-testid="release-note-banner" className="flex flex-col gap-[8px]">
       {visible.map(note => {
         // Strip HTML tags for preview
         const preview = note.content_html
           .replace(/<[^>]+>/g, '')
           .replace(/&nbsp;/g, ' ')
           .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/\s+/g, ' ')
+          .trim()
           .slice(0, 120)
 
         return (

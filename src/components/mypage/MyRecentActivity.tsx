@@ -13,6 +13,7 @@ type ActivityLogWithTask = ActivityLog & {
 
 interface Props {
   activities: ActivityLogWithTask[]
+  isLoading?: boolean
 }
 
 const ACTION_I18N_KEYS: Record<ActivityAction, string> = {
@@ -58,15 +59,34 @@ function formatTimeAgo(dateStr: string, t: (key: string) => string): string {
   return `${y}/${m}/${day}`
 }
 
-export function MyRecentActivity({ activities }: Props) {
+export function MyRecentActivity({ activities, isLoading }: Props) {
   const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface rounded-[10px] border border-border2 shadow-sm p-5" data-testid="mypage-activity">
+        <h3 className="text-[13px] font-bold text-text mb-4">{t('mypage.activity.title')}</h3>
+        <div className="space-y-[12px] animate-pulse">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="w-5 h-5 rounded-full bg-surf2 shrink-0" />
+              <div className="flex-1">
+                <div className="h-[12px] bg-surf2 rounded w-3/4 mb-[6px]" />
+                <div className="h-[10px] bg-surf2 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const visible = expanded ? activities : activities.slice(0, INITIAL_VISIBLE)
   const hasMore = activities.length > INITIAL_VISIBLE
 
   return (
-    <div className="bg-surface rounded-[10px] border border-border2 shadow-sm p-5">
+    <div className="bg-surface rounded-[10px] border border-border2 shadow-sm p-5" data-testid="mypage-activity">
       <h3 className="text-[13px] font-bold text-text mb-4">
         {t('mypage.activity.title')}
       </h3>

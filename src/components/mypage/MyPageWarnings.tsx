@@ -7,6 +7,7 @@ import type { MyPageWarning } from '@/types/mypage'
 
 interface Props {
   warnings: MyPageWarning[]
+  isLoading?: boolean
 }
 
 const SEVERITY_STYLES = {
@@ -29,8 +30,41 @@ const SEVERITY_DOT = {
   caution: 'bg-orange-400',
 } as const
 
-export function MyPageWarnings({ warnings }: Props) {
+function getWarningDescription(w: MyPageWarning, t: (key: string) => string): string {
+  switch (w.type) {
+    case 'overdue':
+      return t('mypage.warnings.overdue').replace('{days}', String(w.days ?? 0)).replace('{deadline}', w.deadline ?? '')
+    case 'deadline_soon':
+      return w.days === 0
+        ? t('mypage.warnings.deadlineToday')
+        : t('mypage.warnings.deadlineSoon').replace('{days}', String(w.days ?? 0)).replace('{deadline}', w.deadline ?? '')
+    case 'overloaded':
+      return t('mypage.warnings.overloadedRate').replace('{rate}', String(w.rate ?? 0))
+    case 'stale_task':
+      return t('mypage.warnings.staleTask').replace('{days}', String(w.days ?? 0))
+    case 'critical_issue':
+      return w.description // Keep server-generated for issues (already bilingual)
+    default:
+      return w.description
+  }
+}
+
+export function MyPageWarnings({ warnings, isLoading }: Props) {
   const { t } = useI18n()
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+        <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+          <h3 className="text-[13px] font-bold text-text">{t('mypage.warnings.title')}</h3>
+        </div>
+        <div className="p-[16px] animate-pulse">
+          <div className="h-[14px] bg-surf2 rounded w-3/4 mb-[8px]" />
+          <div className="h-[14px] bg-surf2 rounded w-1/2" />
+        </div>
+      </div>
+    )
+  }
 
   if (warnings.length === 0) {
     return (
@@ -49,7 +83,7 @@ export function MyPageWarnings({ warnings }: Props) {
   }
 
   return (
-    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+    <div data-testid="mypage-warnings" className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center gap-[6px]">
         <h3 className="text-[13px] font-bold text-text">{t('mypage.warnings.title')}</h3>
         <span className="text-[10px] bg-danger-bg text-danger px-[6px] py-[1px] rounded-full font-bold border border-danger-b">
@@ -70,7 +104,7 @@ export function MyPageWarnings({ warnings }: Props) {
                 <Icon className="w-[14px] h-[14px] shrink-0 text-text" />
                 <div className="flex-1 min-w-0">
                   <span className="text-[12px] font-semibold text-text truncate block">{w.title}</span>
-                  <span className="text-[11px] text-text2 dark:text-text/70">{w.description}</span>
+                  <span className="text-[11px] text-text2 dark:text-text/70">{getWarningDescription(w, t)}</span>
                 </div>
               </div>
             </Link>

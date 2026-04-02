@@ -1,6 +1,6 @@
 import { isMockMode } from '@/lib/utils'
 import { APP_CONFIG } from '@/lib/config'
-import { startOfWeek, endOfWeek, format, differenceInCalendarDays, startOfDay, isBefore } from 'date-fns'
+import { startOfWeek, endOfWeek, format, differenceInCalendarDays, parseISO } from 'date-fns'
 import type { MyPageData, MyPageWarning } from '@/types/mypage'
 import type { TaskWithRelations } from '@/types/database'
 import type { Issue } from '@/types/issue'
@@ -24,7 +24,7 @@ function buildWarnings(
     const dl = getDeadline(t)
     if (!dl || dl >= todayStr) continue
     if (['done', 'dropped', 'rejected'].includes(t.status)) continue
-    const days = differenceInCalendarDays(new Date(todayStr), new Date(dl))
+    const days = differenceInCalendarDays(parseISO(todayStr), parseISO(dl))
     warnings.push({
       id: `overdue-${t.id}`,
       type: 'overdue',
@@ -35,6 +35,7 @@ function buildWarnings(
       entity_type: 'task',
       entity_id: t.id,
       days,
+      deadline: dl,
     })
   }
 
@@ -43,7 +44,7 @@ function buildWarnings(
     const dl = getDeadline(t)
     if (!dl || dl < todayStr || dl > soonDateStr) continue
     if (['done', 'dropped', 'rejected'].includes(t.status)) continue
-    const days = differenceInCalendarDays(new Date(dl), new Date(todayStr))
+    const days = differenceInCalendarDays(parseISO(dl), parseISO(todayStr))
     warnings.push({
       id: `soon-${t.id}`,
       type: 'deadline_soon',
@@ -54,6 +55,7 @@ function buildWarnings(
       entity_type: 'task',
       entity_id: t.id,
       days,
+      deadline: dl,
     })
   }
 
@@ -67,6 +69,7 @@ function buildWarnings(
       description: `今週の稼働率: ${utilizationRate}%（上限: 100%）`,
       link: '/workload',
       entity_type: 'workload',
+      rate: utilizationRate,
     })
   } else if (utilizationRate >= APP_CONFIG.workload.warningThreshold) {
     warnings.push({
@@ -77,6 +80,7 @@ function buildWarnings(
       description: `今週の稼働率: ${utilizationRate}%（閾値: ${APP_CONFIG.workload.warningThreshold}%）`,
       link: '/workload',
       entity_type: 'workload',
+      rate: utilizationRate,
     })
   }
 
@@ -84,7 +88,7 @@ function buildWarnings(
   for (const t of tasks) {
     if (t.status !== 'in_progress') continue
     if (t.updated_at.slice(0, 10) >= staleDateStr) continue
-    const days = differenceInCalendarDays(new Date(todayStr), new Date(t.updated_at.slice(0, 10)))
+    const days = differenceInCalendarDays(parseISO(todayStr), parseISO(t.updated_at.slice(0, 10)))
     warnings.push({
       id: `stale-${t.id}`,
       type: 'stale_task',
@@ -100,7 +104,7 @@ function buildWarnings(
 
   // W5: Critical/High issues
   for (const i of issues) {
-    if (!['critical', 'high'].includes(i.severity)) continue
+    if (!i.severity || !['critical', 'high'].includes(i.severity)) continue
     warnings.push({
       id: `issue-${i.id}`,
       type: 'critical_issue',

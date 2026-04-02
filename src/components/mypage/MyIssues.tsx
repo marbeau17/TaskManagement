@@ -8,13 +8,29 @@ import type { Issue } from '@/types/issue'
 
 interface Props {
   issues: Issue[]
+  isLoading?: boolean
 }
 
-export function MyIssues({ issues }: Props) {
+export function MyIssues({ issues, isLoading }: Props) {
   const { t } = useI18n()
 
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-issues">
+        <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+          <h3 className="text-[13px] font-bold text-text">{t('mypage.issues.title')}</h3>
+        </div>
+        <div className="p-[12px] space-y-[8px] animate-pulse">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-[32px] bg-surf2 rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+    <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-issues">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center justify-between">
         <h3 className="text-[13px] font-bold text-text">{t('mypage.issues.title')}</h3>
         {issues.length > 0 && (
