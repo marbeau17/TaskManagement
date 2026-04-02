@@ -1,9 +1,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isMockMode } from '@/lib/utils'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // WEB-15: Only admin/director can invite members
+    if (!isMockMode()) {
+      const supabase = await createServerSupabaseClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (!profile || (profile.role !== 'admin' && profile.role !== 'director')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
     const body = await request.json()
     const { email, name, role } = body as {
       email: string

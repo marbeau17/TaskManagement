@@ -40,7 +40,7 @@ export function UtilizationTrend() {
         if (t.status === 'rejected') return false
         if (!t.assigned_to) return false
         const deadline = t.confirmed_deadline ?? t.desired_deadline
-        if (!deadline) return true
+        if (!deadline) return false
         return deadline <= weekSundayStr
       })
 

@@ -148,20 +148,34 @@ export function ClientView() {
   const { data: members, isLoading: membersLoading } = useMembers()
 
   const isLoading = tasksLoading || membersLoading
+  const { t } = useI18n()
 
   // Group tasks by client
   const clientGroups = useMemo(() => {
     if (!tasks) return []
 
+    const NO_CLIENT_KEY = '__no_client__'
+    const noClientPlaceholder: Client = {
+      id: NO_CLIENT_KEY,
+      name: t('client.noClient'),
+      created_at: '',
+    }
+
     const grouped = new Map<string, { client: Client; tasks: TaskWithRelations[] }>()
 
     for (const task of tasks) {
-      if (!task.client) continue
-      const key = task.client.id
+      const key = task.client?.id ?? NO_CLIENT_KEY
       if (!grouped.has(key)) {
-        grouped.set(key, { client: task.client, tasks: [] })
+        grouped.set(key, { client: task.client ?? noClientPlaceholder, tasks: [] })
       }
       grouped.get(key)!.tasks.push(task)
+    }
+
+    // Move the "no client" group to the end
+    const noClientGroup = grouped.get(NO_CLIENT_KEY)
+    if (noClientGroup) {
+      grouped.delete(NO_CLIENT_KEY)
+      grouped.set(NO_CLIENT_KEY, noClientGroup)
     }
 
     return Array.from(grouped.values()).map((group) => {
@@ -196,7 +210,7 @@ export function ClientView() {
         progressPercent,
       } satisfies ClientCardData
     })
-  }, [tasks])
+  }, [tasks, t])
 
   // All tasks sorted by client for the table
   const allTasks = useMemo(() => {
@@ -207,8 +221,6 @@ export function ClientView() {
       return ca.localeCompare(cb, 'ja')
     })
   }, [tasks])
-
-  const { t } = useI18n()
 
   if (isLoading) {
     return (

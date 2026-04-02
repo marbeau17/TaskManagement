@@ -15,6 +15,8 @@ const TABS: TabDef[] = [
   { key: 'todo', i18nKey: 'tasks.tab.todo' },
   { key: 'in_progress', i18nKey: 'tasks.tab.inProgress' },
   { key: 'done', i18nKey: 'tasks.tab.done' },
+  { key: 'rejected', i18nKey: 'tasks.tab.rejected' },
+  { key: 'dropped', i18nKey: 'tasks.tab.dropped' },
 ]
 
 interface TaskStatusTabsProps {
@@ -31,6 +33,8 @@ export function TaskStatusTabs({ tasks }: TaskStatusTabsProps) {
     todo: tasks.filter((t) => t.status === 'todo').length,
     in_progress: tasks.filter((t) => t.status === 'in_progress').length,
     done: tasks.filter((t) => t.status === 'done').length,
+    rejected: tasks.filter((t) => t.status === 'rejected').length,
+    dropped: tasks.filter((t) => t.status === 'dropped').length,
   }
 
   return (

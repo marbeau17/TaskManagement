@@ -367,10 +367,10 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
 
     const totalCount = filteredTasks.length
     const activeCount = filteredTasks.filter((t) => t.status !== 'done' && t.status !== 'rejected').length
-    const waitingCount = filteredTasks.filter((t) => t.status === 'waiting').length
+    const waitingCount = tasks.filter((t) => t.status === 'waiting').length
     const todoCount = filteredTasks.filter((t) => t.status === 'todo').length
     const inProgressCount = filteredTasks.filter((t) => t.status === 'in_progress').length
-    const doneCount = filteredTasks.filter((t) => t.status === 'done').length
+    const doneCountFiltered = filteredTasks.filter((t) => t.status === 'done').length
     const todayStrAll = now.toISOString().slice(0, 10)
     const overdueCount = tasks.filter((t) => {
       if (t.status === 'done' || t.status === 'rejected') return false
@@ -378,7 +378,10 @@ export function useTaskStats(period?: 'week' | 'last_week' | 'month' | 'last_mon
       if (!deadline) return false
       return deadline < todayStrAll
     }).length
-    const completableCount = filteredTasks.filter((t) => t.status !== 'rejected').length
+    // Completion rate: always computed from ALL tasks (not period-filtered)
+    // so the dashboard reflects overall project health regardless of period toggle
+    const doneCount = tasks.filter((t) => t.status === 'done').length
+    const completableCount = tasks.filter((t) => t.status !== 'rejected' && t.status !== 'dropped').length
     const completionRate = completableCount > 0 ? Math.round((doneCount / completableCount) * 100) : 0
 
     // Additional period counts (always computed from all tasks)

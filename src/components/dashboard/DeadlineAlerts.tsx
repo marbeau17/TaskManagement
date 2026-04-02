@@ -94,7 +94,7 @@ export function DeadlineAlerts() {
 
     return tasks
       .filter((tk) => {
-        if (tk.status === 'done') return false
+        if (tk.status === 'done' || tk.status === 'rejected' || tk.status === 'dropped') return false
         const deadline = tk.confirmed_deadline ?? tk.desired_deadline
         return !!deadline
       })

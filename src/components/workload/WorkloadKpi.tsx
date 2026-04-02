@@ -6,11 +6,17 @@ import type { WorkloadKpiData } from '@/types/workload'
 
 interface WorkloadKpiProps {
   data: WorkloadKpiData
+  period?: 'week' | 'month' | 'all'
 }
 
-export function WorkloadKpi({ data }: WorkloadKpiProps) {
+export function WorkloadKpi({ data, period = 'week' }: WorkloadKpiProps) {
   const { t } = useI18n()
   const prevWeekDiff = '+3pt' // mock comparison
+
+  const actualHoursLabel =
+    period === 'week' ? t('workload.weeklyActualHours') :
+    period === 'month' ? t('workload.monthlyActualHours') :
+    t('workload.totalActualHours')
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[12px]">
@@ -22,7 +28,7 @@ export function WorkloadKpi({ data }: WorkloadKpiProps) {
         variant="mint"
       />
       <KpiCard
-        label={t('workload.weeklyActualHours')}
+        label={actualHoursLabel}
         value={data.total_actual_hours.toFixed(1)}
         unit={t('workload.unitHours')}
         subText={t('workload.estimateComparison').replace('{hours}', data.total_estimated_hours.toFixed(1))}

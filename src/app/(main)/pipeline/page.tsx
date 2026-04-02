@@ -45,10 +45,10 @@ const MONTH_LABELS = [
   'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
 ]
 
-const STATUS_OPTIONS = ['Firm', 'Namelikly', 'Win', 'Lost', '']
+const STATUS_OPTIONS = ['Firm', 'Likely', 'Win', 'Lost', '']
 const STATUS_COLORS: Record<string, string> = {
   Firm: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  Namelikly: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Likely: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   Win: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   Lost: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
@@ -161,7 +161,7 @@ export default function PipelinePage() {
     const maxSeq = opportunities.reduce((max, o) => Math.max(max, o.seq_id), 0)
     const res = await fetch('/api/pipeline', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seq_id: maxSeq + 1, is_new: true, client_type: 'Customer', client_name: '', opportunity_name: '', status: 'Namelikly', probability: 0, cm_percent: 0 }),
+      body: JSON.stringify({ seq_id: maxSeq + 1, is_new: true, client_type: 'Customer', client_name: '', opportunity_name: '', status: 'Likely', probability: 0, cm_percent: 0 }),
     }).catch(() => null)
     if (res?.ok) { await fetchData(); toast.success('追加しました') }
     else toast.error('追加に失敗しました')
@@ -337,7 +337,7 @@ export default function PipelinePage() {
                     <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1 py-1 focus:outline-none focus:border-mint">
                       <option value="">すべて</option>
                       <option value="Firm">Firm</option>
-                      <option value="Namelikly">Namelikly</option>
+                      <option value="Likely">Likely</option>
                       <option value="Win">Win</option>
                       <option value="Lost">Lost</option>
                     </select>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { Topbar } from '@/components/layout'
 import { Avatar, RoleChip, Pagination } from '@/components/shared'
 import { useMembers } from '@/hooks/useMembers'
@@ -13,7 +13,9 @@ import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
 import { OrgChart } from '@/components/members/OrgChart'
 import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
 import { usePermission } from '@/hooks/usePermission'
+import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
+import { useRouter } from 'next/navigation'
 
 // ---------------------------------------------------------------------------
 // Tab type
@@ -444,8 +446,17 @@ function RoleManagementPanel() {
 
 export default function MembersPage() {
   const { t } = useI18n()
+  const { user } = useAuth()
+  const router = useRouter()
   const { data: members, isLoading } = useMembers()
   const { can } = usePermission()
+
+  // WEB-15: Only admin/director can access members page
+  useEffect(() => {
+    if (user && user.role !== 'admin' && user.role !== 'director') {
+      router.replace('/dashboard')
+    }
+  }, [user, router])
   const [activeTab, setActiveTab] = useState<TabId>('list')
   const [editingMember, setEditingMember] = useState<User | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)

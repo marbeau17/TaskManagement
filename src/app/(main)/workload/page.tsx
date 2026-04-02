@@ -206,7 +206,7 @@ export default function WorkloadPage() {
                 ))}
               </div>
             ) : (
-              <WorkloadKpi data={kpi} />
+              <WorkloadKpi data={kpi} period={period as 'week' | 'month' | 'all'} />
             )}
 
             {/* Resource Load Chart */}

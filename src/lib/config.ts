@@ -33,11 +33,12 @@ export const APP_CONFIG = {
     minDurationDays: 7,
     /** Valid status transitions (from → allowed targets) */
     statusTransitions: {
-      waiting: ['todo', 'rejected'],
-      todo: ['in_progress', 'waiting', 'rejected'],
-      in_progress: ['done', 'todo', 'rejected'],
+      waiting: ['todo', 'rejected', 'dropped'],
+      todo: ['in_progress', 'waiting', 'rejected', 'dropped'],
+      in_progress: ['done', 'todo', 'rejected', 'dropped'],
       done: ['in_progress', 'todo'],
-      rejected: ['todo', 'waiting'],
+      rejected: ['todo', 'waiting', 'dropped'],
+      dropped: ['todo', 'waiting'],
     } as Record<string, string[]>,
   },
 
