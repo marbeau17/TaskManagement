@@ -74,7 +74,7 @@ export function CrmDealKanban({ onDealClick }: Props) {
         return (
           <div
             key={stage}
-            className={`flex-shrink-0 w-[240px] bg-surf2 rounded-[10px] border border-border2 flex flex-col ${
+            className={`flex-shrink-0 w-[160px] md:w-[240px] bg-surf2 rounded-[10px] border border-border2 flex flex-col ${
               dragOverStage === stage ? 'ring-2 ring-mint-dd' : ''
             }`}
             onDragOver={e => handleDragOver(e, stage)}

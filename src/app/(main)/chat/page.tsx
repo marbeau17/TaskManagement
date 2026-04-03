@@ -48,7 +48,7 @@ export default function ChatPage() {
         <NotificationBell />
       </Topbar>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Chat Sidebar */}
         <ChatSidebar
           channels={channels}

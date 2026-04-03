@@ -111,9 +111,9 @@ export function CrmInbox() {
         </span>
       </div>
 
-      <div className="flex gap-[12px] min-h-[500px]">
+      <div className="flex flex-col md:flex-row gap-[12px] min-h-[300px] md:min-h-[500px]">
         {/* Submission list */}
-        <div className="w-[360px] bg-surface border border-border2 rounded-[12px] shadow overflow-hidden shrink-0">
+        <div className="w-full md:w-[360px] bg-surface border border-border2 rounded-[12px] shadow overflow-hidden shrink-0">
           {loading ? (
             <div className="p-[16px] animate-pulse space-y-[8px]">
               {[1,2,3,4].map(i => <div key={i} className="h-[60px] bg-surf2 rounded-[8px]" />)}

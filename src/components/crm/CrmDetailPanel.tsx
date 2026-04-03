@@ -43,7 +43,7 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-[480px] bg-surface border-l border-border2 shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-full md:max-w-[480px] bg-surface border-l border-border2 shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-[16px] py-[12px] border-b border-border2 bg-surf2 shrink-0">
           <div className="flex-1 min-w-0">

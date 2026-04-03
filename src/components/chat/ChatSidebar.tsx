@@ -54,7 +54,7 @@ export function ChatSidebar({ channels, selectedChannel, onSelectChannel, onChan
   }
 
   return (
-    <div className="w-[260px] bg-surf2/50 border-r border-border2 flex flex-col shrink-0 overflow-hidden">
+    <div className="w-full md:w-[260px] bg-surf2/50 border-r border-border2 flex flex-col shrink-0 overflow-hidden">
       {/* Search */}
       <div className="p-[10px] border-b border-border2">
         <div className="relative">

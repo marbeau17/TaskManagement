@@ -61,7 +61,7 @@ export default function CrmPage() {
       <div className="flex-1 overflow-y-auto">
         {/* Tab bar */}
         <div className="px-[12px] md:px-[20px] pt-[12px]">
-          <div className="flex items-center gap-[4px] border-b border-border2 pb-[1px]">
+          <div className="flex items-center gap-[4px] border-b border-border2 pb-[1px] overflow-x-auto flex-nowrap">
             {TABS.filter(tab => tab.id !== 'line' || user?.role === 'admin').map(tab => (
               <button
                 key={tab.id}
