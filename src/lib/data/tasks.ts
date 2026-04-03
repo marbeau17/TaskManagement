@@ -265,8 +265,8 @@ export async function createTask(
     is_draft: !step2,
     progress: 0,
     actual_hours: 0,
-    assigned_to: step2?.assigned_to ?? null,
-    confirmed_deadline: step2?.confirmed_deadline ?? null,
+    assigned_to: step2?.assigned_to || null,  // Guard: empty string → null
+    confirmed_deadline: step2?.confirmed_deadline || null,
     estimated_hours: step2?.estimated_hours ?? null,
     project_id: step1.project_id ?? null,
     parent_task_id: step1.parent_task_id ?? null,
@@ -456,8 +456,8 @@ export async function assignTask(
   const { data: updated, error } = await supabase
     .from('tasks')
     .update({
-      assigned_to: data.assigned_to,
-      confirmed_deadline: data.confirmed_deadline,
+      assigned_to: data.assigned_to || null,  // Guard: empty string → null
+      confirmed_deadline: data.confirmed_deadline || null,
       estimated_hours: data.estimated_hours,
       director_id: authUser?.id ?? null,
       status: 'todo',

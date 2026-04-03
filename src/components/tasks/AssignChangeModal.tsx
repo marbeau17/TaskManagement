@@ -161,7 +161,12 @@ export function AssignChangeModal({
     // Use the most recently added assignee, or fallback to first/existing
     const primaryAssignee = assignees && assignees.length > 0
       ? assignees[assignees.length - 1].user_id
-      : task.assigned_to ?? ''
+      : task.assigned_to ?? null
+
+    if (!primaryAssignee) {
+      // No assignee selected — cannot save without a valid user
+      return
+    }
 
     const step2: TaskFormStep2 = {
       assigned_to: primaryAssignee,
