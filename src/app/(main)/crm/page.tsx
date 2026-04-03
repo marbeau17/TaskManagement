@@ -10,6 +10,14 @@ import { CrmCompanyList } from '@/components/crm/CrmCompanyList'
 import { CrmContactList } from '@/components/crm/CrmContactList'
 import { CrmLeadList } from '@/components/crm/CrmLeadList'
 import { CrmDealList } from '@/components/crm/CrmDealList'
+import { CrmGlobalSearch } from '@/components/crm/CrmGlobalSearch'
+import { CrmDealKanban } from '@/components/crm/CrmDealKanban'
+import { CrmFunnelChart } from '@/components/crm/CrmFunnelChart'
+import { CrmUpcomingTasks } from '@/components/crm/CrmUpcomingTasks'
+import { CrmWinLossAnalysis } from '@/components/crm/CrmWinLossAnalysis'
+import { CrmImportWizard } from '@/components/crm/CrmImportWizard'
+import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
+import type { CrmEntityType } from '@/types/crm'
 
 const TABS = [
   { id: 'dashboard', labelKey: 'crm.dashboard' },
@@ -17,6 +25,7 @@ const TABS = [
   { id: 'companies', labelKey: 'crm.companies' },
   { id: 'leads', labelKey: 'crm.leads' },
   { id: 'deals', labelKey: 'crm.deals' },
+  { id: 'import', labelKey: 'crm.import.title' },
 ]
 
 export default function CrmPage() {
@@ -24,6 +33,8 @@ export default function CrmPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const activeTab = searchParams.get('tab') ?? 'dashboard'
+  const [detailPanel, setDetailPanel] = useState<{ type: CrmEntityType; entity: any } | null>(null)
+  const [dealView, setDealView] = useState<'list' | 'kanban'>('list')
 
   const setTab = (tab: string) => {
     router.push(`/crm?tab=${tab}`, { scroll: false })
@@ -32,6 +43,7 @@ export default function CrmPage() {
   return (
     <>
       <Topbar title={t('crm.title')} subtitle={t('crm.subtitle') !== 'crm.subtitle' ? t('crm.subtitle') : ''}>
+        <CrmGlobalSearch onSelect={(type, entity) => setDetailPanel({ type: type as CrmEntityType, entity })} />
         <NotificationBell />
       </Topbar>
 
@@ -57,13 +69,42 @@ export default function CrmPage() {
 
         {/* Tab content */}
         <div className="p-[12px] md:p-[20px]">
-          {activeTab === 'dashboard' && <CrmDashboard />}
+          {activeTab === 'dashboard' && (
+            <div className="flex flex-col gap-[16px]">
+              <CrmDashboard />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
+                <CrmFunnelChart />
+                <CrmUpcomingTasks />
+              </div>
+              <CrmWinLossAnalysis />
+            </div>
+          )}
           {activeTab === 'contacts' && <CrmContactList />}
           {activeTab === 'companies' && <CrmCompanyList />}
           {activeTab === 'leads' && <CrmLeadList />}
-          {activeTab === 'deals' && <CrmDealList />}
+          {activeTab === 'deals' && (
+            <div>
+              <div className="flex items-center gap-[8px] mb-[12px]">
+                <button onClick={() => setDealView('list')} className={`px-[10px] py-[4px] text-[11px] font-semibold rounded-[6px] ${dealView === 'list' ? 'bg-mint-dd text-white' : 'bg-surf2 text-text2'}`}>
+                  {t('crm.deals.listView')}
+                </button>
+                <button onClick={() => setDealView('kanban')} className={`px-[10px] py-[4px] text-[11px] font-semibold rounded-[6px] ${dealView === 'kanban' ? 'bg-mint-dd text-white' : 'bg-surf2 text-text2'}`}>
+                  {t('crm.deals.kanbanView')}
+                </button>
+              </div>
+              {dealView === 'list' ? <CrmDealList /> : <CrmDealKanban onDealClick={d => setDetailPanel({ type: 'deal', entity: d })} />}
+            </div>
+          )}
+          {activeTab === 'import' && <CrmImportWizard />}
         </div>
       </div>
+
+      <CrmDetailPanel
+        open={!!detailPanel}
+        onClose={() => setDetailPanel(null)}
+        entityType={detailPanel?.type ?? 'contact'}
+        entity={detailPanel?.entity}
+      />
     </>
   )
 }
