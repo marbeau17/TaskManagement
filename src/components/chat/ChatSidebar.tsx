@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Hash, Lock, MessageCircle, Plus, ChevronDown, ChevronRight, Search } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
 import type { ChatChannel } from '@/types/chat'
@@ -96,23 +96,16 @@ export function ChatSidebar({ channels, selectedChannel, onSelectChannel, onChan
             </div>
 
             {/* Projects / Tasks section */}
-            <div className="p-[6px]">
-              <button onClick={() => setProjectsOpen(!projectsOpen)} className="flex items-center gap-[4px] px-[8px] py-[4px] text-[10px] font-bold text-text2 uppercase tracking-wider w-full hover:bg-surface rounded-[4px]">
-                {projectsOpen ? <ChevronDown className="w-[12px] h-[12px]" /> : <ChevronRight className="w-[12px] h-[12px]" />}
-                {t('chat.projects')}
-              </button>
-              {projectsOpen && (
-                <div className="ml-[8px]">
-                  {channels.filter(c => c.channel_type === 'task' || c.project_id).length > 0 ? (
-                    channels.filter(c => c.channel_type === 'task' || c.project_id).map(ch => (
-                      <ChannelItem key={ch.id} channel={{...ch, avatar_emoji: '💬'}} selected={selectedChannel?.id === ch.id} onClick={() => onSelectChannel(ch)} />
-                    ))
-                  ) : (
-                    <p className="text-[10px] text-text3 px-[10px] py-[4px]">{t('chat.noTaskChannels')}</p>
-                  )}
-                </div>
-              )}
-            </div>
+            <ProjectTaskTree
+              channels={channels}
+              selectedChannel={selectedChannel}
+              onSelectChannel={onSelectChannel}
+              onChannelCreated={onChannelCreated}
+              userId={userId}
+              t={t}
+              projectsOpen={projectsOpen}
+              setProjectsOpen={setProjectsOpen}
+            />
 
             {/* DMs section */}
             {dmChannels.length > 0 && (
@@ -168,5 +161,133 @@ function ChannelItem({ channel, selected, onClick }: { channel: ChatChannel; sel
         </span>
       )}
     </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Project / Task Tree with add functionality
+// ---------------------------------------------------------------------------
+
+function ProjectTaskTree({ channels, selectedChannel, onSelectChannel, onChannelCreated, userId, t, projectsOpen, setProjectsOpen }: {
+  channels: ChatChannel[]
+  selectedChannel: ChatChannel | null
+  onSelectChannel: (ch: ChatChannel) => void
+  onChannelCreated?: (ch: ChatChannel) => void
+  userId: string
+  t: (key: string) => string
+  projectsOpen: boolean
+  setProjectsOpen: (v: boolean) => void
+}) {
+  const [projects, setProjects] = useState<any[]>([])
+  const [showAddProject, setShowAddProject] = useState(false)
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
+  const [loadingTasks, setLoadingTasks] = useState<Record<string, any[]>>({})
+
+  // Fetch projects
+  useEffect(() => {
+    fetch('/api/projects').catch(() => null)
+      .then(r => r?.ok ? r.json() : [])
+      .then(data => { if (Array.isArray(data)) setProjects(data.slice(0, 20)) })
+      .catch(() => {})
+  }, [])
+
+  const taskChannels = channels.filter(c => c.channel_type === 'task')
+
+  const toggleProject = async (projectId: string, projectName: string) => {
+    const newSet = new Set(expandedProjects)
+    if (newSet.has(projectId)) {
+      newSet.delete(projectId)
+    } else {
+      newSet.add(projectId)
+      // Fetch tasks for this project if not loaded
+      if (!loadingTasks[projectId]) {
+        try {
+          const r = await fetch(`/api/tasks?project_id=${projectId}&limit=20`)
+          if (r.ok) {
+            const data = await r.json()
+            const tasks = data.data ?? data ?? []
+            setLoadingTasks(prev => ({ ...prev, [projectId]: Array.isArray(tasks) ? tasks : [] }))
+          }
+        } catch {}
+      }
+    }
+    setExpandedProjects(newSet)
+  }
+
+  const createTaskChannel = async (taskTitle: string) => {
+    try {
+      const res = await fetch('/api/chat/channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: taskTitle.slice(0, 30), description: 'タスクチャット: ' + taskTitle, channel_type: 'task', created_by: userId }),
+      })
+      if (res.ok) {
+        const ch = await res.json()
+        onChannelCreated?.(ch)
+      }
+    } catch {}
+  }
+
+  return (
+    <div className="p-[6px]">
+      <button onClick={() => setProjectsOpen(!projectsOpen)} className="flex items-center gap-[4px] px-[8px] py-[4px] text-[10px] font-bold text-text2 uppercase tracking-wider w-full hover:bg-surface rounded-[4px]">
+        {projectsOpen ? <ChevronDown className="w-[12px] h-[12px]" /> : <ChevronRight className="w-[12px] h-[12px]" />}
+        {t('chat.projects')}
+      </button>
+      {projectsOpen && (
+        <div className="mt-[2px]">
+          {/* Existing task channels */}
+          {taskChannels.map(ch => (
+            <ChannelItem key={ch.id} channel={{...ch, avatar_emoji: '💬'}} selected={selectedChannel?.id === ch.id} onClick={() => onSelectChannel(ch)} />
+          ))}
+
+          {/* Project tree */}
+          {projects.map(p => (
+            <div key={p.id} className="ml-[4px]">
+              <button
+                onClick={() => toggleProject(p.id, p.name)}
+                className="flex items-center gap-[6px] w-full px-[8px] py-[4px] text-[11px] text-text2 hover:bg-surface rounded-[4px] transition-colors"
+              >
+                {expandedProjects.has(p.id) ? <ChevronDown className="w-[10px] h-[10px]" /> : <ChevronRight className="w-[10px] h-[10px]" />}
+                <span className="text-[12px]">📁</span>
+                <span className="truncate flex-1">{p.name}</span>
+              </button>
+              {expandedProjects.has(p.id) && (
+                <div className="ml-[20px]">
+                  {(loadingTasks[p.id] ?? []).length === 0 ? (
+                    <p className="text-[9px] text-text3 py-[2px] px-[8px]">タスクなし</p>
+                  ) : (
+                    (loadingTasks[p.id] ?? []).slice(0, 10).map((task: any) => {
+                      const hasChannel = taskChannels.some(c => c.name === task.title?.slice(0, 30))
+                      return (
+                        <button
+                          key={task.id}
+                          onClick={() => {
+                            if (hasChannel) {
+                              const ch = taskChannels.find(c => c.name === task.title?.slice(0, 30))
+                              if (ch) onSelectChannel(ch)
+                            } else {
+                              createTaskChannel(task.title)
+                            }
+                          }}
+                          className="flex items-center gap-[4px] w-full px-[6px] py-[3px] text-[10px] text-text3 hover:text-text hover:bg-surface rounded-[4px] transition-colors"
+                        >
+                          <span>{hasChannel ? '💬' : '➕'}</span>
+                          <span className="truncate">{task.title?.slice(0, 25)}</span>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {projects.length === 0 && taskChannels.length === 0 && (
+            <p className="text-[10px] text-text3 px-[10px] py-[4px]">{t('chat.noTaskChannels')}</p>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
