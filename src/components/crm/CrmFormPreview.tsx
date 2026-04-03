@@ -14,14 +14,21 @@ export function CrmFormPreview({ fields, settings, formName }: Props) {
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
-      <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+      <div className="px-[14px] py-[10px] border-b border-border2 bg-gradient-to-r from-surf2 to-surface flex items-center gap-[6px]">
+        <span className="text-[16px]">👁️</span>
         <h3 className="text-[13px] font-bold text-text">{t('crm.forms.preview')}</h3>
+        <span className="text-[10px] text-text3 ml-auto">Live Preview</span>
       </div>
       <div className="p-[20px]">
         {/* Simulated form */}
-        <div className="max-w-[500px] mx-auto bg-white dark:bg-gray-900 rounded-[12px] border border-gray-200 dark:border-gray-700 p-[24px] shadow-lg">
+        <div className="max-w-[500px] mx-auto bg-white dark:bg-gray-900 rounded-[16px] border border-gray-200 dark:border-gray-700 p-[28px] shadow-xl ring-1 ring-black/5 dark:ring-white/5">
           {formName && (
-            <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100 mb-[16px]">{formName}</h2>
+            <div className="flex items-center gap-[8px] mb-[20px]">
+              <div className="w-[36px] h-[36px] rounded-[8px] flex items-center justify-center" style={{ backgroundColor: (settings.formColor ?? '#1a2d51') + '15' }}>
+                <span className="text-[18px]">📋</span>
+              </div>
+              <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100">{formName}</h2>
+            </div>
           )}
           <div className="flex flex-wrap gap-x-[12px] gap-y-[12px]">
             {fields.filter(f => f.type !== 'hidden').map(field => (
@@ -35,10 +42,10 @@ export function CrmFormPreview({ fields, settings, formName }: Props) {
                     disabled
                     rows={3}
                     placeholder={field.placeholder || ''}
-                    className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400 resize-none"
+                    className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400 focus:ring-2 focus:ring-offset-1 resize-none"
                   />
                 ) : field.type === 'select' ? (
-                  <select disabled className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400">
+                  <select disabled className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400 focus:ring-2 focus:ring-offset-1">
                     <option>{field.placeholder || '選択してください'}</option>
                     {(field.options ?? []).map(o => <option key={o}>{o}</option>)}
                   </select>
@@ -51,19 +58,22 @@ export function CrmFormPreview({ fields, settings, formName }: Props) {
                     type={field.type}
                     disabled
                     placeholder={field.placeholder || ''}
-                    className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400"
+                    className="w-full px-[10px] py-[8px] border border-gray-300 dark:border-gray-600 rounded-[6px] text-[13px] bg-gray-50 dark:bg-gray-800 text-gray-400 focus:ring-2 focus:ring-offset-1"
                   />
                 )}
                 {field.crmMapping && (
-                  <span className="text-[9px] text-mint-dd mt-[2px] block">→ CRM: {field.crmMapping}</span>
+                  <div className="flex items-center gap-[4px] mt-[4px]">
+                    <span className="w-[4px] h-[4px] rounded-full bg-mint-dd" />
+                    <span className="text-[9px] text-mint-dd font-medium">CRM → {field.crmMapping}</span>
+                  </div>
                 )}
               </div>
             ))}
           </div>
           <button
             disabled
-            className="mt-[16px] w-full py-[10px] rounded-[6px] text-[14px] font-bold text-white"
-            style={{ backgroundColor: settings.formColor ?? '#1a2d51' }}
+            className="mt-[20px] w-full py-[12px] rounded-[8px] text-[14px] font-bold text-white shadow-md hover:shadow-lg transition-shadow"
+            style={{ background: `linear-gradient(135deg, ${settings.formColor ?? '#1a2d51'}, ${settings.formColor ?? '#1a2d51'}cc)` }}
           >
             {settings.submitButtonText || '送信'}
           </button>

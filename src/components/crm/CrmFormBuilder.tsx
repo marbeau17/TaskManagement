@@ -16,16 +16,16 @@ interface Props {
   isSaving?: boolean
 }
 
-const FIELD_TYPES: { value: FormFieldType; label: string }[] = [
-  { value: 'text', label: 'テキスト' },
-  { value: 'email', label: 'メール' },
-  { value: 'phone', label: '電話番号' },
-  { value: 'textarea', label: 'テキストエリア' },
-  { value: 'select', label: 'セレクト' },
-  { value: 'checkbox', label: 'チェックボックス' },
-  { value: 'number', label: '数値' },
-  { value: 'date', label: '日付' },
-  { value: 'hidden', label: '非表示' },
+const FIELD_TYPES: { value: FormFieldType; label: string; icon: string }[] = [
+  { value: 'text', label: 'テキスト', icon: '✏️' },
+  { value: 'email', label: 'メール', icon: '📧' },
+  { value: 'phone', label: '電話番号', icon: '📞' },
+  { value: 'textarea', label: 'テキストエリア', icon: '📝' },
+  { value: 'select', label: 'セレクト', icon: '📋' },
+  { value: 'checkbox', label: 'チェックボックス', icon: '☑️' },
+  { value: 'number', label: '数値', icon: '🔢' },
+  { value: 'date', label: '日付', icon: '📅' },
+  { value: 'hidden', label: '非表示', icon: '👁️' },
 ]
 
 const CRM_MAPPINGS = [
@@ -94,7 +94,7 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
 
   return (
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
-      <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2 flex items-center justify-between">
+      <div className="px-[16px] py-[14px] border-b border-border2 bg-gradient-to-r from-surf2 to-surface flex items-center justify-between">
         <h3 className="text-[14px] font-bold text-text">{t('crm.forms.builder')}</h3>
         <div className="flex items-center gap-[8px]">
           <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-[4px] text-[11px] text-text2 hover:text-text">
@@ -159,7 +159,7 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
         <div className="space-y-[8px]">
           <label className="text-[11px] font-semibold text-text2 block">{t('crm.forms.fields')}</label>
           {fields.map((field, idx) => (
-            <div key={field.id} className="bg-surf2 rounded-[8px] p-[10px] border border-border2">
+            <div key={field.id} className="bg-surface rounded-[10px] p-[12px] border border-border2 shadow-sm hover:shadow transition-shadow">
               <div className="flex items-start gap-[6px]">
                 <div className="flex flex-col gap-[2px] pt-[4px]">
                   <button onClick={() => moveField(idx, -1)} disabled={idx === 0} className="text-[10px] text-text3 hover:text-text disabled:opacity-30">↑</button>
@@ -168,11 +168,16 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
                 <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-[6px]">
                   <input type="text" value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} placeholder="フィールド名" className={inputClass} />
                   <select value={field.type} onChange={e => updateField(field.id, { type: e.target.value as FormFieldType })} className={inputClass}>
-                    {FIELD_TYPES.map(ft => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
+                    {FIELD_TYPES.map(ft => <option key={ft.value} value={ft.value}>{ft.icon} {ft.label}</option>)}
                   </select>
-                  <select value={field.crmMapping ?? ''} onChange={e => updateField(field.id, { crmMapping: e.target.value || undefined })} className={inputClass}>
-                    {CRM_MAPPINGS.map(cm => <option key={cm.value} value={cm.value}>{cm.label}</option>)}
-                  </select>
+                  <div className="flex items-center gap-[4px]">
+                    <select value={field.crmMapping ?? ''} onChange={e => updateField(field.id, { crmMapping: e.target.value || undefined })} className={inputClass}>
+                      {CRM_MAPPINGS.map(cm => <option key={cm.value} value={cm.value}>{cm.label}</option>)}
+                    </select>
+                    {field.crmMapping && (
+                      <span className="text-[9px] text-mint-dd font-bold whitespace-nowrap">→CRM</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-[6px]">
                     <select value={field.width ?? 'full'} onChange={e => updateField(field.id, { width: e.target.value as 'full' | 'half' })} className={`${inputClass} w-[70px]`}>
                       <option value="full">100%</option>
@@ -195,7 +200,7 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
               )}
             </div>
           ))}
-          <button onClick={addField} className="w-full py-[8px] text-[12px] font-semibold text-mint-dd bg-mint-dd/5 border border-mint-dd/20 rounded-[8px] hover:bg-mint-dd/10 flex items-center justify-center gap-[4px]">
+          <button onClick={addField} className="w-full py-[10px] text-[12px] font-semibold text-mint-dd bg-mint-dd/5 border-2 border-dashed border-mint-dd/30 rounded-[10px] hover:bg-mint-dd/10 hover:border-mint-dd/50 flex items-center justify-center gap-[6px] transition-all">
             <Plus className="w-[14px] h-[14px]" /> {t('crm.forms.addField')}
           </button>
         </div>
