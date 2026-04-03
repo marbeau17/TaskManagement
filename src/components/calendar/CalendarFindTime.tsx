@@ -81,14 +81,22 @@ export function CalendarFindTime() {
         <div className="flex gap-[8px]">
           <div className="flex-1">
             <label className="text-[11px] font-semibold text-text2 block mb-[4px]">{t('calendar.workStart')}</label>
-            <select value={workStart} onChange={e => setWorkStart(parseInt(e.target.value))} className="w-full text-[12px] px-[8px] py-[6px] bg-surface border border-border2 rounded-[6px]">
-              {Array.from({length: 12}, (_, i) => i + 6).map(h => <option key={h} value={h}>{h}:00</option>)}
+            <select value={workStart} onChange={e => setWorkStart(parseFloat(e.target.value))} className="w-full text-[12px] px-[8px] py-[6px] bg-surface border border-border2 rounded-[6px]">
+              {Array.from({length: 24}, (_, i) => 6 + i * 0.5).filter(h => h <= 17).map(h => {
+                const hh = String(Math.floor(h)).padStart(2, '0')
+                const mm = h % 1 === 0.5 ? '30' : '00'
+                return <option key={h} value={h}>{hh}:{mm}</option>
+              })}
             </select>
           </div>
           <div className="flex-1">
             <label className="text-[11px] font-semibold text-text2 block mb-[4px]">{t('calendar.workEnd')}</label>
-            <select value={workEnd} onChange={e => setWorkEnd(parseInt(e.target.value))} className="w-full text-[12px] px-[8px] py-[6px] bg-surface border border-border2 rounded-[6px]">
-              {Array.from({length: 12}, (_, i) => i + 12).map(h => <option key={h} value={h}>{h}:00</option>)}
+            <select value={workEnd} onChange={e => setWorkEnd(parseFloat(e.target.value))} className="w-full text-[12px] px-[8px] py-[6px] bg-surface border border-border2 rounded-[6px]">
+              {Array.from({length: 24}, (_, i) => 12 + i * 0.5).filter(h => h <= 23).map(h => {
+                const hh = String(Math.floor(h)).padStart(2, '0')
+                const mm = h % 1 === 0.5 ? '30' : '00'
+                return <option key={h} value={h}>{hh}:{mm}</option>
+              })}
             </select>
           </div>
         </div>
