@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { toast } from '@/stores/toastStore'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -158,13 +159,13 @@ export function AssignChangeModal({
   }
 
   const onSubmit = (values: FormValues) => {
-    // Use the most recently added assignee, or fallback to first/existing
+    // Priority: task_assignees > selectedUserId (dropdown) > existing assigned_to
     const primaryAssignee = assignees && assignees.length > 0
       ? assignees[assignees.length - 1].user_id
-      : task.assigned_to ?? null
+      : selectedUserId || task.assigned_to || null
 
     if (!primaryAssignee) {
-      // No assignee selected — cannot save without a valid user
+      toast.error(t('assignChange.noAssignee') || 'メンバーを選択してください')
       return
     }
 
