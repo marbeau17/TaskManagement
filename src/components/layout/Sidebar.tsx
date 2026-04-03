@@ -41,6 +41,7 @@ const MAIN_NAV = [
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload', domain: 'workload' },
   { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', domain: 'pipeline' },
   { id: 'chat', labelKey: 'nav.chat', icon: '💬', href: '/chat', domain: 'chat' },
+  { id: 'calendar', labelKey: 'nav.calendar', icon: '📅', href: '/calendar' },
   { id: 'crm', labelKey: 'nav.crm', icon: '🤝', href: '/crm', domain: 'crm' },
 ]
 
