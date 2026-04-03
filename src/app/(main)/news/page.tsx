@@ -233,23 +233,62 @@ export default function NewsPage() {
                     <span className="text-[10px] text-text3 ml-auto">{formatDate(article.published_at)}</span>
                   </div>
                 </div>
-                <div className="px-[16px] py-[14px]">
-                  {article.content_html.includes('<!DOCTYPE') || article.content_html.includes('<html') ? (
-                    <iframe
-                      srcDoc={article.content_html}
-                      className="w-full border-0 rounded"
-                      style={{ minHeight: '80vh' }}
-                      sandbox="allow-scripts allow-same-origin allow-popups"
-                      onLoad={(e) => {
-                        const iframe = e.target as HTMLIFrameElement
-                        if (iframe.contentDocument) {
-                          iframe.style.height = iframe.contentDocument.documentElement.scrollHeight + 'px'
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content_html) }} />
-                  )}
+                <div className="flex gap-[16px] px-[16px] py-[14px]">
+                  {/* Article content */}
+                  <div className="flex-1 min-w-0">
+                    {article.content_html.includes('<!DOCTYPE') || article.content_html.includes('<html') ? (
+                      <iframe
+                        srcDoc={article.content_html}
+                        className="w-full border-0 rounded"
+                        style={{ minHeight: '80vh' }}
+                        sandbox="allow-scripts allow-same-origin allow-popups"
+                        onLoad={(e) => {
+                          const iframe = e.target as HTMLIFrameElement
+                          if (iframe.contentDocument) {
+                            iframe.style.height = iframe.contentDocument.documentElement.scrollHeight + 'px'
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="text-[13px] text-text leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content_html) }} />
+                    )}
+                  </div>
+                  {/* Table of Contents */}
+                  {!article.content_html.includes('<!DOCTYPE') && (() => {
+                    const headings = (article.content_html.match(/<h[23][^>]*>(.*?)<\/h[23]>/gi) ?? []).map(h => {
+                      const level = h.charAt(2) === '3' ? 3 : 2
+                      const text = h.replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim()
+                      const id = text.replace(/[^a-zA-Z0-9ぁ-んァ-ヶ亜-熙]/g, '-').slice(0, 40)
+                      return { level, text, id }
+                    })
+                    if (headings.length === 0) return null
+                    return (
+                      <nav className="w-[200px] shrink-0 hidden lg:block sticky top-[20px] self-start">
+                        <p className="text-[10px] font-bold text-text3 uppercase tracking-wider mb-[8px]">目次</p>
+                        <div className="space-y-[4px] border-l-2 border-border2 pl-[10px]">
+                          {headings.map((h, i) => (
+                            <a
+                              key={i}
+                              href={`#${h.id}`}
+                              className={`block text-[11px] hover:text-mint-dd transition-colors truncate ${
+                                h.level === 3 ? 'pl-[10px] text-text3' : 'text-text2 font-medium'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                const el = document.querySelector(`h2, h3`)
+                                // Find the nth heading in the article
+                                const allHeadings = document.querySelectorAll('h2, h3')
+                                const target = Array.from(allHeadings).find(el => el.textContent?.trim().includes(h.text.slice(0, 10)))
+                                target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                              }}
+                            >
+                              {h.text}
+                            </a>
+                          ))}
+                        </div>
+                      </nav>
+                    )
+                  })()}
                 </div>
               </div>
             ))}
