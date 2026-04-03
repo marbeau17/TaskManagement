@@ -27,6 +27,8 @@ export interface Issue {
   git_pr_url: string
   labels: string[]
   reopen_count: number
+  resolved_at?: string | null
+  closed_at?: string | null
   created_at: string
   updated_at: string
   // Joined

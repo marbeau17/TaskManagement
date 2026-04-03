@@ -216,7 +216,7 @@ export default function TasksPage() {
             <TableSkeleton rows={8} columns={5} />
           ) : (
             <KanbanBoard
-              tasks={filteredTasks}
+              tasks={tasks}
               onStatusChange={handleStatusChange}
             />
           )

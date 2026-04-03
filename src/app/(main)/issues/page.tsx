@@ -294,6 +294,8 @@ export default function IssuesPage() {
                       { label: t('issues.colAssignee'), field: 'assignee' as const },
                       { label: t('issues.colProject'), field: 'project' as const },
                       { label: t('issues.colCreatedAt'), field: 'created' as const },
+                      { label: t('issues.colResolvedAt'), field: 'created' as const },
+                      { label: t('issues.colClosedAt'), field: 'created' as const },
                     ]).map(({ label, field }) => (
                       <th
                         key={field}
@@ -431,6 +433,12 @@ export default function IssuesPage() {
                       </td>
                       <td className="px-[12px] py-[10px] text-[11.5px] text-text whitespace-nowrap">
                         {formatDate(issue.created_at)}
+                      </td>
+                      <td className="px-[12px] py-[10px] text-[11.5px] text-text whitespace-nowrap">
+                        {issue.resolved_at ? formatDate(issue.resolved_at) : '—'}
+                      </td>
+                      <td className="px-[12px] py-[10px] text-[11.5px] text-text whitespace-nowrap">
+                        {issue.closed_at ? formatDate(issue.closed_at) : '—'}
                       </td>
                       <td className="px-[12px] py-[10px]">
                         {can('issues', 'delete') && (
