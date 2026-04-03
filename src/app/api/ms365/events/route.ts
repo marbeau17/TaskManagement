@@ -44,3 +44,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const db = createAdminClient() as any
+
+    const event = {
+      user_id: body.user_id,
+      ms_event_id: 'manual-' + Date.now(),
+      subject: body.subject ?? '',
+      start_at: body.start_at,
+      end_at: body.end_at,
+      duration_minutes: body.duration_minutes ?? 30,
+      sensitivity: body.sensitivity ?? 'normal',
+      show_as: body.show_as ?? 'busy',
+      organizer_name: body.organizer_name ?? '',
+      location: body.location ?? '',
+      response_status: 'organizer',
+    }
+
+    const { data, error } = await db.from('calendar_events').insert(event).select().single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}

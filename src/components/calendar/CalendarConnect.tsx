@@ -15,24 +15,36 @@ export function CalendarConnect() {
 
   useEffect(() => {
     if (!user) return
-    // Check connection status
-    fetch(`/api/ms365/events?user_id=${user.id}&start_date=${new Date().toISOString().slice(0, 10)}&end_date=${new Date().toISOString().slice(0, 10)}&viewer_id=${user.id}`)
-      .then(r => {
-        if (r.ok) setConnected(true)
+    // Check if user has MS365 token
+    fetch('/api/ms365/events?user_id=' + user.id + '&start_date=' + new Date().toISOString().slice(0,10) + '&end_date=' + new Date().toISOString().slice(0,10))
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setConnected(true)
+        }
       })
       .catch(() => {})
+
+    // Also check URL params for connection result
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('connected') === 'true') {
+      setConnected(true)
+      toast.success(t('calendar.syncComplete'))
+    }
+    if (params.get('error')) {
+      toast.error(t('calendar.connectFailed') || 'Connection failed: ' + params.get('error'))
+    }
   }, [user])
 
   const handleSync = async () => {
     setSyncing(true)
-    toast.success(t('calendar.syncStarted'))
-    // In production, this would call /api/ms365/sync
-    // For now, just show the UI flow
-    setTimeout(() => {
+    try {
+      // Trigger re-auth which performs sync on callback
+      window.location.href = '/api/ms365/auth'
+    } catch {
+      toast.error(t('calendar.syncFailed') || 'Sync failed')
       setSyncing(false)
-      setLastSync(new Date().toISOString())
-      toast.success(t('calendar.syncComplete'))
-    }, 2000)
+    }
   }
 
   return (
@@ -66,9 +78,7 @@ export function CalendarConnect() {
           {!connected ? (
             <button
               onClick={() => {
-                // In production: redirect to /api/ms365/auth
-                toast.success(t('calendar.connectRedirect'))
-                setConnected(true)
+                window.location.href = '/api/ms365/auth'
               }}
               className="flex items-center gap-[6px] px-[14px] py-[8px] text-[12px] font-bold text-white bg-blue-600 rounded-[8px] hover:bg-blue-700 transition-colors"
             >
@@ -86,10 +96,14 @@ export function CalendarConnect() {
                 {syncing ? t('calendar.syncing') : t('calendar.sync')}
               </button>
               <button
-                onClick={() => {
-                  if (confirm(t('calendar.disconnectConfirm'))) {
+                onClick={async () => {
+                  if (!confirm(t('calendar.disconnectConfirm'))) return
+                  try {
+                    await fetch('/api/ms365/disconnect', { method: 'POST' })
                     setConnected(false)
                     toast.success(t('calendar.disconnected'))
+                  } catch {
+                    toast.error('Failed to disconnect')
                   }
                 }}
                 className="flex items-center gap-[6px] px-[14px] py-[8px] text-[12px] font-semibold text-danger bg-danger/5 border border-danger/20 rounded-[8px] hover:bg-danger/10"
@@ -104,6 +118,11 @@ export function CalendarConnect() {
         {lastSync && (
           <p className="text-[10px] text-text3">
             {t('calendar.lastSync')}: {new Date(lastSync).toLocaleString('ja-JP')}
+          </p>
+        )}
+        {!connected && (
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-[8px] py-[4px] rounded-[6px]">
+            ⚠ {t('calendar.mockNote')}
           </p>
         )}
       </div>
