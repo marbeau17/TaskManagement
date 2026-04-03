@@ -81,6 +81,9 @@ function EditMemberModal({
   const [department, setDepartment] = useState(member.department ?? '')
   const [title, setTitle] = useState(member.title ?? '')
   const [level, setLevel] = useState(member.level ?? '')
+  const [accessDomains, setAccessDomains] = useState<string[]>(
+    member.access_domains ?? ['tasks', 'issues', 'projects', 'workload', 'chat', 'reports']
+  )
   const [saving, setSaving] = useState(false)
   const [newCustomRole, setNewCustomRole] = useState('')
   const queryClient = useQueryClient()
@@ -100,6 +103,7 @@ function EditMemberModal({
         department: department.trim(),
         title: title.trim(),
         level,
+        access_domains: accessDomains,
       })
       queryClient.invalidateQueries({ queryKey: ['members'] })
       onClose()
@@ -108,7 +112,7 @@ function EditMemberModal({
     } finally {
       setSaving(false)
     }
-  }, [member.id, member.name, name, nameShort, role, capacity, managerId, department, title, level, queryClient, onClose])
+  }, [member.id, member.name, name, nameShort, role, capacity, managerId, department, title, level, accessDomains, queryClient, onClose])
 
   const handleAddCustomRole = useCallback(async () => {
     const trimmed = newCustomRole.trim()
@@ -301,6 +305,45 @@ function EditMemberModal({
               <option value="L4">L4</option>
               <option value="L5">L5</option>
             </select>
+          </div>
+
+          {/* Access Domains */}
+          <div className="mt-[12px]">
+            <label className="block text-[12px] font-semibold text-text2 mb-[6px]">
+              {t('members.accessDomains')}
+            </label>
+            <div className="grid grid-cols-2 gap-[6px]">
+              {[
+                { id: 'tasks', label: t('nav.taskList'), icon: '\u{1F4CB}' },
+                { id: 'issues', label: t('nav.issues'), icon: '\u{1F41B}' },
+                { id: 'projects', label: t('nav.projects'), icon: '\u{1F4C1}' },
+                { id: 'workload', label: t('nav.workload'), icon: '\u{23F1}' },
+                { id: 'pipeline', label: t('nav.pipeline'), icon: '\u{1F4B0}' },
+                { id: 'crm', label: 'CRM', icon: '\u{1F91D}' },
+                { id: 'chat', label: t('nav.chat'), icon: '\u{1F4AC}' },
+                { id: 'reports', label: t('nav.reports'), icon: '\u{1F4CA}' },
+              ].map(d => {
+                const checked = accessDomains.includes(d.id)
+                return (
+                  <label key={d.id} className="flex items-center gap-[6px] text-[12px] text-text px-[8px] py-[4px] rounded-[6px] bg-surf2 hover:bg-border2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        setAccessDomains(prev =>
+                          checked
+                            ? prev.filter(x => x !== d.id)
+                            : [...prev, d.id]
+                        )
+                      }}
+                      className="rounded border-wf-border"
+                    />
+                    <span>{d.icon}</span>
+                    <span>{d.label}</span>
+                  </label>
+                )
+              })}
+            </div>
           </div>
         </div>
 

@@ -44,6 +44,7 @@ export interface User {
   manager_id: string | null
   level: string
   department: string
+  access_domains: string[]
   title: string
   created_at: string
   updated_at: string

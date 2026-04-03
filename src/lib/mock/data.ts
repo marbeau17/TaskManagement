@@ -53,6 +53,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'CEO',
     created_at: '2020-01-01T00:00:00',
     updated_at: '2020-01-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -71,6 +72,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'COO',
     created_at: '2020-01-01T00:00:00',
     updated_at: '2020-01-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -89,6 +91,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2022-04-01T00:00:00',
     updated_at: '2022-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -107,6 +110,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Senior Consultant',
     created_at: '2023-01-01T00:00:00',
     updated_at: '2023-01-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -125,6 +129,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Manager',
     created_at: '2021-04-01T00:00:00',
     updated_at: '2021-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -143,6 +148,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2023-04-01T00:00:00',
     updated_at: '2023-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -161,6 +167,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'エンジニア',
     created_at: '2023-07-01T00:00:00',
     updated_at: '2023-07-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -179,6 +186,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2024-04-01T00:00:00',
     updated_at: '2024-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -197,6 +205,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2024-10-01T00:00:00',
     updated_at: '2024-10-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -215,6 +224,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2025-01-01T00:00:00',
     updated_at: '2025-01-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -233,6 +243,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'エンジニア',
     created_at: '2025-04-01T00:00:00',
     updated_at: '2025-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
   {
@@ -251,6 +262,7 @@ export const mockUsers: MockUserWithPassword[] = [
     title: 'Specialist',
     created_at: '2025-04-01T00:00:00',
     updated_at: '2025-04-01T00:00:00',
+    access_domains: ["tasks","issues","projects","workload","chat","reports"],
     password: DEFAULT_PASSWORD,
   },
 ]

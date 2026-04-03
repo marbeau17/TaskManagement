@@ -33,22 +33,25 @@ const MAIN_NAV = [
   { id: 'news', labelKey: 'nav.news', icon: '📢', href: '/news' },
   { id: 'mypage', labelKey: 'nav.mypage', icon: '👤', href: '/mypage' },
   { id: 'dashboard', labelKey: 'nav.dashboard', icon: '📊', href: '/dashboard' },
-  { id: 'request', labelKey: 'nav.taskRequest', icon: '📝', href: '/tasks/new' },
-  { id: 'tasks', labelKey: 'nav.taskList', icon: '📋', href: '/tasks', badgeDynamic: true },
-  { id: 'issues', labelKey: 'nav.issues', icon: '🐛', href: '/issues' },
+  { id: 'request', labelKey: 'nav.taskRequest', icon: '📝', href: '/tasks/new', domain: 'tasks' },
+  { id: 'tasks', labelKey: 'nav.taskList', icon: '📋', href: '/tasks', badgeDynamic: true, domain: 'tasks' },
+  { id: 'issues', labelKey: 'nav.issues', icon: '🐛', href: '/issues', domain: 'issues' },
   { id: 'clients', labelKey: 'nav.clients', icon: '🏢', href: '/clients' },
-  { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
-  { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
-  { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', restricted: true },
-  { id: 'chat', labelKey: 'nav.chat', icon: '💬', href: '/chat' },
-  { id: 'crm', labelKey: 'nav.crm', icon: '🤝', href: '/crm', restricted: true },
+  { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects', domain: 'projects' },
+  { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload', domain: 'workload' },
+  { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', domain: 'pipeline' },
+  { id: 'chat', labelKey: 'nav.chat', icon: '💬', href: '/chat', domain: 'chat' },
+  { id: 'crm', labelKey: 'nav.crm', icon: '🤝', href: '/crm', domain: 'crm' },
 ]
 
-const PIPELINE_ALLOWED = ['安田', '伊藤', '瀧宮', '渡邊', '渡辺']
-function canSeePipeline(u: { role: string; name: string } | null): boolean {
+function canAccessDomain(u: { role: string; name: string; access_domains?: string[] } | null, domain?: string): boolean {
   if (!u) return false
+  if (!domain) return true // No domain restriction
+  // Admin and director can see everything
   if (u.role === 'admin' || u.role === 'director') return true
-  return PIPELINE_ALLOWED.some((n) => u.name.includes(n))
+  // Check user's access_domains
+  const domains = u.access_domains ?? ['tasks', 'issues', 'projects', 'workload', 'chat', 'reports']
+  return domains.includes(domain)
 }
 
 const SYSTEM_NAV = [
@@ -61,6 +64,7 @@ const SYSTEM_NAV = [
 
 export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarProps) {
   const { user, logout } = useAuth()
+  const userWithDomains = user as (typeof user & { access_domains?: string[] }) | null
   const { data: members } = useMembers()
   const { data: waitingCount = 0 } = useWaitingTaskCount()
   const router = useRouter()
@@ -138,7 +142,7 @@ export function Sidebar({ activePage, onNavigate, collapsed = false }: SidebarPr
           </div>
         )}
         <nav className="flex flex-col gap-[2px]">
-          {MAIN_NAV.filter((item) => !(item as any).restricted || canSeePipeline(user)).map((item) => {
+          {MAIN_NAV.filter((item) => canAccessDomain(userWithDomains, (item as any).domain)).map((item) => {
             const isActive = activePage === item.id
             const label = t(item.labelKey)
             return (

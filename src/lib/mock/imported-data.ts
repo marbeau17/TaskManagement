@@ -137,6 +137,7 @@ export const okutsuUser: MockUserWithPassword = {
   title: '',
   created_at: '2025-01-01T00:00:00',
   updated_at: '2025-01-01T00:00:00',
+  access_domains: ['tasks', 'issues', 'projects', 'workload', 'chat', 'reports'],
   password: DEFAULT_PASSWORD,
 }
 

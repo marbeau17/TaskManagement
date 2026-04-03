@@ -20,7 +20,9 @@ import { CrmCampaignList } from '@/components/crm/CrmCampaignList'
 import { CrmSourceChart } from '@/components/crm/CrmSourceChart'
 import { CrmFormList } from '@/components/crm/CrmFormList'
 import { CrmInbox } from '@/components/crm/CrmInbox'
+import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
 import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
+import { useAuth } from '@/hooks/useAuth'
 import type { CrmEntityType } from '@/types/crm'
 
 const TABS = [
@@ -33,10 +35,12 @@ const TABS = [
   { id: 'forms', labelKey: 'crm.forms.title' },
   { id: 'inbox', labelKey: 'crm.inbox.title' },
   { id: 'import', labelKey: 'crm.import.title' },
+  { id: 'line', labelKey: 'crm.line.title' },
 ]
 
 export default function CrmPage() {
   const { t } = useI18n()
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
   const activeTab = searchParams.get('tab') ?? 'dashboard'
@@ -58,7 +62,7 @@ export default function CrmPage() {
         {/* Tab bar */}
         <div className="px-[12px] md:px-[20px] pt-[12px]">
           <div className="flex items-center gap-[4px] border-b border-border2 pb-[1px]">
-            {TABS.map(tab => (
+            {TABS.filter(tab => tab.id !== 'line' || user?.role === 'admin').map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setTab(tab.id)}
@@ -107,6 +111,7 @@ export default function CrmPage() {
           {activeTab === 'forms' && <CrmFormList />}
           {activeTab === 'inbox' && <CrmInbox />}
           {activeTab === 'import' && <CrmImportWizard />}
+          {activeTab === 'line' && <CrmLineSettings />}
         </div>
       </div>
 

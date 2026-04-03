@@ -403,6 +403,7 @@ export function addMockMember(data: InviteMemberForm & { password?: string }): U
     title: '',
     created_at: now,
     updated_at: now,
+    access_domains: ['tasks', 'issues', 'projects', 'workload', 'chat', 'reports'],
     password: data.password ?? DEFAULT_PASSWORD,
     must_change_password: true,
   }
