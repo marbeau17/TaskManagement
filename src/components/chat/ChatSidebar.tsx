@@ -9,11 +9,12 @@ interface Props {
   channels: ChatChannel[]
   selectedChannel: ChatChannel | null
   onSelectChannel: (ch: ChatChannel) => void
+  onChannelCreated?: (ch: ChatChannel) => void
   loading: boolean
   userId: string
 }
 
-export function ChatSidebar({ channels, selectedChannel, onSelectChannel, loading, userId }: Props) {
+export function ChatSidebar({ channels, selectedChannel, onSelectChannel, onChannelCreated, loading, userId }: Props) {
   const { t } = useI18n()
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
@@ -29,18 +30,20 @@ export function ChatSidebar({ channels, selectedChannel, onSelectChannel, loadin
     : null
 
   const handleCreate = async () => {
-    if (!newName.trim()) return
-    const res = await fetch('/api/chat/channels', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName.trim(), created_by: userId }),
-    })
-    if (res.ok) {
-      const ch = await res.json()
-      setNewName('')
-      setShowCreate(false)
-      window.location.reload()
-    }
+    if (!newName.trim() || !userId) return
+    try {
+      const res = await fetch('/api/chat/channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim(), created_by: userId }),
+      })
+      if (res.ok) {
+        const ch = await res.json()
+        setNewName('')
+        setShowCreate(false)
+        onChannelCreated?.(ch)
+      }
+    } catch {}
   }
 
   const ChannelIcon = ({ type }: { type: string }) => {

@@ -71,6 +71,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
 
+    // Create notifications for @mentioned users
+    const mentionedNames: string[] = body.mentions ?? []
+    if (mentionedNames.length === 0 && body.content) {
+      // Parse @mentions from content
+      const atMentions = body.content.match(/@([^\s@]+(?:\s[^\s@]+)?)/g) ?? []
+      mentionedNames.push(...atMentions.map((m: string) => m.slice(1)))
+    }
+
+    if (mentionedNames.length > 0) {
+      // Lookup user IDs by name
+      const { data: mentionedUsers } = await db
+        .from('users')
+        .select('id, name')
+        .eq('is_active', true)
+
+      const senderName = data?.user?.name ?? 'Someone'
+
+      for (const name of mentionedNames) {
+        const matchedUser = (mentionedUsers ?? []).find((u: any) =>
+          u.name === name || u.name.includes(name)
+        )
+        if (matchedUser && matchedUser.id !== body.user_id) {
+          await db.from('notifications').insert({
+            user_id: matchedUser.id,
+            type: 'mention',
+            title: `${senderName}さんがあなたをメンションしました`,
+            message: body.content.slice(0, 100),
+            link: `/chat`,
+            is_read: false,
+          }).catch(() => {})
+        }
+      }
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })

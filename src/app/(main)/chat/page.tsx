@@ -16,6 +16,19 @@ export default function ChatPage() {
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const refreshChannels = async () => {
+    const res = await fetch('/api/chat/channels')
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data)) setChannels(data)
+    }
+  }
+
+  const handleChannelCreated = (ch: ChatChannel) => {
+    setChannels(prev => [ch, ...prev])
+    setSelectedChannel(ch)
+  }
+
   useEffect(() => {
     fetch('/api/chat/channels')
       .then(r => r.json())
@@ -41,6 +54,7 @@ export default function ChatPage() {
           channels={channels}
           selectedChannel={selectedChannel}
           onSelectChannel={setSelectedChannel}
+          onChannelCreated={handleChannelCreated}
           loading={loading}
           userId={user?.id ?? ''}
         />
