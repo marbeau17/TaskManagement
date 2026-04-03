@@ -83,8 +83,13 @@ export function useCreateTask() {
       step1: TaskFormStep1
       step2?: TaskFormStep2
     }) => createTask(step1, step2),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
+      // Invalidate subtask cache when creating a subtask
+      if (variables.step1.parent_task_id) {
+        qc.invalidateQueries({ queryKey: ['subtasks', variables.step1.parent_task_id] })
+      }
+      qc.invalidateQueries({ queryKey: ['subtasks'] })
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to create task')
@@ -203,6 +208,7 @@ export function useBulkDeleteTasks() {
     mutationFn: (taskIds: string[]) => bulkDeleteTasks(taskIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['subtasks'] })
       toast.success('Tasks deleted successfully')
     },
     onError: (error: any) => {

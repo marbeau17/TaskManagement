@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSubtasks, useCreateTask } from '@/hooks/useTasks'
+import { useMembers } from '@/hooks/useMembers'
 import type { TaskWithRelations } from '@/types/database'
 import { Avatar, ProgressBar, StatusChip } from '@/components/shared'
 import { useI18n } from '@/hooks/useI18n'
@@ -27,8 +28,12 @@ function AddSubtaskForm({
   onClose: () => void
 }) {
   const [title, setTitle] = useState('')
+  const [assigneeId, setAssigneeId] = useState('')
   const createTask = useCreateTask()
+  const { data: members } = useMembers()
   const { t } = useI18n()
+
+  const activeMembers = (members ?? []).filter(m => m.is_active)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,47 +46,67 @@ function AddSubtaskForm({
         parent_task_id: parentTask.id,
         wbs_code: '',
       },
+      step2: assigneeId ? {
+        assigned_to: assigneeId,
+        confirmed_deadline: parentTask.confirmed_deadline ?? parentTask.desired_deadline ?? '',
+        estimated_hours: 0,
+      } : undefined,
     })
     setTitle('')
+    setAssigneeId('')
     onClose()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-[8px] mt-[8px]">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder={t('subtask.placeholder')}
-        autoFocus
-        className="
-          flex-1 rounded-lg border border-wf-border px-3 py-1.5 text-[12.5px] text-text1
-          bg-surface placeholder:text-text3
-          focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
-        "
-      />
-      <button
-        type="submit"
-        disabled={!title.trim() || createTask.isPending}
-        className="
-          px-3 py-1.5 rounded-lg text-[12px] font-semibold
-          text-white bg-mint hover:bg-mint-d transition-colors
-          disabled:opacity-50 disabled:cursor-not-allowed
-        "
-      >
-        {createTask.isPending ? '...' : t('common.add')}
-      </button>
-      <button
-        type="button"
-        onClick={onClose}
-        className="
-          px-3 py-1.5 rounded-lg text-[12px] font-semibold
-          text-text2 bg-surf2 border border-wf-border
-          hover:bg-wf-border transition-colors
-        "
-      >
-        {t('common.cancel')}
-      </button>
+    <form onSubmit={handleSubmit} className="mt-[8px] space-y-[6px]">
+      <div className="flex items-center gap-[8px]">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={t('subtask.placeholder')}
+          autoFocus
+          className="
+            flex-1 rounded-lg border border-wf-border px-3 py-1.5 text-[12.5px] text-text1
+            bg-surface placeholder:text-text3
+            focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
+          "
+        />
+        <select
+          value={assigneeId}
+          onChange={(e) => setAssigneeId(e.target.value)}
+          className="w-[140px] rounded-lg border border-wf-border px-2 py-1.5 text-[12px] text-text1 bg-surface focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
+        >
+          <option value="">{t('assign.selectPlaceholder')}</option>
+          {activeMembers.map(m => (
+            <option key={m.id} value={m.id}>{m.name}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center gap-[8px]">
+        <button
+          type="submit"
+          disabled={!title.trim() || createTask.isPending}
+          className="
+            px-3 py-1.5 rounded-lg text-[12px] font-semibold
+            text-white bg-mint hover:bg-mint-d transition-colors
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+        >
+          {createTask.isPending ? '...' : t('common.add')}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="
+            px-3 py-1.5 rounded-lg text-[12px] font-semibold
+            text-text2 bg-surf2 border border-wf-border
+            hover:bg-wf-border transition-colors
+          "
+        >
+          {t('common.cancel')}
+        </button>
+      </div>
     </form>
   )
 }
