@@ -244,6 +244,10 @@ export function CrmContactList() {
               <option value="en">English</option>
             </select>
           </div>
+          <label className="flex items-center gap-[6px] text-[12px] text-text px-[10px] py-[6px]">
+            <input type="checkbox" checked={formData.decision_maker} onChange={e => setFormData(p => ({...p, decision_maker: e.target.checked}))} className="rounded" />
+            {t('crm.contact.decisionMaker')}
+          </label>
           <div className="flex gap-[8px] justify-end">
             <button onClick={() => setShowForm(false)} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
             <button onClick={handleCreate} disabled={createMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
@@ -263,6 +267,7 @@ export function CrmContactList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell cursor-pointer select-none" onClick={() => toggleSort('lifecycle_stage')}>{t('crm.contact.lifecycleStage')} <SortIcon col="lifecycle_stage" /></th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell cursor-pointer select-none" onClick={() => toggleSort('lead_score')}>{t('crm.contact.leadScore')} <SortIcon col="lead_score" /></th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden xl:table-cell">{t('crm.contact.mobilePhone')}</th>
+                <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden xl:table-cell">{t('crm.source.title')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden xl:table-cell">{t('crm.contact.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
               </tr>
@@ -270,14 +275,17 @@ export function CrmContactList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={8} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={9} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : sorted.length === 0 ? (
-                <tr><td colSpan={8} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={9} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
                 sorted.map(c => (
                   <tr key={c.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
-                    <td className="px-[12px] py-[8px] font-medium text-text">{c.last_name} {c.first_name}</td>
+                    <td className="px-[12px] py-[8px] font-medium text-text">
+                      {c.last_name} {c.first_name}
+                      {c.decision_maker && <span className="ml-[4px] text-[8px] bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 px-[4px] py-[1px] rounded font-bold">DM</span>}
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">{c.email}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">{c.company?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] hidden lg:table-cell">
@@ -287,6 +295,9 @@ export function CrmContactList() {
                     </td>
                     <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{c.lead_score}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">{c.mobile_phone || '—'}</td>
+                    <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">
+                      {c.source_channel ? <span className="text-[10px] bg-surf2 px-[5px] py-[1px] rounded">{c.source_channel}</span> : '—'}
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">{c.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
                       <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>

@@ -79,6 +79,16 @@ export interface CrmContact {
   preferred_language: string
   last_activity_date: string | null
   decision_maker: boolean
+  source_channel: string
+  source_detail: string
+  first_touch_date: string | null
+  first_touch_channel: string
+  utm_source: string
+  utm_medium: string
+  utm_campaign: string
+  email_opt_in: boolean
+  line_opt_in: boolean
+  line_user_id: string
   tags: string[]
   custom_fields: Record<string, any>
   created_at: string

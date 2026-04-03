@@ -6,12 +6,28 @@ import { useCrmCompanies, useCreateCrmCompany, useDeleteCrmCompany } from '@/hoo
 import { Pagination } from '@/components/shared'
 import type { CrmCompanyFilters } from '@/types/crm'
 
+const TYPE_BADGE: Record<string, string> = {
+  prospect: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+  customer: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+  partner: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
+  vendor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  competitor: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
+  other: 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300',
+}
+
+const TIER_BADGE: Record<string, string> = {
+  enterprise: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
+  mid_market: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+  smb: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  startup: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+}
+
 export function CrmCompanyList() {
   const { t } = useI18n()
   const [filters, setFilters] = useState<CrmCompanyFilters>({ page: 1, pageSize: 20 })
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', domain: '', industry: '', phone: '', website: '' })
+  const [formData, setFormData] = useState({ name: '', domain: '', industry: '', phone: '', website: '', company_type: '', tier: '' })
 
   const { data, isLoading } = useCrmCompanies({ ...filters, q: search || undefined })
   const createMutation = useCreateCrmCompany()
@@ -23,7 +39,7 @@ export function CrmCompanyList() {
   const handleCreate = async () => {
     if (!formData.name.trim()) return
     await createMutation.mutateAsync(formData)
-    setFormData({ name: '', domain: '', industry: '', phone: '', website: '' })
+    setFormData({ name: '', domain: '', industry: '', phone: '', website: '', company_type: '', tier: '' })
     setShowForm(false)
   }
 
@@ -54,6 +70,23 @@ export function CrmCompanyList() {
             <input type="text" value={formData.domain} onChange={e => setFormData(p => ({...p, domain: e.target.value}))} placeholder={t('crm.company.domain')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
             <input type="text" value={formData.industry} onChange={e => setFormData(p => ({...p, industry: e.target.value}))} placeholder={t('crm.company.industry')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
           </div>
+          <div className="flex gap-[8px]">
+            <select value={formData.company_type ?? ''} onChange={e => setFormData(p => ({...p, company_type: e.target.value}))} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint">
+              <option value="">{t('crm.company.companyType')}</option>
+              <option value="prospect">Prospect</option>
+              <option value="customer">Customer</option>
+              <option value="partner">Partner</option>
+              <option value="vendor">Vendor</option>
+              <option value="competitor">Competitor</option>
+            </select>
+            <select value={formData.tier ?? ''} onChange={e => setFormData(p => ({...p, tier: e.target.value}))} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint">
+              <option value="">{t('crm.company.tier')}</option>
+              <option value="enterprise">Enterprise</option>
+              <option value="mid_market">Mid Market</option>
+              <option value="smb">SMB</option>
+              <option value="startup">Startup</option>
+            </select>
+          </div>
           <div className="flex gap-[8px] justify-end">
             <button onClick={() => setShowForm(false)} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
             <button onClick={handleCreate} disabled={createMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
@@ -70,6 +103,8 @@ export function CrmCompanyList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.company.name')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.company.domain')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.company.industry')}</th>
+                <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.companyType')}</th>
+                <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.tier')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
               </tr>
@@ -77,16 +112,30 @@ export function CrmCompanyList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={5} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={7} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : companies.length === 0 ? (
-                <tr><td colSpan={5} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={7} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
                 companies.map(c => (
                   <tr key={c.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
                     <td className="px-[12px] py-[8px] font-medium text-text">{c.name}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">{c.domain}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">{c.industry}</td>
+                    <td className="px-[12px] py-[8px] hidden lg:table-cell">
+                      {c.company_type && (
+                        <span className={`inline-block px-[6px] py-[2px] rounded-full text-[10px] font-semibold ${TYPE_BADGE[c.company_type] ?? TYPE_BADGE.other}`}>
+                          {c.company_type.toUpperCase()}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-[12px] py-[8px] hidden lg:table-cell">
+                      {c.tier && (
+                        <span className={`inline-block px-[6px] py-[2px] rounded-full text-[10px] font-semibold ${TIER_BADGE[c.tier] ?? ''}`}>
+                          {c.tier.replace('_', ' ').toUpperCase()}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{c.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
                       <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
