@@ -14,10 +14,12 @@ export function TaskFilters() {
   const {
     search,
     client_id,
+    project_id,
     assigned_to,
     requested_by,
     setSearch,
     setClientId,
+    setProjectId,
     setAssignedTo,
     setRequestedBy,
   } = useFilterStore()
@@ -42,6 +44,14 @@ export function TaskFilters() {
     queryFn: () => getClients(),
   })
 
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const res = await fetch('/api/projects')
+      return res.ok ? res.json() : []
+    },
+  })
+
   const memberOptions = (members ?? []).map((m) => ({
     label: m.name,
     value: m.id,
@@ -50,6 +60,11 @@ export function TaskFilters() {
   const clientOptions = (clients ?? []).map((c) => ({
     label: c.name,
     value: c.id,
+  }))
+
+  const projectOptions = (Array.isArray(projects) ? projects : []).map((p: any) => ({
+    label: p.name,
+    value: p.id,
   }))
 
   return (
@@ -62,6 +77,12 @@ export function TaskFilters() {
           value: client_id ?? '',
           options: clientOptions,
           onChange: (v) => setClientId(v || undefined),
+        },
+        {
+          label: t('tasks.filter.project'),
+          value: project_id ?? '',
+          options: projectOptions,
+          onChange: (v) => setProjectId(v || undefined),
         },
         {
           label: t('tasks.filter.assignee'),

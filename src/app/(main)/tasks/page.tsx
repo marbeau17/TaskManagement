@@ -24,6 +24,7 @@ export default function TasksPage() {
   const {
     search,
     client_id,
+    project_id,
     assigned_to,
     requested_by,
     status,
@@ -40,11 +41,12 @@ export default function TasksPage() {
     () => ({
       search: search || undefined,
       client_id,
+      project_id,
       assigned_to,
       requested_by,
       period,
     }),
-    [search, client_id, assigned_to, requested_by, period]
+    [search, client_id, project_id, assigned_to, requested_by, period]
   )
 
   const { t } = useI18n()
