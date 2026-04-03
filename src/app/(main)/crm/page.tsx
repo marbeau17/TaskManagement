@@ -16,6 +16,7 @@ import { CrmFunnelChart } from '@/components/crm/CrmFunnelChart'
 import { CrmUpcomingTasks } from '@/components/crm/CrmUpcomingTasks'
 import { CrmWinLossAnalysis } from '@/components/crm/CrmWinLossAnalysis'
 import { CrmImportWizard } from '@/components/crm/CrmImportWizard'
+import { CrmFormList } from '@/components/crm/CrmFormList'
 import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
 import type { CrmEntityType } from '@/types/crm'
 
@@ -25,6 +26,7 @@ const TABS = [
   { id: 'companies', labelKey: 'crm.companies' },
   { id: 'leads', labelKey: 'crm.leads' },
   { id: 'deals', labelKey: 'crm.deals' },
+  { id: 'forms', labelKey: 'crm.forms.title' },
   { id: 'import', labelKey: 'crm.import.title' },
 ]
 
@@ -95,6 +97,7 @@ export default function CrmPage() {
               {dealView === 'list' ? <CrmDealList /> : <CrmDealKanban onDealClick={d => setDetailPanel({ type: 'deal', entity: d })} />}
             </div>
           )}
+          {activeTab === 'forms' && <CrmFormList />}
           {activeTab === 'import' && <CrmImportWizard />}
         </div>
       </div>
