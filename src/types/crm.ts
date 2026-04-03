@@ -34,6 +34,21 @@ export interface CrmCompany {
   source: LeadSource
   tags: string[]
   custom_fields: Record<string, any>
+  annual_revenue: number
+  employee_count: number
+  founded_year: number | null
+  country: string
+  city: string
+  postal_code: string
+  linkedin_url: string
+  facebook_url: string
+  twitter_handle: string
+  parent_company_id: string | null
+  company_type: string
+  tier: string
+  last_activity_date: string | null
+  lifecycle_stage: string
+  notes: string
   created_at: string
   updated_at: string
   owner?: { id: string; name: string; avatar_color: string } | null
@@ -58,6 +73,12 @@ export interface CrmContact {
   lead_score: number
   source: string
   last_contacted_at: string | null
+  mobile_phone: string
+  address: string
+  date_of_birth: string | null
+  preferred_language: string
+  last_activity_date: string | null
+  decision_maker: boolean
   tags: string[]
   custom_fields: Record<string, any>
   created_at: string
@@ -158,6 +179,8 @@ export interface CrmContactFilters {
   owner_id?: string
   lifecycle_stage?: LifecycleStage
   lead_status?: LeadStatus
+  preferred_language?: string
+  decision_maker?: boolean
   page?: number
   pageSize?: number
   sortBy?: string
@@ -189,6 +212,9 @@ export interface CrmLeadFilters {
 export interface CrmCompanyFilters {
   q?: string
   owner_id?: string
+  company_type?: string
+  tier?: string
+  lifecycle_stage?: string
   page?: number
   pageSize?: number
   sortBy?: string
