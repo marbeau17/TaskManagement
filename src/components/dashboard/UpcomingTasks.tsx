@@ -61,7 +61,7 @@ export function UpcomingTasks() {
       {/* Header with tabs */}
       <div className="px-[12px] py-[8px] border-b border-border2 bg-surf2">
         <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-[13px] font-bold text-text">{t('upcoming.title')}</h3>
+          <h3 className="text-[13px] font-bold text-text">{'📅 '}{t('upcoming.title')}</h3>
           {overdueCount > 0 && (
             <span className="text-[10px] bg-danger-bg text-danger px-[6px] py-[1px] rounded-full font-bold border border-danger-b">
               {overdueCount} {t('upcoming.overdue')}

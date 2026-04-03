@@ -83,7 +83,7 @@ export function UtilizationTrend() {
   return (
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-        <h3 className="text-[13px] font-bold text-text">{t('workload.utilizationTrend')}</h3>
+        <h3 className="text-[13px] font-bold text-text">{'📈 '}{t('workload.utilizationTrend')}</h3>
       </div>
 
       <div className="p-[12px]">

@@ -109,7 +109,7 @@ export default function WorkloadPage() {
 
   return (
     <>
-      <Topbar title={selectedMember ? `${t('workload.title')} - ${selectedMember.name}` : t('workload.title')}>
+      <Topbar title={selectedMember ? `⏱ ${t('workload.title')} - ${selectedMember.name}` : '⏱ ' + t('workload.title')}>
         {creatorId && (
           <button
             onClick={() => router.push('/workload')}

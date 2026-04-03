@@ -41,7 +41,7 @@ export function MyTodayTasks({ tasks, isLoading }: Props) {
     return (
       <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-today-tasks">
         <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-          <h3 className="text-[13px] font-bold text-text">{t('mypage.todayTasks.title')}</h3>
+          <h3 className="text-[13px] font-bold text-text">{'☀️ '}{t('mypage.todayTasks.title')}</h3>
         </div>
         <div className="p-[12px] space-y-[8px] animate-pulse">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -55,7 +55,7 @@ export function MyTodayTasks({ tasks, isLoading }: Props) {
   return (
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden" data-testid="mypage-today-tasks">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center justify-between">
-        <h3 className="text-[13px] font-bold text-text">{t('mypage.todayTasks.title')}</h3>
+        <h3 className="text-[13px] font-bold text-text">{'☀️ '}{t('mypage.todayTasks.title')}</h3>
         <span className="text-[10px] bg-mint-dd/10 text-mint-dd px-[6px] py-[1px] rounded-full font-bold">
           {tasks.length}
         </span>

@@ -548,7 +548,7 @@ export default function MembersPage() {
 
   return (
     <>
-      <Topbar title={t('members.title')}>
+      <Topbar title={'👥 ' + t('members.title')}>
         {can('members', 'create') && (
           <button
             onClick={() => setInviteOpen(true)}

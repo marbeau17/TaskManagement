@@ -98,7 +98,7 @@ export function CapacityMatrix() {
   return (
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center justify-between">
-        <h3 className="text-[13px] font-bold text-text">{t('workload.capacityMatrix')}</h3>
+        <h3 className="text-[13px] font-bold text-text">{'📊 '}{t('workload.capacityMatrix')}</h3>
         <div className="flex items-center gap-[6px]">
           <button onClick={() => setWeekOffset((o) => o - 4)} className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors">&laquo;</button>
           <button onClick={() => setWeekOffset((o) => o - 1)} className="text-[11px] text-text2 hover:text-mint px-[6px] py-[2px] rounded border border-wf-border hover:border-mint transition-colors">&lsaquo;</button>

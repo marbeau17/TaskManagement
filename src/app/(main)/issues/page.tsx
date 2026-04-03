@@ -134,7 +134,7 @@ export default function IssuesPage() {
 
   return (
     <>
-      <Topbar title={t('issues.title')}>
+      <Topbar title={'🐛 ' + t('issues.title')}>
         <button
           onClick={() => {
             if (sortedIssues.length > 0) exportIssuesCsv(sortedIssues, locale)

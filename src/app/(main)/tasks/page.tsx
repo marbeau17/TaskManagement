@@ -86,7 +86,7 @@ export default function TasksPage() {
   return (
     <>
       <Topbar
-        title={t('tasks.title')}
+        title={'📋 ' + t('tasks.title')}
         subtitle={t('tasks.totalCount').replace('{count}', String(tasks.length))}
       >
         {/* Desktop only controls */}

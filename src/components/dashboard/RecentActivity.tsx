@@ -62,7 +62,7 @@ export function RecentActivity() {
   return (
     <div className="bg-surface rounded-[10px] border border-wf-border shadow-sm p-5">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {t('dashboard.activityFeed')}
+        {'📋 '}{t('dashboard.activityFeed')}
       </h3>
 
       {isLoading && (

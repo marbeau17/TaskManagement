@@ -66,7 +66,7 @@ export function MyRecentActivity({ activities, isLoading }: Props) {
   if (isLoading) {
     return (
       <div className="bg-surface rounded-[10px] border border-border2 shadow-sm p-5" data-testid="mypage-activity">
-        <h3 className="text-[13px] font-bold text-text mb-4">{t('mypage.activity.title')}</h3>
+        <h3 className="text-[13px] font-bold text-text mb-4">{'📝 '}{t('mypage.activity.title')}</h3>
         <div className="space-y-[12px] animate-pulse">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex gap-3">
@@ -88,7 +88,7 @@ export function MyRecentActivity({ activities, isLoading }: Props) {
   return (
     <div className="bg-surface rounded-[10px] border border-border2 shadow-sm p-5" data-testid="mypage-activity">
       <h3 className="text-[13px] font-bold text-text mb-4">
-        {t('mypage.activity.title')}
+        {'📝 '}{t('mypage.activity.title')}
       </h3>
 
       {activities.length === 0 && (

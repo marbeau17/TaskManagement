@@ -56,7 +56,7 @@ export default function DashboardPage() {
     <>
       {/* Topbar */}
       <Topbar
-        title={t('dashboard.title')}
+        title={'📊 ' + t('dashboard.title')}
         subtitle={`${t('dashboard.thisWeekLabel')}: ${weekRange.label}`}
       >
         <PeriodToggle

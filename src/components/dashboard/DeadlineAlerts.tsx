@@ -120,7 +120,7 @@ export function DeadlineAlerts() {
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       {/* Header */}
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2 flex items-center gap-[6px]">
-        <h3 className="text-[13px] font-bold text-text">{t('deadline.title')}</h3>
+        <h3 className="text-[13px] font-bold text-text">{'⚠️ '}{t('deadline.title')}</h3>
         {alertRows.filter((r) => r.level === 'overdue' || r.level === 'today').length > 0 && (
           <span className="text-[10px] bg-danger-bg text-danger px-[6px] py-[1px] rounded-full font-bold border border-danger-b">
             {alertRows.filter((r) => r.level === 'overdue' || r.level === 'today').length}

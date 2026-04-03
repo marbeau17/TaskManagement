@@ -111,7 +111,7 @@ export default function PipelinePage() {
   if (user && !canAccessPipeline(user)) {
     return (
       <>
-        <Topbar title={t('pipeline.title')} />
+        <Topbar title={'💰 ' + t('pipeline.title')} />
         <div className="flex items-center justify-center h-[400px]">
           <div className="text-center">
             <div className="text-[40px] mb-[12px]">🔒</div>
@@ -251,7 +251,7 @@ export default function PipelinePage() {
 
   return (
     <>
-      <Topbar title={t('pipeline.title')}>
+      <Topbar title={'💰 ' + t('pipeline.title')}>
         <button onClick={() => {
           const memberName = (uid: string | null) => { if (!uid || !members) return ''; return members.find((m) => m.id === uid)?.name ?? '' }
           const header = ['ID','新/既','区分','クライアント','紹介先','案件名','サブ案件','状況','勝率%','CM%','PM','コンサル1','コンサル2',...MONTH_LABELS,'合計','加重合計','粗利'].join(',')

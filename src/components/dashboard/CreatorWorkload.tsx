@@ -164,7 +164,7 @@ export function CreatorWorkload() {
       {/* Header */}
       <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
         <div className="flex items-center justify-between">
-          <h3 className="text-[13px] font-bold text-text">{t('workload.title')}</h3>
+          <h3 className="text-[13px] font-bold text-text">{'⚡ '}{t('workload.title')}</h3>
           <div className="flex items-center gap-[8px]">
             <button
               onClick={() => setWeekOffset((o) => o - 1)}

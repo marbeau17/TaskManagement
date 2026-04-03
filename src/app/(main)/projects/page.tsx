@@ -345,7 +345,7 @@ export default function ProjectsPage() {
 
   return (
     <>
-      <Topbar title={t('projects.title')}>
+      <Topbar title={'📁 ' + t('projects.title')}>
         {can('projects', 'create') && (
           <button
             onClick={() => setShowCreateModal(true)}
