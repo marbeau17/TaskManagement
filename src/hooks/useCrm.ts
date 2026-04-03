@@ -225,3 +225,18 @@ export function useCrmDashboard() {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+// ---------------------------------------------------------------------------
+// Push to Pipeline
+// ---------------------------------------------------------------------------
+
+export function usePushToPipeline() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (dealId: string) =>
+      mutateJson<{ success: boolean; pipeline_id: string }>(`/api/crm/deals/${dealId}/push-to-pipeline`, 'POST'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['crm', 'deals'] })
+    },
+  })
+}

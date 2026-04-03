@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/hooks/useI18n'
 import { useCrmDeals, useCreateCrmDeal, useUpdateCrmDeal, useDeleteCrmDeal } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
+import { toast } from '@/stores/toastStore'
 import type { CrmDealFilters, DealStage } from '@/types/crm'
 
 const STAGES: DealStage[] = ['proposal', 'negotiation', 'contract_sent', 'won', 'lost', 'churned']
@@ -41,8 +42,30 @@ export function CrmDealList() {
   const updateMutation = useUpdateCrmDeal()
   const deleteMutation = useDeleteCrmDeal()
 
+  const [pushing, setPushing] = useState<string | null>(null)
+
   const deals = data?.data ?? []
   const total = data?.total ?? 0
+
+  const handlePushToPipeline = async (dealId: string) => {
+    if (!confirm(t('crm.deal.pushConfirm'))) return
+    setPushing(dealId)
+    try {
+      const res = await fetch(`/api/crm/deals/${dealId}/push-to-pipeline`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(t('crm.deal.pushSuccess'))
+        // Refresh deals
+        window.location.reload()
+      } else {
+        toast.error(data.error || t('crm.deal.pushFailed'))
+      }
+    } catch {
+      toast.error(t('crm.deal.pushFailed'))
+    } finally {
+      setPushing(null)
+    }
+  }
 
   const handleCreate = async () => {
     if (!formData.title.trim()) return
@@ -184,6 +207,19 @@ export function CrmDealList() {
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.expected_close_date ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
+                      {!d.pipeline_opportunity_id && ['negotiation', 'contract_sent', 'won'].includes(d.stage) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePushToPipeline(d.id) }}
+                          disabled={pushing === d.id}
+                          className="text-[11px] text-mint-dd hover:underline mr-[6px] disabled:opacity-50"
+                          title={t('crm.deal.pushToPipeline')}
+                        >
+                          {pushing === d.id ? '...' : '📊→'}
+                        </button>
+                      )}
+                      {d.pipeline_opportunity_id && (
+                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 mr-[6px]" title={t('crm.deal.linkedPipeline')}>✓PL</span>
+                      )}
                       <button onClick={() => { if (confirm(t('common.deleteConfirm'))) deleteMutation.mutate(d.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
                     </td>
                   </tr>
