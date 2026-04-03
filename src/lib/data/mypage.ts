@@ -224,13 +224,8 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
       .in('status', ['open', 'in_progress'])
       .order('created_at', { ascending: false }),
 
-    db
-      .from('activity_logs')
-      .select(`*, user:users(id, name, name_short, avatar_color, avatar_url),
-               task:tasks(id, title)`)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20),
+    // Placeholder for activities — will be fetched after tasks are resolved
+    Promise.resolve({ data: [] }),
 
     db
       .from('users')
@@ -249,8 +244,21 @@ export async function getMyPageData(userId: string): Promise<MyPageData> {
   ]
 
   const issues: Issue[] = issuesResult.data ?? []
-  const activities = activitiesResult.data ?? []
   const capacityHours = userResult.data?.weekly_capacity_hours ?? 40
+
+  // Fetch activities for MY tasks (not activities I performed on others' tasks)
+  const myTaskIds = tasks.map(t => t.id).slice(0, 50)
+  let activities: any[] = []
+  if (myTaskIds.length > 0) {
+    const { data: actData } = await db
+      .from('activity_logs')
+      .select(`*, user:users(id, name, name_short, avatar_color, avatar_url),
+               task:tasks(id, title)`)
+      .in('task_id', myTaskIds)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    activities = actData ?? []
+  }
 
   // Today tasks: all in_progress tasks + tasks with deadline today + todo with deadline today
   const todayTasks = tasks.filter(t => {
