@@ -2,7 +2,7 @@
 // Chat type definitions (Teams/Slack-style)
 // =============================================================================
 
-export type ChannelType = 'public' | 'private' | 'dm'
+export type ChannelType = 'public' | 'private' | 'dm' | 'task'
 export type MessageType = 'text' | 'file' | 'system'
 export type MemberRole = 'admin' | 'member'
 

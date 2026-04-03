@@ -129,6 +129,28 @@ export default function TaskDetailPage() {
 
         <button
           type="button"
+          onClick={async () => {
+            const res = await fetch('/api/chat/channels', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: task.title.slice(0, 30),
+                description: 'タスクチャット: ' + task.title,
+                channel_type: 'task',
+                created_by: user?.id,
+              }),
+            })
+            if (res.ok) {
+              window.location.href = '/chat'
+            }
+          }}
+          className="flex items-center gap-[4px] px-[10px] py-[5px] rounded-[6px] text-[12px] font-semibold text-text2 bg-surf2 border border-border2 hover:bg-border2 transition-colors"
+        >
+          💬 {t('chat.openTaskChat')}
+        </button>
+
+        <button
+          type="button"
           onClick={handleClone}
           disabled={cloneTask.isPending}
           className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-wf-border text-text2 bg-surface hover:bg-surf2 transition-colors disabled:opacity-50"

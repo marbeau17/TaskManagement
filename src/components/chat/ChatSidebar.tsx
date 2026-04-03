@@ -21,6 +21,7 @@ export function ChatSidebar({ channels, selectedChannel, onSelectChannel, onChan
   const [newName, setNewName] = useState('')
   const [channelsOpen, setChannelsOpen] = useState(true)
   const [dmsOpen, setDmsOpen] = useState(true)
+  const [projectsOpen, setProjectsOpen] = useState(true)
 
   const publicChannels = channels.filter(c => c.channel_type !== 'dm')
   const dmChannels = channels.filter(c => c.channel_type === 'dm')
@@ -92,6 +93,25 @@ export function ChatSidebar({ channels, selectedChannel, onSelectChannel, onChan
               {channelsOpen && publicChannels.map(ch => (
                 <ChannelItem key={ch.id} channel={ch} selected={selectedChannel?.id === ch.id} onClick={() => onSelectChannel(ch)} />
               ))}
+            </div>
+
+            {/* Projects / Tasks section */}
+            <div className="p-[6px]">
+              <button onClick={() => setProjectsOpen(!projectsOpen)} className="flex items-center gap-[4px] px-[8px] py-[4px] text-[10px] font-bold text-text2 uppercase tracking-wider w-full hover:bg-surface rounded-[4px]">
+                {projectsOpen ? <ChevronDown className="w-[12px] h-[12px]" /> : <ChevronRight className="w-[12px] h-[12px]" />}
+                {t('chat.projects')}
+              </button>
+              {projectsOpen && (
+                <div className="ml-[8px]">
+                  {channels.filter(c => c.channel_type === 'task' || c.project_id).length > 0 ? (
+                    channels.filter(c => c.channel_type === 'task' || c.project_id).map(ch => (
+                      <ChannelItem key={ch.id} channel={{...ch, avatar_emoji: '💬'}} selected={selectedChannel?.id === ch.id} onClick={() => onSelectChannel(ch)} />
+                    ))
+                  ) : (
+                    <p className="text-[10px] text-text3 px-[10px] py-[4px]">{t('chat.noTaskChannels')}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* DMs section */}

@@ -1392,6 +1392,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     'chat.messagePlaceholder': 'にメッセージを送信',
     'chat.enterToSend': 'Enter で送信 • Shift+Enter で改行',
     'chat.attach': 'ファイルを添付',
+    'chat.projects': 'プロジェクト・タスク',
+    'chat.noTaskChannels': 'タスクチャンネルはまだありません',
+    'chat.openTaskChat': 'タスクチャットを開く',
   },
   en: {
     'activity.assigned': 'assigned a member',
@@ -2775,6 +2778,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     'chat.messagePlaceholder': 'Message',
     'chat.enterToSend': 'Enter to send • Shift+Enter for new line',
     'chat.attach': 'Attach file',
+    'chat.projects': 'Projects / Tasks',
+    'chat.noTaskChannels': 'No task channels yet',
+    'chat.openTaskChat': 'Open Task Chat',
   }
 }
 
