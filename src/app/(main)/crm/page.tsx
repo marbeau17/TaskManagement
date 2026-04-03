@@ -16,6 +16,8 @@ import { CrmFunnelChart } from '@/components/crm/CrmFunnelChart'
 import { CrmUpcomingTasks } from '@/components/crm/CrmUpcomingTasks'
 import { CrmWinLossAnalysis } from '@/components/crm/CrmWinLossAnalysis'
 import { CrmImportWizard } from '@/components/crm/CrmImportWizard'
+import { CrmCampaignList } from '@/components/crm/CrmCampaignList'
+import { CrmSourceChart } from '@/components/crm/CrmSourceChart'
 import { CrmFormList } from '@/components/crm/CrmFormList'
 import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
 import type { CrmEntityType } from '@/types/crm'
@@ -26,6 +28,7 @@ const TABS = [
   { id: 'companies', labelKey: 'crm.companies' },
   { id: 'leads', labelKey: 'crm.leads' },
   { id: 'deals', labelKey: 'crm.deals' },
+  { id: 'campaigns', labelKey: 'crm.campaign.title' },
   { id: 'forms', labelKey: 'crm.forms.title' },
   { id: 'import', labelKey: 'crm.import.title' },
 ]
@@ -74,8 +77,9 @@ export default function CrmPage() {
           {activeTab === 'dashboard' && (
             <div className="flex flex-col gap-[16px]">
               <CrmDashboard />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-[16px]">
                 <CrmFunnelChart />
+                <CrmSourceChart />
                 <CrmUpcomingTasks />
               </div>
               <CrmWinLossAnalysis />
@@ -97,6 +101,7 @@ export default function CrmPage() {
               {dealView === 'list' ? <CrmDealList /> : <CrmDealKanban onDealClick={d => setDetailPanel({ type: 'deal', entity: d })} />}
             </div>
           )}
+          {activeTab === 'campaigns' && <CrmCampaignList />}
           {activeTab === 'forms' && <CrmFormList />}
           {activeTab === 'import' && <CrmImportWizard />}
         </div>
