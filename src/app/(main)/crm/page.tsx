@@ -19,6 +19,7 @@ import { CrmImportWizard } from '@/components/crm/CrmImportWizard'
 import { CrmCampaignList } from '@/components/crm/CrmCampaignList'
 import { CrmSourceChart } from '@/components/crm/CrmSourceChart'
 import { CrmFormList } from '@/components/crm/CrmFormList'
+import { CrmInbox } from '@/components/crm/CrmInbox'
 import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
 import type { CrmEntityType } from '@/types/crm'
 
@@ -30,6 +31,7 @@ const TABS = [
   { id: 'deals', labelKey: 'crm.deals' },
   { id: 'campaigns', labelKey: 'crm.campaign.title' },
   { id: 'forms', labelKey: 'crm.forms.title' },
+  { id: 'inbox', labelKey: 'crm.inbox.title' },
   { id: 'import', labelKey: 'crm.import.title' },
 ]
 
@@ -103,6 +105,7 @@ export default function CrmPage() {
           )}
           {activeTab === 'campaigns' && <CrmCampaignList />}
           {activeTab === 'forms' && <CrmFormList />}
+          {activeTab === 'inbox' && <CrmInbox />}
           {activeTab === 'import' && <CrmImportWizard />}
         </div>
       </div>
