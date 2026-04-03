@@ -40,6 +40,7 @@ const MAIN_NAV = [
   { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects' },
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload' },
   { id: 'pipeline', labelKey: 'nav.pipeline', icon: '💰', href: '/pipeline', restricted: true },
+  { id: 'chat', labelKey: 'nav.chat', icon: '💬', href: '/chat' },
   { id: 'crm', labelKey: 'nav.crm', icon: '🤝', href: '/crm', restricted: true },
 ]
 
