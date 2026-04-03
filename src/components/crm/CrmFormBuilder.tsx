@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, GripVertical, Settings, Copy } from 'lucide-react'
+import { Plus, Trash2, GripVertical, Settings, Copy, Eye } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
+import { CrmFormPreview } from './CrmFormPreview'
 import type { FormField, FormSettings, FormFieldType } from '@/types/crm-form'
 
 interface Props {
@@ -65,6 +66,7 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
   ])
   const [settings, setSettings] = useState<FormSettings>({ ...defaultSettings, ...initialSettings })
   const [showSettings, setShowSettings] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   const addField = () => setFields(f => [...f, defaultField()])
   const removeField = (id: string) => setFields(f => f.filter(fi => fi.id !== id))
@@ -94,9 +96,14 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
     <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
       <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2 flex items-center justify-between">
         <h3 className="text-[14px] font-bold text-text">{t('crm.forms.builder')}</h3>
-        <button onClick={() => setShowSettings(!showSettings)} className="flex items-center gap-[4px] text-[11px] text-text2 hover:text-text">
-          <Settings className="w-[14px] h-[14px]" /> {t('crm.forms.settings')}
-        </button>
+        <div className="flex items-center gap-[8px]">
+          <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-[4px] text-[11px] text-text2 hover:text-text">
+            <Eye className="w-[14px] h-[14px]" /> {t('crm.forms.preview')}
+          </button>
+          <button onClick={() => setShowSettings(!showSettings)} className="flex items-center gap-[4px] text-[11px] text-text2 hover:text-text">
+            <Settings className="w-[14px] h-[14px]" /> {t('crm.forms.settings')}
+          </button>
+        </div>
       </div>
 
       <div className="p-[16px] space-y-[12px]">
@@ -133,11 +140,19 @@ export function CrmFormBuilder({ initialFields, initialSettings, initialName, in
               <label className="text-[11px] font-semibold text-text2 block mb-[4px]">{t('crm.forms.notificationEmail')}</label>
               <input type="email" value={settings.notificationEmail ?? ''} onChange={e => setSettings(s => ({...s, notificationEmail: e.target.value || undefined}))} placeholder="sales@example.com" className={inputClass} />
             </div>
+            <div>
+              <label className="text-[11px] font-semibold text-text2 block mb-[4px]">{t('crm.forms.formColor')}</label>
+              <input type="color" value={settings.formColor ?? '#1a2d51'} onChange={e => setSettings(s => ({...s, formColor: e.target.value}))} className="w-[40px] h-[30px] rounded border border-border2 cursor-pointer" />
+            </div>
             <label className="flex items-center gap-[6px] text-[12px] text-text">
               <input type="checkbox" checked={settings.createContact} onChange={e => setSettings(s => ({...s, createContact: e.target.checked}))} className="rounded" />
               {t('crm.forms.createContact')}
             </label>
           </div>
+        )}
+
+        {showPreview && (
+          <CrmFormPreview fields={fields} settings={settings} formName={name} />
         )}
 
         {/* Fields */}

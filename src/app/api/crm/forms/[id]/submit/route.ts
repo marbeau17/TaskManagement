@@ -116,13 +116,52 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }).catch(() => {})
     }
 
-    return NextResponse.json({
+    // 6. Send notification email
+    if (settings.notificationEmail) {
+      try {
+        const { sendEmail } = await import('@/lib/email/send-email')
+        const fieldLabels = (form.fields ?? []) as Array<{ name: string; label: string }>
+        const dataRows = Object.entries(submittedData)
+          .filter(([k]) => !k.startsWith('_'))
+          .map(([k, v]) => {
+            const field = fieldLabels.find(f => f.name === k)
+            return `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb;font-weight:600;color:#374151">${field?.label ?? k}</td><td style="padding:6px 12px;border:1px solid #e5e7eb;color:#111827">${String(v)}</td></tr>`
+          })
+          .join('')
+
+        const html = `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <h2 style="color:#1a2d51;border-bottom:2px solid #1a2d51;padding-bottom:8px">📋 新しいフォーム送信: ${form.name}</h2>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+              ${dataRows}
+            </table>
+            <p style="color:#6b7280;font-size:12px;margin-top:16px">
+              送信元: ${submission.source_url || '不明'}<br>
+              日時: ${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+              ${contactId ? '<br>CRMコンタクト: 自動リンク済み' : ''}
+            </p>
+          </div>
+        `
+
+        await sendEmail({
+          to: settings.notificationEmail,
+          subject: `[WorkFlow] フォーム送信: ${form.name}`,
+          html,
+        }).catch(err => console.error('[Form Notify]', err))
+      } catch (err) {
+        console.error('[Form Notify Email]', err)
+      }
+    }
+
+    const response = NextResponse.json({
       success: true,
       submissionId: saved.id,
       contactId,
       redirectUrl: settings.redirectUrl || null,
       thankYouMessage: settings.thankYouMessage || 'Thank you for your submission!',
     })
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    return response
   } catch (error) {
     console.error('[Form Submit]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
