@@ -9,8 +9,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
 import { WebhookSettings } from '@/components/settings/WebhookSettings'
+import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
 
-type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook'
+type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook' | 'line'
 
 export default function SettingsPage() {
   const { t } = useI18n()
@@ -168,6 +169,7 @@ export default function SettingsPage() {
     { id: 'email', labelKey: 'settings.email' },
     { id: 'ai', labelKey: 'settings.ai' },
     { id: 'webhook', labelKey: 'settings.webhooks' },
+    { id: 'line', labelKey: 'crm.line.title' },
   ]
 
   return (
@@ -475,6 +477,11 @@ export default function SettingsPage() {
           {/* Webhook Settings */}
           {activeTab === 'webhook' && (
             <WebhookSettings />
+          )}
+
+          {/* LINE Settings */}
+          {activeTab === 'line' && (
+            <CrmLineSettings />
           )}
 
           {/* AI Settings */}
