@@ -23,7 +23,7 @@ export function MyTodayMeetings({ isLoading }: Props) {
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         if (Array.isArray(data)) {
-          setMeetings(data.filter(e => !e.is_cancelled && e.show_as !== 'free'))
+          setMeetings(data.filter(e => !e.is_cancelled && e.show_as !== 'free' && e.response_status !== 'declined'))
         }
       })
       .catch(() => {})
