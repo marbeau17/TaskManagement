@@ -37,12 +37,29 @@ export function CalendarConnect() {
   }, [user])
 
   const handleSync = async () => {
+    if (!user) return
     setSyncing(true)
     try {
-      // Trigger re-auth which performs sync on callback
-      window.location.href = '/api/ms365/auth'
+      const res = await fetch('/api/ms365/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id }),
+      })
+      const result = await res.json()
+      console.log('[CalendarConnect] Sync result:', result)
+      if (result.synced > 0) {
+        toast.success(`${t('calendar.syncComplete')} (${result.synced} events)`)
+        setConnected(true)
+        setLastSync(new Date().toISOString())
+      } else if (result.reason === 'not_connected') {
+        // Not connected yet, trigger OAuth
+        window.location.href = '/api/ms365/auth'
+      } else {
+        toast.success(t('calendar.syncComplete'))
+      }
     } catch {
       toast.error(t('calendar.syncFailed') || 'Sync failed')
+    } finally {
       setSyncing(false)
     }
   }
