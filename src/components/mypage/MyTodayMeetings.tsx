@@ -17,16 +17,37 @@ export function MyTodayMeetings({ isLoading }: Props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      console.log('[MyTodayMeetings] No user, skipping fetch')
+      return
+    }
     const today = new Date().toISOString().slice(0, 10)
-    fetch(`/api/ms365/events?user_id=${user.id}&start_date=${today}&end_date=${today}&viewer_id=${user.id}`)
-      .then(r => r.ok ? r.json() : [])
+    const url = `/api/ms365/events?user_id=${user.id}&start_date=${today}&end_date=${today}&viewer_id=${user.id}`
+    console.log('[MyTodayMeetings] Fetching:', url, '| user.id:', user.id, '| today:', today)
+    fetch(url)
+      .then(r => {
+        console.log('[MyTodayMeetings] Response status:', r.status, r.ok ? 'OK' : 'FAIL')
+        return r.ok ? r.json() : []
+      })
       .then(data => {
+        console.log('[MyTodayMeetings] Raw data from API:', JSON.stringify(data).slice(0, 500))
+        console.log('[MyTodayMeetings] Raw count:', Array.isArray(data) ? data.length : 'NOT_ARRAY')
         if (Array.isArray(data)) {
-          setMeetings(data.filter(e => !e.is_cancelled && e.show_as !== 'free' && e.response_status !== 'declined'))
+          const filtered = data.filter(e => !e.is_cancelled && e.show_as !== 'free' && e.response_status !== 'declined')
+          console.log('[MyTodayMeetings] After filter:', filtered.length, '| Filtered out:', data.length - filtered.length)
+          data.forEach((e: any, i: number) => {
+            console.log(`[MyTodayMeetings] Event[${i}]:`, {
+              id: e.id, subject: e.subject, start_at: e.start_at, end_at: e.end_at,
+              is_cancelled: e.is_cancelled, show_as: e.show_as, response_status: e.response_status,
+              user_id: e.user_id,
+            })
+          })
+          setMeetings(filtered)
         }
       })
-      .catch(() => {})
+      .catch(err => {
+        console.error('[MyTodayMeetings] Fetch error:', err)
+      })
       .finally(() => setLoading(false))
   }, [user])
 

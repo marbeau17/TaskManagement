@@ -22,6 +22,18 @@ export async function GET(request: NextRequest) {
     if (end_date) query = query.lte('end_at', end_date + 'T23:59:59')
 
     const { data, error } = await query
+    console.log('[API /ms365/events] Query params:', { user_id, start_date, end_date, viewer_id })
+    console.log('[API /ms365/events] DB result: count=', data?.length ?? 0, 'error=', error?.message ?? 'none')
+    if (data?.length) {
+      data.forEach((evt: any, i: number) => {
+        console.log(`[API /ms365/events] Row[${i}]:`, {
+          id: evt.id, user_id: evt.user_id, subject: evt.subject,
+          start_at: evt.start_at, end_at: evt.end_at,
+          is_cancelled: evt.is_cancelled, show_as: evt.show_as,
+          response_status: evt.response_status,
+        })
+      })
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // Privacy filter: hide private event details from non-owners
