@@ -76,7 +76,9 @@ export function AssignChangeModal({
     confirmed_deadline: z.string().min(1, t('assign.validation.deadlineRequired')),
     estimated_hours: z
       .number({ error: t('assign.validation.enterEstimatedHours') })
-      .min(0.5, t('assign.validation.minHours')),
+      .min(0.5, t('assign.validation.minHours'))
+      .nullable()
+      .optional(),
   }), [t])
 
   type FormValues = z.infer<typeof schema>
@@ -346,7 +348,7 @@ export function AssignChangeModal({
               htmlFor="modal_estimated_hours"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              {t('assignChange.estimatedHours')} <span className="text-danger">*</span>
+              {t('assignChange.estimatedHours')}
             </label>
             <Controller
               control={control}

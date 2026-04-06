@@ -34,7 +34,7 @@ export interface TaskFormStep1 {
 export interface TaskFormStep2 {
   assigned_to: string
   confirmed_deadline: string
-  estimated_hours: number
+  estimated_hours?: number | null
 }
 
 /** Pagination parameters for list queries */

@@ -58,7 +58,9 @@ export function AssignForm({
     confirmed_deadline: z.string().min(1, t('assign.validation.deadlineRequired')),
     estimated_hours: z
       .number({ error: t('assign.validation.enterEstimatedHours') })
-      .min(0.5, t('assign.validation.minHours')),
+      .min(0.5, t('assign.validation.minHours'))
+      .nullable()
+      .optional(),
   }), [t])
 
   type Step2FormValues = z.infer<typeof step2Schema>
@@ -316,7 +318,7 @@ export function AssignForm({
               htmlFor="estimated_hours"
               className="block text-[12.5px] font-semibold text-text2 mb-1.5"
             >
-              {t('assign.estimatedHours')} <span className="text-danger">*</span>
+              {t('assign.estimatedHours')}
             </label>
             <Controller
               control={control}
