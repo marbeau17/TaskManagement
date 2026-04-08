@@ -113,6 +113,7 @@ export interface CrmLead {
   description: string
   tags: string[]
   custom_fields: Record<string, any>
+  sales_contribution: number
   created_at: string
   updated_at: string
   contact?: { id: string; first_name: string; last_name: string; email: string } | null
@@ -140,6 +141,7 @@ export interface CrmDeal {
   description: string
   tags: string[]
   custom_fields: Record<string, any>
+  sales_contribution: number
   created_at: string
   updated_at: string
   company?: { id: string; name: string } | null

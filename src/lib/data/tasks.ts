@@ -52,7 +52,8 @@ async function logActivity(
 const VALID_TASK_TRANSITIONS: Record<string, string[]> = {
   waiting: ['todo', 'rejected'],
   todo: ['in_progress', 'waiting', 'rejected'],
-  in_progress: ['done', 'todo', 'rejected'],
+  in_progress: ['done', 'reviewing', 'todo', 'rejected'],
+  reviewing: ['done', 'in_progress', 'rejected'],
   done: ['in_progress', 'todo'],
   rejected: ['todo', 'waiting'],
 }

@@ -16,6 +16,7 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   waiting: '⏳ アサイン待ち',
   todo: '📋 未着手',
   in_progress: '▶ 進行中',
+  reviewing: '🔍 確認中',
   done: '✓ 完了',
   rejected: '↩ 差し戻し',
   dropped: '⛔ ドロップ',
@@ -27,6 +28,7 @@ export const STATUS_LABELS_I18N: Record<Locale, Record<TaskStatus, string>> = {
     waiting: '⏳ Awaiting',
     todo: '📋 To Do',
     in_progress: '▶ In Progress',
+    reviewing: '🔍 Reviewing',
     done: '✓ Done',
     rejected: '↩ Rejected',
     dropped: '⛔ Dropped',
@@ -55,6 +57,11 @@ export const STATUS_STYLES: Record<
     bg: 'bg-info-bg',
     text: 'text-info',
     border: 'border-info-b',
+  },
+  reviewing: {
+    bg: 'bg-violet-100 dark:bg-violet-900/30',
+    text: 'text-violet-700 dark:text-violet-300',
+    border: 'border-violet-300 dark:border-violet-700',
   },
   done: {
     bg: 'bg-ok-bg',

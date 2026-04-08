@@ -13,6 +13,7 @@ import { useTemplates } from '@/hooks/useTemplates'
 import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { TemplateFieldRenderer } from '@/components/tasks/TemplateFieldRenderer'
 import { useI18n } from '@/hooks/useI18n'
+import { DateInput } from '@/components/shared'
 
 // ---------------------------------------------------------------------------
 // Zod schema for Step 1
@@ -429,9 +430,8 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             >
               {t('taskForm.desiredDeadline')}
             </label>
-            <input
+            <DateInput
               id="desired_deadline"
-              type="date"
               className="
                 w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
                 bg-surface

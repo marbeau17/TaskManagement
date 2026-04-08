@@ -20,6 +20,10 @@ const BAR_COLORS: Record<TaskStatus, { bar: string; progress: string }> = {
     bar: 'bg-blue-200 dark:bg-blue-800/60',
     progress: 'bg-blue-500 dark:bg-blue-400',
   },
+  reviewing: {
+    bar: 'bg-violet-200 dark:bg-violet-800/60',
+    progress: 'bg-violet-500 dark:bg-violet-400',
+  },
   done: {
     bar: 'bg-emerald-200 dark:bg-emerald-800/60',
     progress: 'bg-emerald-500 dark:bg-emerald-400',

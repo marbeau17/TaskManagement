@@ -51,6 +51,7 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
       status: stageToStatus[deal.stage] ?? 'Likely',
       probability: deal.probability ?? 0,
       pm_user_id: deal.owner_id,
+      cm_percent: deal.sales_contribution ?? 0,
     }
 
     const { data: pipeline, error: pipelineError } = await db

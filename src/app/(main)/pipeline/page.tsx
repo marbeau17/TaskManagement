@@ -396,10 +396,10 @@ export default function PipelinePage() {
                   </tr>
                 ))}
                 {/* Totals */}
-                {opportunities.length > 0 && (
+                {filteredOpportunities.length > 0 && (
                   <tr className="border-t-2 border-mint bg-surf2/50 font-bold">
-                    <td colSpan={14} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}</td>
-                    {MONTHS.map((m) => <td key={m} className="px-[2px] py-[6px] text-[10px] text-mint text-right">{fmtK(opportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))}</td>)}
+                    <td colSpan={14} className="px-[6px] py-[6px] text-[11px] text-text sticky left-0 bg-surf2/50 z-10">{t('pipeline.total')}{hasActiveFilter && <span className="ml-[4px] text-[9px] text-warn font-normal">(フィルター適用中)</span>}</td>
+                    {MONTHS.map((m) => <td key={m} className="px-[2px] py-[6px] text-[10px] text-mint text-right">{fmtK(filteredOpportunities.reduce((s, o) => s + getMonthRevenue(o, m), 0))}</td>)}
                     <td className="px-[6px] py-[6px] text-right text-[12px] text-mint">{fmtK(totalRevenue)}</td>
                     <td></td>
                   </tr>

@@ -109,6 +109,13 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
                     </div>
                     <span className="text-[11px] font-bold text-text">{entity.probability ?? 0}%</span>
                   </div>
+                  <div className="flex items-center gap-[8px]">
+                    <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
+                    <div className="flex-1 bg-surf2 rounded-full h-[8px] overflow-hidden">
+                      <div className="bg-mint-dd h-full rounded-full" style={{ width: `${entity.sales_contribution ?? 0}%` }} />
+                    </div>
+                    <span className="text-[11px] font-bold text-text">{entity.sales_contribution ?? 0}%</span>
+                  </div>
                 </>
               )}
               {entityType === 'lead' && (
@@ -116,6 +123,13 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
                   <InfoRow icon={DollarSign} label={t('crm.lead.value')} value={`¥${(entity.estimated_value ?? 0).toLocaleString()}`} />
                   <InfoRow icon={Building2} label={t('crm.company.name')} value={entity.company?.name} />
                   <InfoRow icon={User} label={t('crm.company.owner')} value={entity.owner?.name} />
+                  <div className="flex items-center gap-[8px]">
+                    <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
+                    <div className="flex-1 bg-surf2 rounded-full h-[8px] overflow-hidden">
+                      <div className="bg-mint-dd h-full rounded-full" style={{ width: `${entity.sales_contribution ?? 0}%` }} />
+                    </div>
+                    <span className="text-[11px] font-bold text-text">{entity.sales_contribution ?? 0}%</span>
+                  </div>
                 </>
               )}
               {entity.description && (

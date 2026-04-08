@@ -15,6 +15,7 @@ const QUICK_PERCENTS = [25, 50, 75, 100] as const
 const STATUS_KEYS: { value: TaskStatus; i18nKey: string }[] = [
   { value: 'todo', i18nKey: 'progress.statusTodo' },
   { value: 'in_progress', i18nKey: 'progress.statusInProgress' },
+  { value: 'reviewing', i18nKey: 'progress.statusReviewing' },
   { value: 'done', i18nKey: 'progress.statusDone' },
 ]
 

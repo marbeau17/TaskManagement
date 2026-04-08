@@ -19,7 +19,7 @@ interface KanbanBoardProps {
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void
 }
 
-const COLUMNS: TaskStatus[] = ['waiting', 'todo', 'in_progress', 'done', 'rejected', 'dropped']
+const COLUMNS: TaskStatus[] = ['waiting', 'todo', 'in_progress', 'reviewing', 'done', 'rejected', 'dropped']
 
 const COLUMN_COLORS: Record<TaskStatus, { header: string; dropHighlight: string }> = {
   waiting: {
@@ -33,6 +33,10 @@ const COLUMN_COLORS: Record<TaskStatus, { header: string; dropHighlight: string 
   in_progress: {
     header: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800',
     dropHighlight: 'bg-blue-50/50 dark:bg-blue-950/20',
+  },
+  reviewing: {
+    header: 'bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800',
+    dropHighlight: 'bg-violet-50/50 dark:bg-violet-950/20',
   },
   done: {
     header: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
@@ -254,6 +258,7 @@ export function KanbanBoard({ tasks, onStatusChange }: KanbanBoardProps) {
       waiting: [],
       todo: [],
       in_progress: [],
+      reviewing: [],
       done: [],
       rejected: [],
       dropped: [],

@@ -13,7 +13,7 @@ interface ImportClient {
 interface ImportTask {
   title: string
   description: string
-  status: 'waiting' | 'todo' | 'in_progress' | 'done' | 'rejected'
+  status: 'waiting' | 'todo' | 'in_progress' | 'reviewing' | 'done' | 'rejected'
   client_name: string
   assigned_to_email: string
   additional_assignee_emails: string[]

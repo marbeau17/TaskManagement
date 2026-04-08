@@ -18,8 +18,8 @@ export async function login(page: Page, retries = 2) {
         { timeout: 15000 }
       ).catch(() => {})
 
-      // Wait for navigation to dashboard or change-password page
-      await page.waitForURL(/\/(dashboard|change-password)/, { timeout: 30000 })
+      // Wait for navigation to dashboard, mypage, or change-password page
+      await page.waitForURL(/\/(dashboard|mypage|change-password)/, { timeout: 30000 })
       return // success
     } catch (error) {
       if (attempt < retries) {

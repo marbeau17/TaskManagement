@@ -26,6 +26,7 @@ const emptyForm = {
   amount: '',
   stage: 'proposal' as DealStage,
   probability: '',
+  sales_contribution: '',
   expected_close_date: '',
   description: '',
 }
@@ -74,6 +75,7 @@ export function CrmDealList() {
       amount: formData.amount ? Number(formData.amount) : 0,
       stage: formData.stage,
       probability: formData.probability ? Number(formData.probability) : 0,
+      sales_contribution: formData.sales_contribution ? Number(formData.sales_contribution) : 0,
       expected_close_date: formData.expected_close_date || null,
       description: formData.description,
     })
@@ -143,6 +145,15 @@ export function CrmDealList() {
               className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
             />
             <input
+              type="number"
+              min={0}
+              max={100}
+              value={formData.sales_contribution}
+              onChange={e => setFormData(p => ({ ...p, sales_contribution: e.target.value }))}
+              placeholder="営業貢献度 (%) (0-100)"
+              className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
+            />
+            <input
               type="date"
               value={formData.expected_close_date}
               onChange={e => setFormData(p => ({ ...p, expected_close_date: e.target.value }))}
@@ -174,6 +185,7 @@ export function CrmDealList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.stage')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.amount')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.probability')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">貢献度</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.expectedClose')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
@@ -182,10 +194,10 @@ export function CrmDealList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={8} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={9} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : deals.length === 0 ? (
-                <tr><td colSpan={8} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={9} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
                 deals.map(d => (
                   <tr key={d.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
@@ -204,6 +216,7 @@ export function CrmDealList() {
                     </td>
                     <td className="px-[12px] py-[8px] text-right font-medium text-text">{formatYen(d.amount)}</td>
                     <td className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell">{d.probability}%</td>
+                    <td className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell">{d.sales_contribution ?? 0}%</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.expected_close_date ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">

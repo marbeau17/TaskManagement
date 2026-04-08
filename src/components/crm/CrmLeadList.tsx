@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useI18n } from '@/hooks/useI18n'
-import { useCrmLeads, useCreateCrmLead, useConvertLead } from '@/hooks/useCrm'
+import { useCrmLeads, useCreateCrmLead, useConvertLead, useUpdateCrmLead } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
 import type { CrmLeadFilters, LeadStatus } from '@/types/crm'
 
@@ -22,11 +22,14 @@ export function CrmLeadList() {
   const [filters, setFilters] = useState<CrmLeadFilters>({ page: 1, pageSize: 20 })
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ title: '', source: 'website', estimated_value: 0, description: '' })
+  const [formData, setFormData] = useState({ title: '', source: 'website', estimated_value: 0, sales_contribution: 0, description: '' })
 
   const { data, isLoading } = useCrmLeads({ ...filters, q: search || undefined })
   const createMutation = useCreateCrmLead()
   const convertMutation = useConvertLead()
+  const updateMutation = useUpdateCrmLead()
+  const [editingSalesContrib, setEditingSalesContrib] = useState<string | null>(null)
+  const [editSalesContribValue, setEditSalesContribValue] = useState(0)
 
   const leads = data?.data ?? []
   const total = data?.total ?? 0
@@ -34,7 +37,7 @@ export function CrmLeadList() {
   const handleCreate = async () => {
     if (!formData.title.trim()) return
     await createMutation.mutateAsync(formData)
-    setFormData({ title: '', source: 'website', estimated_value: 0, description: '' })
+    setFormData({ title: '', source: 'website', estimated_value: 0, sales_contribution: 0, description: '' })
     setShowForm(false)
   }
 
@@ -80,6 +83,10 @@ export function CrmLeadList() {
             </select>
             <input type="number" value={formData.estimated_value || ''} onChange={e => setFormData(p => ({...p, estimated_value: Number(e.target.value) || 0}))} placeholder={t('crm.lead.estimatedValue')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
           </div>
+          <div className="flex gap-[8px] items-center">
+            <label className="text-[12px] text-text2 whitespace-nowrap">営業貢献度 (%)</label>
+            <input type="number" min={0} max={100} value={formData.sales_contribution} onChange={e => setFormData(p => ({...p, sales_contribution: Math.min(100, Math.max(0, Number(e.target.value) || 0))}))} className="w-[100px] text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
+          </div>
           <textarea value={formData.description} onChange={e => setFormData(p => ({...p, description: e.target.value}))} placeholder={t('crm.lead.description')} rows={2} className="w-full text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint resize-none" />
           <div className="flex gap-[8px] justify-end">
             <button onClick={() => setShowForm(false)} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
@@ -99,6 +106,7 @@ export function CrmLeadList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.lead.company')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.lead.status')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.estimatedValue')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">貢献度</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[80px]"></th>
               </tr>
@@ -106,10 +114,10 @@ export function CrmLeadList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={7} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={8} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : leads.length === 0 ? (
-                <tr><td colSpan={7} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={8} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
                 leads.map(l => (
                   <tr key={l.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
@@ -124,6 +132,27 @@ export function CrmLeadList() {
                       </span>
                     </td>
                     <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{formatCurrency(l.estimated_value)}</td>
+                    <td
+                      className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell cursor-pointer hover:bg-mint/10"
+                      onClick={() => { setEditingSalesContrib(l.id); setEditSalesContribValue((l as any).sales_contribution ?? 0) }}
+                    >
+                      {editingSalesContrib === l.id ? (
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          autoFocus
+                          value={editSalesContribValue}
+                          onChange={e => setEditSalesContribValue(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                          onBlur={() => { updateMutation.mutate({ id: l.id, data: { sales_contribution: editSalesContribValue } }); setEditingSalesContrib(null) }}
+                          onKeyDown={e => { if (e.key === 'Enter') { updateMutation.mutate({ id: l.id, data: { sales_contribution: editSalesContribValue } }); setEditingSalesContrib(null) } if (e.key === 'Escape') setEditingSalesContrib(null) }}
+                          onClick={e => e.stopPropagation()}
+                          className="w-[60px] text-[12px] px-[4px] py-[2px] bg-surface border border-mint rounded-[4px] outline-none text-right"
+                        />
+                      ) : (
+                        <span>{(l as any).sales_contribution ?? 0}%</span>
+                      )}
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{l.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
                       {l.status === 'qualified' && (

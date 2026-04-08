@@ -7,6 +7,7 @@ import { useI18n } from '@/hooks/useI18n'
 import { useUpdateTask } from '@/hooks/useTasks'
 import { useClients } from '@/hooks/useClients'
 import { useProjects } from '@/hooks/useProjects'
+import { DateInput } from '@/components/shared'
 
 interface TaskDetailInfoProps {
   task: TaskWithRelations & {
@@ -220,8 +221,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
       <div className="flex gap-6 flex-wrap">
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.startDate')}</span>
-          <input
-            type="date"
+          <DateInput
             value={toInputDate(task.start_date)}
             onChange={(e) => handleSave('start_date', e.target.value || null)}
             className={`text-[13px] text-text bg-surface border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer ${!task.start_date ? 'border-danger bg-danger/5' : 'border-wf-border'}`}
@@ -232,8 +232,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
         </div>
         <div>
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.desiredDeadline')}</span>
-          <input
-            type="date"
+          <DateInput
             value={toInputDate(task.desired_deadline)}
             onChange={(e) => handleSave('desired_deadline', e.target.value || null)}
             className="text-[13px] text-text bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer"
@@ -243,8 +242,7 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
           <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.confirmedDeadline')}</span>
           <div className="flex items-center gap-1">
             {overdue && <span>🚨</span>}
-            <input
-              type="date"
+            <DateInput
               value={toInputDate(task.confirmed_deadline)}
               onChange={(e) => handleSave('confirmed_deadline', e.target.value || null)}
               className={`text-[13px] font-semibold bg-surface border border-wf-border rounded-md px-2 py-1 focus:outline-none focus:border-mint cursor-pointer ${overdue ? 'text-danger' : 'text-text'}`}

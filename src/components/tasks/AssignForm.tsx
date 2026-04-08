@@ -7,7 +7,7 @@ import { z } from 'zod'
 import type { TaskFormStep1, TaskFormStep2 } from '@/types/task'
 import { useMembers } from '@/hooks/useMembers'
 import { useWorkloadSummaries } from '@/hooks/useWorkload'
-import { Avatar, ProgressBar } from '@/components/shared'
+import { Avatar, ProgressBar, DateInput } from '@/components/shared'
 import { WORKLOAD_THRESHOLDS } from '@/lib/constants'
 import { useI18n } from '@/hooks/useI18n'
 
@@ -289,9 +289,8 @@ export function AssignForm({
             >
               {t('assign.confirmedDeadline')} <span className="text-danger">*</span>
             </label>
-            <input
+            <DateInput
               id="confirmed_deadline"
-              type="date"
               className={`
                 w-full rounded-lg border px-3 py-2 text-[13px] text-text1
                 bg-surface

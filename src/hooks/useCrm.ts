@@ -145,7 +145,7 @@ export function useUpdateCrmLead() {
 export function useConvertLead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { dealTitle: string; stage?: string; amount?: number; owner_id?: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { dealTitle: string; stage?: string; amount?: number; owner_id?: string; sales_contribution?: number } }) =>
       mutateJson<{ deal: CrmDeal; lead: CrmLead }>(`/api/crm/leads/${id}/convert`, 'POST', data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['crm', 'leads'] })

@@ -20,6 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
   waiting: 'var(--status-waiting, #C8A030)',
   todo: 'var(--status-todo, #94A3B8)',
   in_progress: 'var(--status-in-progress, #3B82F6)',
+  reviewing: 'var(--status-reviewing, #8B5CF6)',
   done: 'var(--status-done, #6FB5A3)',
   rejected: 'var(--status-rejected, #C05050)',
 }
@@ -31,6 +32,7 @@ export function StatusDistributionChart({ tasks }: StatusDistributionChartProps)
     waiting: t('tasks.waiting'),
     todo: t('tasks.todo'),
     in_progress: t('tasks.inProgress'),
+    reviewing: '確認中',
     done: t('tasks.done'),
     rejected: 'Rejected',
   }), [t])
