@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Phone, Mail, Building2, User, Calendar, DollarSign } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
 import { useCrmActivities } from '@/hooks/useCrm'
@@ -109,13 +109,12 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
                     </div>
                     <span className="text-[11px] font-bold text-text">{entity.probability ?? 0}%</span>
                   </div>
-                  <div className="flex items-center gap-[8px]">
-                    <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
-                    <div className="flex-1 bg-surf2 rounded-full h-[8px] overflow-hidden">
-                      <div className="bg-mint-dd h-full rounded-full" style={{ width: `${entity.sales_contribution ?? 0}%` }} />
-                    </div>
-                    <span className="text-[11px] font-bold text-text">{entity.sales_contribution ?? 0}%</span>
-                  </div>
+                  <EditableSalesContribution
+                    value={entity.sales_contribution ?? 0}
+                    entityType="deal"
+                    entityId={entity.id}
+                    onSaved={(v) => { entity.sales_contribution = v; onUpdate?.({ ...entity, sales_contribution: v }) }}
+                  />
                 </>
               )}
               {entityType === 'lead' && (
@@ -123,13 +122,12 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
                   <InfoRow icon={DollarSign} label={t('crm.lead.value')} value={`¥${(entity.estimated_value ?? 0).toLocaleString()}`} />
                   <InfoRow icon={Building2} label={t('crm.company.name')} value={entity.company?.name} />
                   <InfoRow icon={User} label={t('crm.company.owner')} value={entity.owner?.name} />
-                  <div className="flex items-center gap-[8px]">
-                    <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
-                    <div className="flex-1 bg-surf2 rounded-full h-[8px] overflow-hidden">
-                      <div className="bg-mint-dd h-full rounded-full" style={{ width: `${entity.sales_contribution ?? 0}%` }} />
-                    </div>
-                    <span className="text-[11px] font-bold text-text">{entity.sales_contribution ?? 0}%</span>
-                  </div>
+                  <EditableSalesContribution
+                    value={entity.sales_contribution ?? 0}
+                    entityType="lead"
+                    entityId={entity.id}
+                    onSaved={(v) => { entity.sales_contribution = v; onUpdate?.({ ...entity, sales_contribution: v }) }}
+                  />
                 </>
               )}
               {entity.description && (
@@ -155,6 +153,96 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
         </div>
       </div>
     </>
+  )
+}
+
+function EditableSalesContribution({
+  value,
+  entityType,
+  entityId,
+  onSaved,
+}: {
+  value: number
+  entityType: 'lead' | 'deal'
+  entityId: string
+  onSaved?: (v: number) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+  const [displayValue, setDisplayValue] = useState(value)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setDisplayValue(value)
+  }, [value])
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+  }, [editing])
+
+  const save = useCallback(async () => {
+    const clamped = Math.max(0, Math.min(100, Math.round(draft)))
+    setEditing(false)
+    if (clamped === displayValue) return
+    setDisplayValue(clamped)
+    try {
+      const endpoint = entityType === 'lead'
+        ? `/api/crm/leads/${entityId}`
+        : `/api/crm/deals/${entityId}`
+      await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sales_contribution: clamped }),
+      })
+      onSaved?.(clamped)
+    } catch {
+      setDisplayValue(value)
+    }
+  }, [draft, displayValue, entityType, entityId, value, onSaved])
+
+  const cancel = useCallback(() => {
+    setEditing(false)
+    setDraft(displayValue)
+  }, [displayValue])
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-[8px]">
+        <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
+        <input
+          ref={inputRef}
+          type="number"
+          min={0}
+          max={100}
+          value={draft}
+          onChange={(e) => setDraft(Number(e.target.value))}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); save() }
+            if (e.key === 'Escape') { e.preventDefault(); cancel() }
+          }}
+          className="flex-1 h-[28px] px-[8px] text-[12px] bg-surf2 border border-mint-dd rounded-[6px] text-text outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <span className="text-[11px] font-bold text-text w-[28px] text-right">%</span>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center gap-[8px] cursor-pointer group"
+      onClick={() => { setDraft(displayValue); setEditing(true) }}
+      title="クリックして編集"
+    >
+      <span className="text-[11px] text-text2 w-[100px]">営業貢献度</span>
+      <div className="flex-1 bg-surf2 rounded-full h-[8px] overflow-hidden group-hover:ring-1 group-hover:ring-mint-dd transition-shadow">
+        <div className="bg-mint-dd h-full rounded-full" style={{ width: `${displayValue}%` }} />
+      </div>
+      <span className="text-[11px] font-bold text-text group-hover:text-mint-dd transition-colors">{displayValue}%</span>
+    </div>
   )
 }
 

@@ -247,4 +247,5 @@ export interface CrmDashboardData {
   totalContacts: number
   totalLeads: number
   totalDeals: number
+  avgSalesContribution: number
 }

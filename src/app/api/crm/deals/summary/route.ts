@@ -8,7 +8,7 @@ export async function GET() {
     // Fetch all deals
     const { data: deals, error: dealsError } = await db
       .from('crm_deals')
-      .select('id, stage, amount, actual_close_date')
+      .select('id, stage, amount, actual_close_date, sales_contribution')
 
     if (dealsError) return NextResponse.json({ error: dealsError.message }, { status: 500 })
 
@@ -63,6 +63,12 @@ export async function GET() {
 
     if (leadsError) return NextResponse.json({ error: leadsError.message }, { status: 500 })
 
+    // avgSalesContribution: average sales_contribution across all deals that have a value
+    const dealsWithContribution = allDeals.filter((d: any) => d.sales_contribution != null && d.sales_contribution > 0)
+    const avgSalesContribution = dealsWithContribution.length > 0
+      ? Math.round(dealsWithContribution.reduce((sum: number, d: any) => sum + Number(d.sales_contribution), 0) / dealsWithContribution.length)
+      : 0
+
     return NextResponse.json({
       dealsByStage,
       pipelineValue,
@@ -70,6 +76,7 @@ export async function GET() {
       totalDeals,
       totalContacts: contactsCount ?? 0,
       totalLeads: leadsCount ?? 0,
+      avgSalesContribution,
     })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })

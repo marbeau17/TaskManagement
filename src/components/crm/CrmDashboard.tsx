@@ -11,8 +11,8 @@ export function CrmDashboard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-[16px]">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-[12px]">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-surface border border-border2 rounded-[10px] p-[13px] shadow h-[88px] animate-pulse" />
           ))}
         </div>
@@ -23,7 +23,8 @@ export function CrmDashboard() {
 
   const d = data ?? {
     pipelineValue: 0, wonThisMonth: 0, avgDealSize: 0, conversionRate: 0,
-    totalContacts: 0, totalLeads: 0, totalDeals: 0, dealsByStage: [], recentActivities: [],
+    totalContacts: 0, totalLeads: 0, totalDeals: 0, avgSalesContribution: 0,
+    dealsByStage: [], recentActivities: [],
   }
 
   const formatCurrency = (v: number) => {
@@ -35,7 +36,7 @@ export function CrmDashboard() {
   return (
     <div className="flex flex-col gap-[16px]">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-[12px]">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-[12px]">
         <KpiCard
           label={t('crm.kpi.pipelineValue')}
           value={d.pipelineValue >= 1000000 ? Math.round(d.pipelineValue / 1000000) : Math.round(d.pipelineValue / 1000)}
@@ -59,6 +60,12 @@ export function CrmDashboard() {
           value={d.totalDeals}
           unit={t('kpi.unit.count')}
           subText={`${d.totalLeads} ${t('crm.leads')}`}
+          variant="mint"
+        />
+        <KpiCard
+          label={t('crm.kpi.avgSalesContribution')}
+          value={d.avgSalesContribution}
+          unit="%"
           variant="mint"
         />
       </div>

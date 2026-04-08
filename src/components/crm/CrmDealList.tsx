@@ -44,6 +44,8 @@ export function CrmDealList() {
   const deleteMutation = useDeleteCrmDeal()
 
   const [pushing, setPushing] = useState<string | null>(null)
+  const [editingSalesContrib, setEditingSalesContrib] = useState<string | null>(null)
+  const [editSalesContribValue, setEditSalesContribValue] = useState(0)
 
   const deals = data?.data ?? []
   const total = data?.total ?? 0
@@ -185,7 +187,7 @@ export function CrmDealList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.stage')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.amount')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.probability')}</th>
-                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">貢献度</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.salesContribution')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.expectedClose')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
@@ -216,7 +218,40 @@ export function CrmDealList() {
                     </td>
                     <td className="px-[12px] py-[8px] text-right font-medium text-text">{formatYen(d.amount)}</td>
                     <td className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell">{d.probability}%</td>
-                    <td className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell">{d.sales_contribution ?? 0}%</td>
+                    <td
+                      className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell cursor-pointer hover:bg-mint/10"
+                      onClick={() => {
+                        setEditingSalesContrib(d.id)
+                        setEditSalesContribValue(d.sales_contribution ?? 0)
+                      }}
+                    >
+                      {editingSalesContrib === d.id ? (
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          autoFocus
+                          value={editSalesContribValue}
+                          onChange={e => setEditSalesContribValue(Number(e.target.value))}
+                          onBlur={() => {
+                            updateMutation.mutate({ id: d.id, data: { sales_contribution: editSalesContribValue } })
+                            setEditingSalesContrib(null)
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              updateMutation.mutate({ id: d.id, data: { sales_contribution: editSalesContribValue } })
+                              setEditingSalesContrib(null)
+                            } else if (e.key === 'Escape') {
+                              setEditingSalesContrib(null)
+                            }
+                          }}
+                          onClick={e => e.stopPropagation()}
+                          className="w-[60px] text-right text-[12px] px-[4px] py-[2px] border border-mint rounded-[4px] outline-none bg-surface"
+                        />
+                      ) : (
+                        <>{d.sales_contribution ?? 0}%</>
+                      )}
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.expected_close_date ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{d.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">

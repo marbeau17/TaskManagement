@@ -26,6 +26,8 @@ export function CrmDealKanban({ onDealClick }: Props) {
   const updateDeal = useUpdateCrmDeal()
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null)
+  const [editingContribution, setEditingContribution] = useState<string | null>(null)
+  const [contributionValue, setContributionValue] = useState<number>(0)
 
   const deals = data?.data ?? []
 
@@ -61,6 +63,12 @@ export function CrmDealKanban({ onDealClick }: Props) {
         ...(stage === 'lost' ? { actual_close_date: new Date().toISOString().slice(0, 10), probability: 0 } : {}),
       },
     })
+  }
+
+  const handleContributionSave = async (dealId: string) => {
+    const clamped = Math.min(100, Math.max(0, contributionValue))
+    await updateDeal.mutateAsync({ id: dealId, data: { sales_contribution: clamped } })
+    setEditingContribution(null)
   }
 
   const formatAmount = (v: number) => `¥${v.toLocaleString()}`
@@ -107,6 +115,39 @@ export function CrmDealKanban({ onDealClick }: Props) {
                   <div className="flex items-center justify-between mt-[6px]">
                     <span className="text-[11px] font-bold text-mint-dd">{formatAmount(deal.amount ?? 0)}</span>
                     <span className="text-[10px] text-text3">{deal.probability}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-[2px]">
+                    {editingContribution === deal.id ? (
+                      <div className="flex items-center gap-[4px]" onClick={e => e.stopPropagation()}>
+                        <span className="text-[10px] text-text3">貢献度:</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={contributionValue}
+                          onChange={e => setContributionValue(Number(e.target.value))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleContributionSave(deal.id)
+                            if (e.key === 'Escape') setEditingContribution(null)
+                          }}
+                          onBlur={() => handleContributionSave(deal.id)}
+                          autoFocus
+                          className="w-[40px] text-[10px] px-[4px] py-[1px] rounded border border-border2 bg-surface text-text text-right"
+                        />
+                        <span className="text-[10px] text-text3">%</span>
+                      </div>
+                    ) : (
+                      <span
+                        className="text-[10px] text-text3 cursor-pointer hover:text-text2"
+                        onClick={e => {
+                          e.stopPropagation()
+                          setEditingContribution(deal.id)
+                          setContributionValue(deal.sales_contribution ?? 0)
+                        }}
+                      >
+                        貢献度: {deal.sales_contribution ?? 0}%
+                      </span>
+                    )}
                   </div>
                   {deal.expected_close_date && (
                     <p className="text-[10px] text-text3 mt-[2px]">📅 {deal.expected_close_date}</p>

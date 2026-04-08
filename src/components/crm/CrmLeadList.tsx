@@ -106,7 +106,7 @@ export function CrmLeadList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.lead.company')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.lead.status')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.estimatedValue')}</th>
-                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">貢献度</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.salesContribution')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[80px]"></th>
               </tr>
@@ -134,7 +134,7 @@ export function CrmLeadList() {
                     <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{formatCurrency(l.estimated_value)}</td>
                     <td
                       className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell cursor-pointer hover:bg-mint/10"
-                      onClick={() => { setEditingSalesContrib(l.id); setEditSalesContribValue((l as any).sales_contribution ?? 0) }}
+                      onClick={() => { setEditingSalesContrib(l.id); setEditSalesContribValue(l.sales_contribution ?? 0) }}
                     >
                       {editingSalesContrib === l.id ? (
                         <input
@@ -150,7 +150,7 @@ export function CrmLeadList() {
                           className="w-[60px] text-[12px] px-[4px] py-[2px] bg-surface border border-mint rounded-[4px] outline-none text-right"
                         />
                       ) : (
-                        <span>{(l as any).sales_contribution ?? 0}%</span>
+                        <span>{l.sales_contribution ?? 0}%</span>
                       )}
                     </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{l.owner?.name ?? '—'}</td>
