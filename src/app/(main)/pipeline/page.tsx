@@ -96,6 +96,12 @@ export default function PipelinePage() {
   const [selectedCols, setSelectedCols] = useState<Set<number>>(new Set())
   const tableRef = useRef<HTMLTableElement>(null)
 
+  // Unique client names for dropdown
+  const uniqueClients = useMemo(() => {
+    const set = new Set(opportunities.map(o => o.client_name).filter(Boolean))
+    return [...set].sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [opportunities])
+
   // Unique referral sources for dropdown
   const uniqueReferrals = useMemo(() => {
     const set = new Set(opportunities.map(o => o.referral_source).filter(Boolean))
@@ -105,7 +111,7 @@ export default function PipelinePage() {
   // Filtered opportunities (applied before sort)
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter(o => {
-      if (filterClient && !o.client_name.toLowerCase().includes(filterClient.toLowerCase())) return false
+      if (filterClient && o.client_name !== filterClient) return false
       if (filterReferral && o.referral_source !== filterReferral) return false
       if (filterOpportunity && !o.opportunity_name.toLowerCase().includes(filterOpportunity.toLowerCase())) return false
       if (filterStatus && o.status !== filterStatus) return false
@@ -650,7 +656,10 @@ export default function PipelinePage() {
                   <th></th>
                   <th></th>
                   <th className="px-[4px] py-[4px]">
-                    <input type="text" value={filterClient} onChange={(e) => setFilterClient(e.target.value)} placeholder="絞り込み..." className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1.5 py-1 focus:outline-none focus:border-mint" />
+                    <select value={filterClient} onChange={(e) => setFilterClient(e.target.value)} className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1 py-1 focus:outline-none focus:border-mint">
+                      <option value="">すべて</option>
+                      {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                   </th>
                   <th className="px-[4px] py-[4px]">
                     <select value={filterReferral} onChange={(e) => setFilterReferral(e.target.value)} className="w-full text-[10px] text-text bg-surface border border-wf-border rounded px-1 py-1 focus:outline-none focus:border-mint">
