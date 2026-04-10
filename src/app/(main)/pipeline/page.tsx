@@ -532,7 +532,44 @@ export default function PipelinePage() {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
 
-    return { monthlyRevenue, monthlyWeighted, monthlyCM, monthlyWeightedCM, byStatus, byPM, byClient }
+    // Top 10 individual opportunities by revenue
+    const topOpportunities = [...filteredOpportunities]
+      .map(o => {
+        const total = getTotal(o)
+        const pmName = o.pm_user_id ? (members?.find(m => m.id === o.pm_user_id)?.name ?? '') : ''
+        return { id: o.id, client: o.client_name, opportunity: o.opportunity_name, status: o.status, probability: o.probability, cm_percent: o.cm_percent, revenue: total, weighted: total * (o.probability / 100), cm: total * (o.cm_percent / 100), pm: pmName }
+      })
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10)
+
+    // Top 10 by weighted revenue (revenue x probability)
+    const topWeighted = [...filteredOpportunities]
+      .map(o => {
+        const total = getTotal(o)
+        const pmName = o.pm_user_id ? (members?.find(m => m.id === o.pm_user_id)?.name ?? '') : ''
+        return { id: o.id, client: o.client_name, opportunity: o.opportunity_name, status: o.status, probability: o.probability, revenue: total, weighted: total * (o.probability / 100), pm: pmName }
+      })
+      .sort((a, b) => b.weighted - a.weighted)
+      .slice(0, 10)
+
+    // Top referral sources
+    const refMap = new Map<string, { revenue: number; weighted: number; cm: number; count: number }>()
+    filteredOpportunities.forEach((o) => {
+      const name = o.referral_source || '(未設定)'
+      const existing = refMap.get(name) ?? { revenue: 0, weighted: 0, cm: 0, count: 0 }
+      const total = getTotal(o)
+      existing.revenue += total
+      existing.weighted += total * (o.probability / 100)
+      existing.cm += total * (o.cm_percent / 100)
+      existing.count += 1
+      refMap.set(name, existing)
+    })
+    const byReferral = [...refMap.entries()]
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10)
+
+    return { monthlyRevenue, monthlyWeighted, monthlyCM, monthlyWeightedCM, byStatus, byPM, byClient, topOpportunities, topWeighted, byReferral }
   }, [filteredOpportunities, members])
 
   const totalRevenue = filteredOpportunities.reduce((s, o) => s + getTotal(o), 0)
@@ -861,6 +898,149 @@ export default function PipelinePage() {
                     )
                   })}
                   {summary.byClient.length === 0 && (
+                    <tr><td colSpan={7} className="text-center py-[12px] text-text3">データなし</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Top 10 Opportunities by Revenue */}
+            <div className="bg-surface border border-border2 rounded-[10px] shadow">
+              <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+                <h3 className="text-[13px] font-bold text-text">📊 案件別 売上 Top 10（千円）</h3>
+              </div>
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="border-b border-border2 bg-surf2/50">
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold w-[40px]">順位</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">クライアント</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">案件名</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">ステータス</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">勝率</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">CM%</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">PM</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">売上高</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">加重売上</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">粗利</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.topOpportunities.map((o, idx) => {
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''
+                    return (
+                      <tr key={o.id} className="border-b border-border2 hover:bg-surf2/30">
+                        <td className="px-[10px] py-[6px] text-center font-bold text-text">{medal || (idx + 1)}</td>
+                        <td className="px-[10px] py-[6px] font-medium text-text">{o.client}</td>
+                        <td className="px-[10px] py-[6px] text-text">{o.opportunity}</td>
+                        <td className="px-[10px] py-[6px] text-center"><span className={`text-[10px] rounded-full px-[5px] py-[1px] font-semibold border ${STATUS_COLORS[o.status] ?? 'bg-surf2 text-text2'}`}>{o.status || '-'}</span></td>
+                        <td className="px-[10px] py-[6px] text-center text-text2">{o.probability}%</td>
+                        <td className="px-[10px] py-[6px] text-center text-text2">{o.cm_percent}%</td>
+                        <td className="px-[10px] py-[6px] text-text2">{o.pm}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-text">{fmtK(o.revenue)}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-mint">{fmtK(o.weighted)}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-text">{fmtK(o.cm)}</td>
+                      </tr>
+                    )
+                  })}
+                  {summary.topOpportunities.length === 0 && (
+                    <tr><td colSpan={10} className="text-center py-[12px] text-text3">データなし</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Top 10 by Weighted Revenue */}
+            <div className="bg-surface border border-border2 rounded-[10px] shadow">
+              <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+                <h3 className="text-[13px] font-bold text-text">⚡ 加重売上 Top 10（売上×勝率）（千円）</h3>
+              </div>
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="border-b border-border2 bg-surf2/50">
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold w-[40px]">順位</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">クライアント</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">案件名</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">ステータス</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">勝率</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">PM</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">売上高</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">加重売上</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">構成比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.topWeighted.map((o, idx) => {
+                    const pct = totalWeighted > 0 ? (o.weighted / totalWeighted * 100) : 0
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''
+                    return (
+                      <tr key={o.id} className="border-b border-border2 hover:bg-surf2/30">
+                        <td className="px-[10px] py-[6px] text-center font-bold text-text">{medal || (idx + 1)}</td>
+                        <td className="px-[10px] py-[6px] font-medium text-text">{o.client}</td>
+                        <td className="px-[10px] py-[6px] text-text">{o.opportunity}</td>
+                        <td className="px-[10px] py-[6px] text-center"><span className={`text-[10px] rounded-full px-[5px] py-[1px] font-semibold border ${STATUS_COLORS[o.status] ?? 'bg-surf2 text-text2'}`}>{o.status || '-'}</span></td>
+                        <td className="px-[10px] py-[6px] text-center text-text2">{o.probability}%</td>
+                        <td className="px-[10px] py-[6px] text-text2">{o.pm}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-text">{fmtK(o.revenue)}</td>
+                        <td className="px-[10px] py-[6px] text-right font-bold text-mint">{fmtK(o.weighted)}</td>
+                        <td className="px-[10px] py-[6px] text-right">
+                          <div className="flex items-center justify-end gap-[6px]">
+                            <div className="w-[60px] h-[6px] bg-border2 rounded-full overflow-hidden">
+                              <div className="h-full bg-mint rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
+                            </div>
+                            <span className="text-[10px] text-text2 w-[36px] text-right">{pct.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {summary.topWeighted.length === 0 && (
+                    <tr><td colSpan={9} className="text-center py-[12px] text-text3">データなし</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Top Referral Sources */}
+            <div className="bg-surface border border-border2 rounded-[10px] shadow">
+              <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
+                <h3 className="text-[13px] font-bold text-text">🤝 紹介先別 売上ランキング（千円）</h3>
+              </div>
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="border-b border-border2 bg-surf2/50">
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold w-[40px]">順位</th>
+                    <th className="px-[10px] py-[6px] text-left text-text2 font-semibold">紹介先</th>
+                    <th className="px-[10px] py-[6px] text-center text-text2 font-semibold">案件数</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">売上高</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">加重売上</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">粗利</th>
+                    <th className="px-[10px] py-[6px] text-right text-text2 font-semibold">構成比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.byReferral.map((ref, idx) => {
+                    const pct = totalRevenue > 0 ? (ref.revenue / totalRevenue * 100) : 0
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''
+                    return (
+                      <tr key={ref.name} className="border-b border-border2 hover:bg-surf2/30">
+                        <td className="px-[10px] py-[6px] text-center font-bold text-text">{medal || (idx + 1)}</td>
+                        <td className="px-[10px] py-[6px] font-medium text-text">{ref.name}</td>
+                        <td className="px-[10px] py-[6px] text-center text-text2">{ref.count}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-text">{fmtK(ref.revenue)}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-mint">{fmtK(ref.weighted)}</td>
+                        <td className="px-[10px] py-[6px] text-right font-medium text-text">{fmtK(ref.cm)}</td>
+                        <td className="px-[10px] py-[6px] text-right">
+                          <div className="flex items-center justify-end gap-[6px]">
+                            <div className="w-[60px] h-[6px] bg-border2 rounded-full overflow-hidden">
+                              <div className="h-full bg-mint rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
+                            </div>
+                            <span className="text-[10px] text-text2 w-[36px] text-right">{pct.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {summary.byReferral.length === 0 && (
                     <tr><td colSpan={7} className="text-center py-[12px] text-text3">データなし</td></tr>
                   )}
                 </tbody>
