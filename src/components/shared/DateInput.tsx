@@ -172,24 +172,40 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
     let m = month
     let d = day
 
-    // Validate and clamp
+    // Only clamp if the segment has a complete value (avoid clamping partial input like "20" → 1900)
     if (segment === 'year' && y) {
-      const n = clamp(parseInt(y, 10) || 0, 1900, 2100)
-      y = pad(n, 4)
-      setYear(y)
+      if (y.length >= 4) {
+        const n = clamp(parseInt(y, 10) || 0, 1900, 2100)
+        y = pad(n, 4)
+        setYear(y)
+      }
     }
     if (segment === 'month' && m) {
-      const n = clamp(parseInt(m, 10) || 0, 1, 12)
-      m = pad(n, 2)
-      setMonth(m)
+      if (m.length >= 2 || parseInt(m, 10) > 1) {
+        const n = clamp(parseInt(m, 10) || 0, 1, 12)
+        m = pad(n, 2)
+        setMonth(m)
+      }
     }
     if (segment === 'day' && d) {
-      const n = clamp(parseInt(d, 10) || 0, 1, 31)
-      d = pad(n, 2)
-      setDay(d)
+      if (d.length >= 2 || parseInt(d, 10) > 3) {
+        const n = clamp(parseInt(d, 10) || 0, 1, 31)
+        d = pad(n, 2)
+        setDay(d)
+      }
     }
 
-    emitChange(y, m, d)
+    // Only emit change when all segments are complete
+    const yValid = y.length === 4 && parseInt(y, 10) >= 1900
+    const mValid = m.length >= 1 && parseInt(m, 10) >= 1 && parseInt(m, 10) <= 12
+    const dValid = d.length >= 1 && parseInt(d, 10) >= 1 && parseInt(d, 10) <= 31
+
+    if (yValid && mValid && dValid) {
+      emitChange(pad(parseInt(y, 10), 4), pad(parseInt(m, 10), 2), pad(parseInt(d, 10), 2))
+    } else if (!y && !m && !d) {
+      // Allow clearing the date
+      emitChange('', '', '')
+    }
 
     // Also call original onBlur (from react-hook-form register)
     if (onBlur) {
