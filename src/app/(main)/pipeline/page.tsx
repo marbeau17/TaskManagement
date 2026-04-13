@@ -515,9 +515,12 @@ export default function PipelinePage() {
       return { name, count: filtered.length, revenue: rev, weighted, cm }
     }).sort((a, b) => b.revenue - a.revenue)
 
-    // Top 10 by client (aggregate across all opportunities for same client)
+    // Active pipeline only (exclude Win/Lost for rankings)
+    const activePipeline = filteredOpportunities.filter(o => o.status !== 'Win' && o.status !== 'Lost')
+
+    // Top 10 by client (aggregate across all active opportunities for same client)
     const clientMap = new Map<string, { revenue: number; weighted: number; cm: number; count: number }>()
-    filteredOpportunities.forEach((o) => {
+    activePipeline.forEach((o) => {
       const name = o.client_name || '(未設定)'
       const existing = clientMap.get(name) ?? { revenue: 0, weighted: 0, cm: 0, count: 0 }
       const total = getTotal(o)
@@ -532,8 +535,8 @@ export default function PipelinePage() {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
 
-    // Top 10 individual opportunities by revenue
-    const topOpportunities = [...filteredOpportunities]
+    // Top 10 individual active opportunities by revenue
+    const topOpportunities = [...activePipeline]
       .map(o => {
         const total = getTotal(o)
         const pmName = o.pm_user_id ? (members?.find(m => m.id === o.pm_user_id)?.name ?? '') : ''
@@ -542,8 +545,8 @@ export default function PipelinePage() {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
 
-    // Top 10 by weighted revenue (revenue x probability)
-    const topWeighted = [...filteredOpportunities]
+    // Top 10 active by weighted revenue (revenue x probability)
+    const topWeighted = [...activePipeline]
       .map(o => {
         const total = getTotal(o)
         const pmName = o.pm_user_id ? (members?.find(m => m.id === o.pm_user_id)?.name ?? '') : ''
@@ -552,9 +555,9 @@ export default function PipelinePage() {
       .sort((a, b) => b.weighted - a.weighted)
       .slice(0, 10)
 
-    // Top referral sources
+    // Top referral sources (active pipeline only)
     const refMap = new Map<string, { revenue: number; weighted: number; cm: number; count: number }>()
-    filteredOpportunities.forEach((o) => {
+    activePipeline.forEach((o) => {
       const name = o.referral_source || '(未設定)'
       const existing = refMap.get(name) ?? { revenue: 0, weighted: 0, cm: 0, count: 0 }
       const total = getTotal(o)
@@ -858,7 +861,7 @@ export default function PipelinePage() {
             {/* Top 10 Clients Ranking */}
             <div className="bg-surface border border-border2 rounded-[10px] shadow">
               <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-                <h3 className="text-[13px] font-bold text-text">🏆 クライアント別 売上 Top 10（千円）</h3>
+                <h3 className="text-[13px] font-bold text-text">🏆 クライアント別 売上 Top 10（千円）<span className="text-[10px] text-text3 font-normal ml-[6px]">※Win/Lost除く</span></h3>
               </div>
               <table className="w-full text-[11px]">
                 <thead>
@@ -907,7 +910,7 @@ export default function PipelinePage() {
             {/* Top 10 Opportunities by Revenue */}
             <div className="bg-surface border border-border2 rounded-[10px] shadow">
               <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-                <h3 className="text-[13px] font-bold text-text">📊 案件別 売上 Top 10（千円）</h3>
+                <h3 className="text-[13px] font-bold text-text">📊 案件別 売上 Top 10（千円）<span className="text-[10px] text-text3 font-normal ml-[6px]">※Win/Lost除く</span></h3>
               </div>
               <table className="w-full text-[11px]">
                 <thead>
@@ -952,7 +955,7 @@ export default function PipelinePage() {
             {/* Top 10 by Weighted Revenue */}
             <div className="bg-surface border border-border2 rounded-[10px] shadow">
               <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-                <h3 className="text-[13px] font-bold text-text">⚡ 加重売上 Top 10（売上×勝率）（千円）</h3>
+                <h3 className="text-[13px] font-bold text-text">⚡ 加重売上 Top 10（売上×勝率）（千円）<span className="text-[10px] text-text3 font-normal ml-[6px]">※Win/Lost除く</span></h3>
               </div>
               <table className="w-full text-[11px]">
                 <thead>
@@ -1003,7 +1006,7 @@ export default function PipelinePage() {
             {/* Top Referral Sources */}
             <div className="bg-surface border border-border2 rounded-[10px] shadow">
               <div className="px-[12px] py-[10px] border-b border-border2 bg-surf2">
-                <h3 className="text-[13px] font-bold text-text">🤝 紹介先別 売上ランキング（千円）</h3>
+                <h3 className="text-[13px] font-bold text-text">🤝 紹介先別 売上ランキング（千円）<span className="text-[10px] text-text3 font-normal ml-[6px]">※Win/Lost除く</span></h3>
               </div>
               <table className="w-full text-[11px]">
                 <thead>
