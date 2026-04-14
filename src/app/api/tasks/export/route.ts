@@ -28,6 +28,7 @@ function formatDate(date: string): string {
 function buildCsv(tasks: TaskWithRelations[], locale: Locale): string {
   const headers = [
     t(locale, 'csv.task.id'),
+    t(locale, 'csv.task.clientId'),
     t(locale, 'csv.task.client'),
     t(locale, 'csv.task.project'),
     t(locale, 'csv.task.title'),
@@ -48,6 +49,7 @@ function buildCsv(tasks: TaskWithRelations[], locale: Locale): string {
   const rows = tasks.map((t) =>
     [
       t.id,
+      String(t.client?.seq_id ?? ''),
       t.client?.name ?? '',
       t.project?.name ?? '',
       t.title,

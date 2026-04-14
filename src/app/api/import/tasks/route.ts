@@ -14,6 +14,7 @@ interface ImportTask {
   title: string
   description: string
   status: 'waiting' | 'todo' | 'in_progress' | 'reviewing' | 'done' | 'rejected'
+  client_id: string
   client_name: string
   project_name: string
   assigned_to_email: string
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
         title: row.title || '',
         description: row.description || '',
         status: (row.status || 'waiting') as ImportTask['status'],
+        client_id: row.client_id || '',
         client_name: row.client_name || '',
         project_name: row.project_name || '',
         assigned_to_email: row.assignee || '',
@@ -218,13 +220,16 @@ async function handleSupabaseImport(
   // ---------------------------------------------------------------------------
 
   const clientMap = new Map<string, string>()
+  const clientSeqMap = new Map<number, string>() // seq_id -> uuid
 
-  // Load all existing clients
-  const { data: existingClients } = await supabase
+  // Load all existing clients (cast to any for seq_id column)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingClients } = await (supabase as any)
     .from('clients')
-    .select('id, name')
-  for (const c of existingClients ?? []) {
+    .select('id, name, seq_id')
+  for (const c of (existingClients ?? []) as Array<{ id: string; name: string; seq_id?: number }>) {
     clientMap.set(c.name, c.id)
+    if (c.seq_id) clientSeqMap.set(c.seq_id, c.id)
   }
 
   // Collect unique client names from importClients and importTasks
@@ -299,9 +304,15 @@ async function handleSupabaseImport(
   for (let i = 0; i < importTasks.length; i++) {
     const it = importTasks[i]
     try {
-      const clientId = clientMap.get(it.client_name)
+      // Resolve client: prefer numeric client_id (seq_id), fallback to client_name
+      let clientId: string | undefined
+      if (it.client_id) {
+        const seqNum = parseInt(it.client_id, 10)
+        if (!isNaN(seqNum)) clientId = clientSeqMap.get(seqNum)
+      }
+      if (!clientId) clientId = clientMap.get(it.client_name)
       if (!clientId) {
-        throw new Error(`Client not found: ${it.client_name}`)
+        throw new Error(`Client not found: ${it.client_id || it.client_name}`)
       }
 
       const assignedTo = it.assigned_to_email

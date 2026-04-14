@@ -52,6 +52,7 @@ export interface User {
 
 export interface Client {
   id: string
+  seq_id?: number
   name: string
   created_at: string
 }
