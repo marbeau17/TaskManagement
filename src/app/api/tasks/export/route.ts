@@ -29,6 +29,7 @@ function buildCsv(tasks: TaskWithRelations[], locale: Locale): string {
   const headers = [
     t(locale, 'csv.task.id'),
     t(locale, 'csv.task.client'),
+    t(locale, 'csv.task.project'),
     t(locale, 'csv.task.title'),
     t(locale, 'csv.task.status'),
     t(locale, 'csv.task.progress'),
@@ -48,6 +49,7 @@ function buildCsv(tasks: TaskWithRelations[], locale: Locale): string {
     [
       t.id,
       t.client?.name ?? '',
+      t.project?.name ?? '',
       t.title,
       STATUS_LABELS[t.status] ?? t.status,
       String(t.progress ?? 0),
@@ -82,10 +84,11 @@ export async function GET(request: NextRequest) {
         '@/lib/supabase/server'
       )
       const supabase = await createServerSupabaseClient()
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('tasks')
         .select(
-          '*, client:clients(*), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
+          '*, client:clients(*), project:projects!project_id(id, name), assigned_user:users!assigned_to(*), requester:users!requested_by(*), director:users!director_id(*)'
         )
         .order('created_at', { ascending: false })
 

@@ -15,6 +15,7 @@ interface ImportTask {
   description: string
   status: 'waiting' | 'todo' | 'in_progress' | 'reviewing' | 'done' | 'rejected'
   client_name: string
+  project_name: string
   assigned_to_email: string
   additional_assignee_emails: string[]
   desired_deadline: string | null
@@ -41,29 +42,48 @@ interface ImportResult {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { tasks: importTasks, clients: importClients } = body as {
-      tasks: ImportTask[]
-      clients: ImportClient[]
+
+    let importTasks: ImportTask[]
+    let importClients: ImportClient[]
+
+    if (body.rows && Array.isArray(body.rows)) {
+      // Format from import UI: { rows: Record<string,string>[], mappings: [] }
+      importTasks = body.rows.map((row: Record<string, string>) => ({
+        title: row.title || '',
+        description: row.description || '',
+        status: (row.status || 'waiting') as ImportTask['status'],
+        client_name: row.client_name || '',
+        project_name: row.project_name || '',
+        assigned_to_email: row.assignee || '',
+        additional_assignee_emails: [],
+        desired_deadline: row.deadline || null,
+        confirmed_deadline: null,
+        estimated_hours: row.estimated_hours ? parseFloat(row.estimated_hours) : null,
+        reference_url: '',
+        updated_at: '',
+        function_category: row.category || '',
+        task_type: '',
+        priority: row.priority || '3',
+      }))
+      // Extract unique client names
+      importClients = [...new Set(importTasks.map(t => t.client_name).filter(Boolean))].map(name => ({ name }))
+    } else {
+      // Legacy format: { tasks: ImportTask[], clients: ImportClient[] }
+      importTasks = body.tasks ?? []
+      importClients = body.clients ?? []
     }
 
     if (!Array.isArray(importTasks)) {
-      return NextResponse.json(
-        { error: 'tasks must be an array' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'tasks must be an array' }, { status: 400 })
     }
 
     if (isMockMode()) {
-      return NextResponse.json(await handleMockImport(importTasks, importClients ?? []))
+      return NextResponse.json(await handleMockImport(importTasks, importClients))
     }
-
-    return NextResponse.json(await handleSupabaseImport(importTasks, importClients ?? []))
+    return NextResponse.json(await handleSupabaseImport(importTasks, importClients))
   } catch (error) {
     console.error('[import/tasks] Unexpected error:', error)
-    return NextResponse.json(
-      { error: 'Import failed', detail: String(error) },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Import failed', detail: String(error) }, { status: 500 })
   }
 }
 
@@ -235,6 +255,19 @@ async function handleSupabaseImport(
   }
 
   // ---------------------------------------------------------------------------
+  // 1b. Resolve project names -> project IDs
+  // ---------------------------------------------------------------------------
+
+  const projectMap = new Map<string, string>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingProjects } = await (supabase as any)
+    .from('projects')
+    .select('id, name')
+  for (const p of existingProjects ?? []) {
+    projectMap.set(p.name, p.id)
+  }
+
+  // ---------------------------------------------------------------------------
   // 2. Build user email -> id map for assignee resolution
   // ---------------------------------------------------------------------------
 
@@ -294,6 +327,7 @@ async function handleSupabaseImport(
         is_draft: false,
         parent_task_id: null,
         wbs_code: '',
+        project_id: it.project_name ? (projectMap.get(it.project_name) ?? null) : null,
       }
 
       const { data: newTask, error } = await supabase

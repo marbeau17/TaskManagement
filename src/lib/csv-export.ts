@@ -16,6 +16,7 @@ interface CsvColumn {
 const CSV_COLUMNS: CsvColumn[] = [
   { headerKey: 'csv.task.id', accessor: (t) => t.id },
   { headerKey: 'csv.task.client', accessor: (t) => t.client?.name ?? '' },
+  { headerKey: 'csv.task.project', accessor: (t) => t.project?.name ?? '' },
   { headerKey: 'csv.task.title', accessor: (t) => t.title },
   { headerKey: 'csv.task.status', accessor: (t) => STATUS_LABELS[t.status] ?? t.status },
   { headerKey: 'csv.task.progress', accessor: (t) => String(t.progress) },
