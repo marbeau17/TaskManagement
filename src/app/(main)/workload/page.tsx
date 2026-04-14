@@ -79,7 +79,11 @@ export default function WorkloadPage() {
     if (!creatorId || !allTasks) return []
     return allTasks
       .filter((t) => {
-        if (t.assigned_to !== creatorId) return false
+        // Match primary assignee OR multi-assignee (task_assignees relation)
+        const isPrimary = t.assigned_to === creatorId
+        const assigneesArr = (t as unknown as { assignees?: Array<{ user_id?: string }> }).assignees
+        const isMulti = Array.isArray(assigneesArr) && assigneesArr.some(a => a.user_id === creatorId)
+        if (!isPrimary && !isMulti) return false
         if (t.status === 'done' || t.status === 'rejected' || t.status === 'dropped') return false
         // Apply period filter matching getWorkloadSummaries: include tasks that OVERLAP the period
         if (period !== 'all') {
