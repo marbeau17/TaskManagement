@@ -121,6 +121,9 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
     )
   }, [newProjectName, newProjectPrefix, newProjectClientId, createProject, clientList, setValue])
 
+  // Priority state
+  const [priority, setPriority] = useState<number>(defaultValues?.priority ?? 3)
+
   // Template state
   const { data: templates } = useTemplates()
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
@@ -171,6 +174,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       description: values.description || undefined,
       desired_deadline: values.desired_deadline || undefined,
       reference_url: values.reference_url || undefined,
+      priority,
       template_id: selectedTemplateId || undefined,
       template_data:
         selectedTemplateId && Object.keys(templateData).length > 0
@@ -439,6 +443,32 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
               "
               {...register('desired_deadline')}
             />
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label
+              htmlFor="priority"
+              className="block text-[12.5px] font-semibold text-text2 mb-1.5"
+            >
+              {t('taskForm.priority')}
+            </label>
+            <select
+              id="priority"
+              value={priority}
+              onChange={(e) => setPriority(Number(e.target.value))}
+              className="
+                w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
+                bg-surface
+                focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
+              "
+            >
+              <option value={1}>1 - {t('taskForm.priorityHigh')}</option>
+              <option value={2}>2 - {t('taskForm.priorityMediumHigh')}</option>
+              <option value={3}>3 - {t('taskForm.priorityMedium')}</option>
+              <option value={4}>4 - {t('taskForm.priorityMediumLow')}</option>
+              <option value={5}>5 - {t('taskForm.priorityLow')}</option>
+            </select>
           </div>
 
           {/* Reference URL */}

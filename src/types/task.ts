@@ -23,6 +23,7 @@ export interface TaskFormStep1 {
   description?: string
   desired_deadline?: string
   reference_url?: string
+  priority?: number
   template_id?: string
   template_data?: Record<string, any>
   project_id?: string
