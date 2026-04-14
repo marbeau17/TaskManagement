@@ -129,3 +129,54 @@ export function buildWeeklyPlan(
   for (const k of weekKeys) plan[k] = perWeek
   return plan
 }
+
+/**
+ * Build a weekly_actual map distributing actual worked hours across
+ * weeks from start_date up to today (or the deadline, whichever is earlier).
+ *
+ * actualTotal = estimated_hours * (progress / 100)
+ * Each past/current week gets: actualTotal / pastWeeksCount
+ *
+ * Returns {} if inputs are invalid or progress is 0.
+ */
+export function buildWeeklyActual(
+  estimatedHours: number,
+  progress: number,
+  startDate: string | Date | null | undefined,
+  deadline: string | Date | null | undefined,
+): Record<string, number> {
+  if (!estimatedHours || estimatedHours <= 0) return {}
+  if (!progress || progress <= 0) return {}
+  const actualTotal = (estimatedHours * progress) / 100
+  if (actualTotal <= 0) return {}
+
+  const start = startDate ? new Date(startDate) : null
+  if (!start || isNaN(start.getTime())) return {}
+
+  // Distribute across weeks from start to min(today, deadline)
+  const today = new Date()
+  let end = today
+  if (deadline) {
+    const dl = new Date(deadline)
+    if (!isNaN(dl.getTime()) && dl < today) end = dl
+  }
+  if (end < start) return {}
+
+  const firstMon = getMonday(start)
+  const lastMon = getMonday(end)
+  const weekKeys: string[] = []
+  const cursor = new Date(firstMon)
+  while (cursor <= lastMon) {
+    const y = cursor.getFullYear()
+    const m = String(cursor.getMonth() + 1).padStart(2, '0')
+    const d = String(cursor.getDate()).padStart(2, '0')
+    weekKeys.push(`${y}-${m}-${d}`)
+    cursor.setDate(cursor.getDate() + 7)
+  }
+  if (weekKeys.length === 0) return {}
+
+  const perWeek = Math.round((actualTotal / weekKeys.length) * 10) / 10
+  const actual: Record<string, number> = {}
+  for (const k of weekKeys) actual[k] = perWeek
+  return actual
+}

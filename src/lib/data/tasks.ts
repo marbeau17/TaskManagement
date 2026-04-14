@@ -20,7 +20,7 @@ import type {
   PaginatedResult,
 } from '@/types/task'
 import { isMockMode } from '@/lib/utils'
-import { buildWeeklyPlan } from '@/lib/workload-utils'
+import { buildWeeklyPlan, buildWeeklyActual } from '@/lib/workload-utils'
 
 // ---------------------------------------------------------------------------
 // Activity log helper
@@ -506,14 +506,38 @@ export async function updateTaskProgress(
   //   throw new Error(`Invalid status transition from ${currentStatus} to ${update.status}`)
   // }
 
+  // Auto-populate template_data.weekly_actual based on progress
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: currentTask } = await (supabase as any)
+    .from('tasks')
+    .select('estimated_hours, start_date, created_at, confirmed_deadline, desired_deadline, template_data')
+    .eq('id', id)
+    .single()
+
+  const updatePayload: Record<string, unknown> = {
+    progress: update.progress,
+    status: update.status,
+    actual_hours: update.actual_hours,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (currentTask && update.progress !== undefined && update.progress > 0) {
+    const est = currentTask.estimated_hours ?? 0
+    const sd = currentTask.start_date || currentTask.created_at
+    const dl = currentTask.confirmed_deadline ?? currentTask.desired_deadline
+    if (est > 0 && sd) {
+      const weeklyActual = buildWeeklyActual(est, update.progress, sd, dl)
+      if (Object.keys(weeklyActual).length > 0) {
+        const existingTd = (currentTask.template_data ?? {}) as Record<string, unknown>
+        updatePayload.template_data = { ...existingTd, weekly_actual: weeklyActual }
+      }
+    }
+  }
+
   const { data, error } = await supabase
     .from('tasks')
-    .update({
-      progress: update.progress,
-      status: update.status,
-      actual_hours: update.actual_hours,
-      updated_at: new Date().toISOString(),
-    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(updatePayload as any)
     .eq('id', id)
     .select()
     .single()
