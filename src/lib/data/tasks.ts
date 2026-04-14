@@ -255,6 +255,19 @@ export async function createTask(
   } = await supabase.auth.getUser()
   if (!authUser) throw new Error('Not authenticated')
 
+  // Auto-calculate planned_hours_per_week from estimated hours and lead time
+  const estimatedHours = step2?.estimated_hours ?? null
+  const deadline = step2?.confirmed_deadline || step1.desired_deadline || null
+  let autoPlannedHoursPerWeek = 0
+  if (estimatedHours && estimatedHours > 0 && deadline) {
+    const startDate = new Date()
+    const endDate = new Date(deadline)
+    const totalMs = endDate.getTime() - startDate.getTime()
+    const totalDays = Math.max(7, Math.ceil(totalMs / (1000 * 60 * 60 * 24)))
+    const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
+    autoPlannedHoursPerWeek = Math.round((estimatedHours / totalWeeks) * 10) / 10
+  }
+
   const insertPayload = {
     client_id: clientId,
     title: step1.title,
@@ -268,7 +281,8 @@ export async function createTask(
     actual_hours: 0,
     assigned_to: step2?.assigned_to || null,  // Guard: empty string → null
     confirmed_deadline: step2?.confirmed_deadline || null,
-    estimated_hours: step2?.estimated_hours ?? null,
+    estimated_hours: estimatedHours,
+    planned_hours_per_week: autoPlannedHoursPerWeek,
     priority: step1.priority ?? 3,
     project_id: step1.project_id ?? null,
     parent_task_id: step1.parent_task_id ?? null,
@@ -328,9 +342,31 @@ export async function updateTask(
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
+  // Auto-recalculate planned_hours_per_week when estimated_hours, start_date, or deadline changes
+  const updateData: Record<string, unknown> = { ...data, updated_at: new Date().toISOString() }
+  const recalcFields = ['start_date', 'confirmed_deadline', 'desired_deadline'] as const
+  const needsRecalc = recalcFields.some(f => f in data)
+  if (needsRecalc) {
+    // Fetch current task to get all fields needed for recalculation
+    const { data: currentTask } = await supabase.from('tasks').select('estimated_hours, start_date, confirmed_deadline, desired_deadline, created_at').eq('id', id).single()
+    if (currentTask) {
+      const merged = Object.assign({}, currentTask, data) as any
+      const est = merged.estimated_hours ?? 0
+      const deadline = merged.confirmed_deadline ?? merged.desired_deadline
+      if (est > 0 && deadline) {
+        const startDate = merged.start_date ? new Date(merged.start_date) : merged.created_at ? new Date(merged.created_at) : new Date()
+        const endDate = new Date(deadline)
+        const totalMs = endDate.getTime() - startDate.getTime()
+        const totalDays = Math.max(7, Math.ceil(totalMs / (1000 * 60 * 60 * 24)))
+        const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
+        updateData.planned_hours_per_week = Math.round((est / totalWeeks) * 10) / 10
+      }
+    }
+  }
+
   const { data: result, error } = await supabase
     .from('tasks')
-    .update({ ...data, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single()

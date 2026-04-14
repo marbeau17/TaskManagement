@@ -224,10 +224,11 @@ export async function getResourceLoadData(periodStart?: string): Promise<Resourc
     ((clientRows ?? []) as Client[]).map((c) => [c.id, c.name])
   )
 
-  // Fetch active tasks with assignees (exclude tasks without deadline)
-  const { data: tasks, error: tasksError } = await supabase
+  // Fetch active tasks with assignees (include fields for weekly proration)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('id, assigned_to, client_id, status, estimated_hours, confirmed_deadline, desired_deadline')
+    .select('id, assigned_to, client_id, status, estimated_hours, confirmed_deadline, desired_deadline, start_date, created_at, planned_hours_per_week')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
@@ -285,11 +286,12 @@ export async function getResourceLoadData(periodStart?: string): Promise<Resourc
       if (periodEndStr && deadline > periodEndStr) continue
       const clientName = clientNameMap.get(t.client_id) ?? '未分類'
       allClientNames.add(clientName)
-      // Divide by number of assignees for multi-assignee tasks
+      // Use prorated weekly hours instead of total estimated hours
       const assignees = resourceTaskAssigneeMap[t.id]
       const assigneeCount = assignees ? assignees.length : 1
+      const weeklyHours = getTaskWeeklyHours(t as any, periodStart) / assigneeCount
       clientHours[clientName] =
-        (clientHours[clientName] ?? 0) + ((t.estimated_hours ?? 0) / assigneeCount)
+        (clientHours[clientName] ?? 0) + weeklyHours
     }
 
     const totalAssigned = Object.values(clientHours).reduce(
