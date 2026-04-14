@@ -344,7 +344,7 @@ export async function getSubtasks(
 
 export async function updateTask(
   id: string,
-  data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'project_id' | 'start_date' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'template_data'>>
+  data: Partial<Pick<Task, 'title' | 'description' | 'client_id' | 'project_id' | 'start_date' | 'desired_deadline' | 'confirmed_deadline' | 'status' | 'assigned_to' | 'priority' | 'planned_hours_per_week' | 'template_data' | 'actual_hours' | 'progress'>>
 ): Promise<Task> {
   if (isMockMode()) {
     const { updateMockTask } = await import('@/lib/mock/handlers')
@@ -514,19 +514,39 @@ export async function updateTaskProgress(
     .eq('id', id)
     .single()
 
+  // Reverse sync: if actual_hours is provided, auto-compute progress from it
+  // progress = round((actual_hours / estimated_hours) * 100), capped at 100
+  let effectiveProgress = update.progress
+  const est = currentTask?.estimated_hours ?? 0
+  if (update.actual_hours !== undefined && update.actual_hours !== null && est > 0) {
+    const computed = Math.min(100, Math.round((update.actual_hours / est) * 100))
+    // If progress wasn't explicitly set OR actual_hours is the primary driver,
+    // overwrite progress with the computed value
+    if (update.progress === undefined || update.progress === null) {
+      effectiveProgress = computed
+    } else {
+      // Both provided: prefer the one that changed. If actual differs from what
+      // progress implies, treat actual_hours as authoritative.
+      const impliedFromProgress = (est * (update.progress / 100))
+      const diff = Math.abs(impliedFromProgress - update.actual_hours)
+      if (diff > 0.1) {
+        effectiveProgress = computed
+      }
+    }
+  }
+
   const updatePayload: Record<string, unknown> = {
-    progress: update.progress,
+    progress: effectiveProgress,
     status: update.status,
     actual_hours: update.actual_hours,
     updated_at: new Date().toISOString(),
   }
 
-  if (currentTask && update.progress !== undefined && update.progress > 0) {
-    const est = currentTask.estimated_hours ?? 0
+  if (currentTask && effectiveProgress !== undefined && effectiveProgress > 0) {
     const sd = currentTask.start_date || currentTask.created_at
     const dl = currentTask.confirmed_deadline ?? currentTask.desired_deadline
     if (est > 0 && sd) {
-      const weeklyActual = buildWeeklyActual(est, update.progress, sd, dl)
+      const weeklyActual = buildWeeklyActual(est, effectiveProgress, sd, dl)
       if (Object.keys(weeklyActual).length > 0) {
         const existingTd = (currentTask.template_data ?? {}) as Record<string, unknown>
         updatePayload.template_data = { ...existingTd, weekly_actual: weeklyActual }

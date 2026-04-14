@@ -51,7 +51,19 @@ export function WeeklyPlanInput({ task }: WeeklyPlanInputProps) {
     else newActual[weekKey] = hours
     setLocalActual(newActual)
     const newData = { ...(task.template_data ?? {}), weekly_actual: newActual }
-    updateTask.mutate({ taskId: task.id, data: { template_data: newData } as any })
+    // Sum weekly_actual values and sync task.actual_hours + progress
+    const total = Object.values(newActual).reduce((s, v) => s + (v ?? 0), 0)
+    const computedProgress = task.estimated_hours && task.estimated_hours > 0
+      ? Math.min(100, Math.round((total / task.estimated_hours) * 100))
+      : undefined
+    updateTask.mutate({
+      taskId: task.id,
+      data: {
+        template_data: newData,
+        actual_hours: total,
+        ...(computedProgress !== undefined ? { progress: computedProgress } : {}),
+      } as any,
+    })
   }
 
   return (
