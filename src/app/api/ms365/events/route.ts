@@ -18,8 +18,18 @@ export async function GET(request: NextRequest) {
       .order('start_at', { ascending: true })
 
     if (user_id) query = query.eq('user_id', user_id)
-    if (start_date) query = query.gte('start_at', start_date + 'T00:00:00')
-    if (end_date) query = query.lte('end_at', end_date + 'T23:59:59')
+    // Filter by JST day bounds: 00:00 JST = 15:00 UTC previous day, 23:59 JST = 14:59 UTC next day
+    // Events stored as UTC (timestamptz) — convert JST day to UTC range
+    if (start_date) {
+      // JST 00:00:00 = UTC 15:00:00 on previous day (for start of day in Japan)
+      const jstStartUtc = new Date(start_date + 'T00:00:00+09:00').toISOString()
+      query = query.gte('start_at', jstStartUtc)
+    }
+    if (end_date) {
+      // JST 23:59:59 = UTC 14:59:59 next day (for end of day in Japan)
+      const jstEndUtc = new Date(end_date + 'T23:59:59+09:00').toISOString()
+      query = query.lte('end_at', jstEndUtc)
+    }
 
     const { data, error } = await query
     console.log('[API /ms365/events] Query params:', { user_id, start_date, end_date, viewer_id })

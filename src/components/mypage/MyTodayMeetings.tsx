@@ -23,7 +23,8 @@ export function MyTodayMeetings({ isLoading }: Props) {
     }
 
     const fetchEvents = () => {
-      const today = new Date().toISOString().slice(0, 10)
+      // Use JST local date (not UTC) so "today" matches the user's calendar day
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
       const url = `/api/ms365/events?user_id=${user.id}&start_date=${today}&end_date=${today}&viewer_id=${user.id}`
       return fetch(url)
         .then(r => r.ok ? r.json() : [])
