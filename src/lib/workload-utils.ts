@@ -92,3 +92,40 @@ export function getSunday(date: Date): Date {
   sunday.setHours(23, 59, 59, 999)
   return sunday
 }
+
+/**
+ * Build a weekly_plan map distributing estimated_hours evenly across weeks
+ * spanning [startDate, deadline]. Each key is the Monday of the week in
+ * YYYY-MM-DD format. Values are rounded to 1 decimal.
+ * Returns {} if inputs are invalid.
+ */
+export function buildWeeklyPlan(
+  estimatedHours: number,
+  startDate: string | Date | null | undefined,
+  deadline: string | Date | null | undefined,
+): Record<string, number> {
+  if (!estimatedHours || estimatedHours <= 0) return {}
+  if (!deadline) return {}
+  const start = startDate ? new Date(startDate) : new Date()
+  const end = new Date(deadline)
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return {}
+
+  // Enumerate Mondays from start week through end week
+  const firstMon = getMonday(start)
+  const lastMon = getMonday(end)
+  const weekKeys: string[] = []
+  const cursor = new Date(firstMon)
+  while (cursor <= lastMon) {
+    const y = cursor.getFullYear()
+    const m = String(cursor.getMonth() + 1).padStart(2, '0')
+    const d = String(cursor.getDate()).padStart(2, '0')
+    weekKeys.push(`${y}-${m}-${d}`)
+    cursor.setDate(cursor.getDate() + 7)
+  }
+  if (weekKeys.length === 0) return {}
+
+  const perWeek = Math.round((estimatedHours / weekKeys.length) * 10) / 10
+  const plan: Record<string, number> = {}
+  for (const k of weekKeys) plan[k] = perWeek
+  return plan
+}

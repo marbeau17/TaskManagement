@@ -20,6 +20,7 @@ import type {
   PaginatedResult,
 } from '@/types/task'
 import { isMockMode } from '@/lib/utils'
+import { buildWeeklyPlan } from '@/lib/workload-utils'
 
 // ---------------------------------------------------------------------------
 // Activity log helper
@@ -255,10 +256,11 @@ export async function createTask(
   } = await supabase.auth.getUser()
   if (!authUser) throw new Error('Not authenticated')
 
-  // Auto-calculate planned_hours_per_week from estimated hours and lead time
+  // Auto-calculate planned_hours_per_week and weekly_plan from estimated hours and lead time
   const estimatedHours = step2?.estimated_hours ?? null
   const deadline = step2?.confirmed_deadline || step1.desired_deadline || null
   let autoPlannedHoursPerWeek = 0
+  let autoWeeklyPlan: Record<string, number> = {}
   if (estimatedHours && estimatedHours > 0 && deadline) {
     const startDate = new Date()
     const endDate = new Date(deadline)
@@ -266,6 +268,14 @@ export async function createTask(
     const totalDays = Math.max(7, Math.ceil(totalMs / (1000 * 60 * 60 * 24)))
     const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
     autoPlannedHoursPerWeek = Math.round((estimatedHours / totalWeeks) * 10) / 10
+    autoWeeklyPlan = buildWeeklyPlan(estimatedHours, startDate, endDate)
+  }
+
+  const templateDataWithPlan: Record<string, unknown> = {
+    ...(step1.template_data ?? {}),
+  }
+  if (Object.keys(autoWeeklyPlan).length > 0) {
+    templateDataWithPlan.weekly_plan = autoWeeklyPlan
   }
 
   const insertPayload = {
@@ -283,6 +293,8 @@ export async function createTask(
     confirmed_deadline: step2?.confirmed_deadline || null,
     estimated_hours: estimatedHours,
     planned_hours_per_week: autoPlannedHoursPerWeek,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    template_data: (Object.keys(templateDataWithPlan).length > 0 ? templateDataWithPlan : null) as any,
     priority: step1.priority ?? 3,
     project_id: step1.project_id ?? null,
     parent_task_id: step1.parent_task_id ?? null,
@@ -342,14 +354,15 @@ export async function updateTask(
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  // Auto-recalculate planned_hours_per_week when estimated_hours, start_date, or deadline changes
+  // Auto-recalculate planned_hours_per_week and weekly_plan when start_date or deadline changes
   const updateData: Record<string, unknown> = { ...data, updated_at: new Date().toISOString() }
   const recalcFields = ['start_date', 'confirmed_deadline', 'desired_deadline'] as const
   const needsRecalc = recalcFields.some(f => f in data)
   if (needsRecalc) {
-    // Fetch current task to get all fields needed for recalculation
-    const { data: currentTask } = await supabase.from('tasks').select('estimated_hours, start_date, confirmed_deadline, desired_deadline, created_at').eq('id', id).single()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: currentTask } = await (supabase as any).from('tasks').select('estimated_hours, start_date, confirmed_deadline, desired_deadline, created_at, template_data').eq('id', id).single()
     if (currentTask) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const merged = Object.assign({}, currentTask, data) as any
       const est = merged.estimated_hours ?? 0
       const deadline = merged.confirmed_deadline ?? merged.desired_deadline
@@ -360,6 +373,12 @@ export async function updateTask(
         const totalDays = Math.max(7, Math.ceil(totalMs / (1000 * 60 * 60 * 24)))
         const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
         updateData.planned_hours_per_week = Math.round((est / totalWeeks) * 10) / 10
+        // Also refresh template_data.weekly_plan with even distribution
+        const newWeeklyPlan = buildWeeklyPlan(est, startDate, endDate)
+        if (Object.keys(newWeeklyPlan).length > 0) {
+          const existingTd = (merged.template_data ?? {}) as Record<string, unknown>
+          updateData.template_data = { ...existingTd, weekly_plan: newWeeklyPlan }
+        }
       }
     }
   }
