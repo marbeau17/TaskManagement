@@ -419,6 +419,47 @@ export async function updateTask(
           })
         }
       }
+
+      // Send completion notification when status changes to 'done'
+      if (data.status === 'done' && authUser) {
+        const { data: taskForComplete } = await supabase
+          .from('tasks')
+          .select('title, estimated_hours, actual_hours, requested_by, client:clients(name)')
+          .eq('id', id)
+          .single() as { data: any; error: any }
+        if (taskForComplete?.requested_by) {
+          const { data: requester } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .eq('id', taskForComplete.requested_by)
+            .single()
+          const { data: completer } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', authUser.id)
+            .single()
+          if (requester?.email) {
+            fetch('/api/email/notify-complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                taskId: id,
+                taskTitle: taskForComplete.title ?? '',
+                clientName: taskForComplete.client?.name ?? '',
+                completedByName: completer?.name ?? '',
+                estimatedHours: taskForComplete.estimated_hours ?? null,
+                actualHours: taskForComplete.actual_hours ?? 0,
+                requesterEmail: requester.email,
+                requesterName: requester.name,
+                completerId: authUser.id,
+                requesterId: requester.id,
+              }),
+            }).catch((err) => {
+              console.error('[updateTask] Completion email failed:', err)
+            })
+          }
+        }
+      }
     } catch {}
   }
 
@@ -461,9 +502,54 @@ export async function updateTaskProgress(
   if (error) throw error
 
   if (data) {
+    const { status } = update
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       await logActivity(supabase, id, authUser?.id ?? null, 'progress_updated', `Progress: ${update.progress}%, Status: ${update.status}`)
+
+      // Send completion notification to requester
+      if (status === 'done') {
+        try {
+          const { data: task } = await supabase
+            .from('tasks')
+            .select('title, estimated_hours, actual_hours, requested_by, client:clients(name)')
+            .eq('id', id)
+            .single() as { data: any; error: any }
+          const { data: { user: authUser } } = await supabase.auth.getUser()
+          if (task?.requested_by && authUser) {
+            const { data: requester } = await supabase
+              .from('users')
+              .select('id, name, email')
+              .eq('id', task.requested_by)
+              .single()
+            const { data: completer } = await supabase
+              .from('users')
+              .select('name')
+              .eq('id', authUser.id)
+              .single()
+            if (requester?.email) {
+              fetch('/api/email/notify-complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  taskId: id,
+                  taskTitle: task.title ?? '',
+                  clientName: task.client?.name ?? '',
+                  completedByName: completer?.name ?? '',
+                  estimatedHours: task.estimated_hours ?? null,
+                  actualHours: task.actual_hours ?? 0,
+                  requesterEmail: requester.email,
+                  requesterName: requester.name,
+                  completerId: authUser.id,
+                  requesterId: requester.id,
+                }),
+              }).catch((err) => {
+                console.error('[updateTaskProgress] Completion email failed:', err)
+              })
+            }
+          }
+        } catch {}
+      }
     } catch {}
   }
 
