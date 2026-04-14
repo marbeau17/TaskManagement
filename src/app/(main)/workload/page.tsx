@@ -81,7 +81,7 @@ export default function WorkloadPage() {
       .filter((t) => {
         if (t.assigned_to !== creatorId) return false
         if (t.status === 'done' || t.status === 'rejected' || t.status === 'dropped') return false
-        // Apply period filter matching getWorkloadSummaries
+        // Apply period filter matching getWorkloadSummaries: include tasks that OVERLAP the period
         if (period !== 'all') {
           const deadline = t.confirmed_deadline ?? t.desired_deadline
           if (!deadline) return false
@@ -94,8 +94,12 @@ export default function WorkloadPage() {
               end = new Date(start)
               end.setDate(end.getDate() + 6)
             }
+            const startStr = periodStart
             const endStr = end.toISOString().slice(0, 10)
-            if (deadline > endStr) return false
+            // Task overlaps period if: task_start <= period_end AND deadline >= period_start
+            const taskStart = t.start_date ?? (t.created_at ? t.created_at.slice(0, 10) : null)
+            if (taskStart && taskStart > endStr) return false // task starts after period
+            if (deadline < startStr) return false // task ended before period
           }
         }
         return true
