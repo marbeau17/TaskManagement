@@ -88,7 +88,10 @@ export async function GET(request: NextRequest) {
       const eventsUrl = `https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${weekStart.toISOString()}&endDateTime=${weekEnd.toISOString()}&$top=50&$select=id,subject,start,end,isAllDay,sensitivity,showAs,isCancelled,isOrganizer,organizer,location,responseStatus,recurrence`
 
       const eventsRes = await fetch(eventsUrl, {
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+          Prefer: 'outlook.timezone="UTC"',
+        },
       })
 
       if (eventsRes.ok) {

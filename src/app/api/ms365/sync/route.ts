@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     console.log('[MS365 Sync] Fetching events:', weekStart.toISOString(), 'to', weekEnd.toISOString())
 
     const eventsRes = await fetch(eventsUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: 'outlook.timezone="UTC"',
+      },
     })
 
     if (!eventsRes.ok) {

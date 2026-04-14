@@ -22,40 +22,45 @@ export function MyTodayMeetings({ isLoading }: Props) {
       return
     }
 
-    const today = new Date().toISOString().slice(0, 10)
-
     const fetchEvents = () => {
+      const today = new Date().toISOString().slice(0, 10)
       const url = `/api/ms365/events?user_id=${user.id}&start_date=${today}&end_date=${today}&viewer_id=${user.id}`
-      console.log('[MyTodayMeetings] Fetching events:', url)
       return fetch(url)
         .then(r => r.ok ? r.json() : [])
         .then(data => {
-          console.log('[MyTodayMeetings] Raw count:', Array.isArray(data) ? data.length : 'NOT_ARRAY')
           if (Array.isArray(data)) {
             const filtered = data.filter(e => !e.is_cancelled && e.show_as !== 'free' && e.response_status !== 'declined')
-            console.log('[MyTodayMeetings] After filter:', filtered.length)
             setMeetings(filtered)
           }
         })
     }
 
-    // First try to sync from MS365, then fetch events
-    console.log('[MyTodayMeetings] Triggering MS365 sync for user:', user.id)
-    fetch('/api/ms365/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: user.id }),
-    })
-      .then(r => r.json())
-      .then(result => {
-        console.log('[MyTodayMeetings] Sync result:', result)
-        return fetchEvents()
+    const syncAndFetch = () => {
+      return fetch('/api/ms365/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id }),
       })
-      .catch(err => {
-        console.error('[MyTodayMeetings] Sync error:', err)
-        return fetchEvents()
-      })
-      .finally(() => setLoading(false))
+        .then(() => fetchEvents())
+        .catch(() => fetchEvents())
+    }
+
+    // Initial sync + fetch
+    syncAndFetch().finally(() => setLoading(false))
+
+    // Auto-refresh every 2 minutes to pick up new/updated meetings
+    const interval = setInterval(() => {
+      syncAndFetch()
+    }, 2 * 60 * 1000)
+
+    // Refresh when window regains focus (user returns to tab)
+    const handleFocus = () => { syncAndFetch() }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [user])
 
   const formatTime = (iso: string) =>

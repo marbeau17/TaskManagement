@@ -33,7 +33,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tasks, error: tasksError } = await (supabase as any)
     .from('tasks')
-    .select('id, assigned_to, status, estimated_hours, actual_hours, progress, start_date, planned_hours_per_week, template_data, confirmed_deadline, desired_deadline')
+    .select('id, assigned_to, status, estimated_hours, actual_hours, progress, start_date, created_at, planned_hours_per_week, template_data, confirmed_deadline, desired_deadline')
     .not('assigned_to', 'is', null)
     .neq('status', 'rejected')
 
@@ -56,6 +56,7 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
   }
 
   // Filter tasks by period if weekStart provided
+  // A task is included if it OVERLAPS the period: start <= periodEnd AND deadline >= periodStart
   let filteredTasks = tasks ?? []
   if (weekStart) {
     const start = new Date(weekStart)
@@ -69,11 +70,16 @@ export async function getWorkloadSummaries(weekStart?: string): Promise<Workload
       end = new Date(start)
       end.setDate(end.getDate() + 6)
     }
+    const startStr = weekStart
     const endStr = end.toISOString().slice(0, 10)
     filteredTasks = filteredTasks.filter((t: any) => {
       const deadline = t.confirmed_deadline ?? t.desired_deadline
       if (!deadline) return false // no deadline = exclude from workload calculation
-      return deadline <= endStr
+      // Task overlaps period if task_start <= period_end AND deadline >= period_start
+      const taskStart = t.start_date ?? (t.created_at ? t.created_at.slice(0, 10) : null)
+      if (taskStart && taskStart > endStr) return false // task starts after period
+      if (deadline < startStr) return false // task ended before period
+      return true
     })
   } else {
     // All period: still exclude tasks without deadline
@@ -282,8 +288,13 @@ export async function getResourceLoadData(periodStart?: string): Promise<Resourc
       // Exclude tasks without deadline (consistent with weekly workload)
       const deadline = (t as any).confirmed_deadline ?? (t as any).desired_deadline
       if (!deadline) continue
-      // Apply period filter
-      if (periodEndStr && deadline > periodEndStr) continue
+      // Apply period overlap filter: include task if it overlaps the period
+      // (task_start <= period_end AND deadline >= period_start)
+      if (periodEndStr && periodStart) {
+        const taskStart = (t as any).start_date ?? ((t as any).created_at ? (t as any).created_at.slice(0, 10) : null)
+        if (taskStart && taskStart > periodEndStr) continue
+        if (deadline < periodStart) continue
+      }
       const clientName = clientNameMap.get(t.client_id) ?? '未分類'
       allClientNames.add(clientName)
       // Use prorated weekly hours instead of total estimated hours
