@@ -277,16 +277,26 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
 
   const handleMonthChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
-    setMonth(raw)
     if (raw.length === 2) {
+      // Clamp before auto-advancing (blur won't see the new value due to React batching)
+      const n = clamp(parseInt(raw, 10) || 0, 1, 12)
+      const clamped = pad(n, 2)
+      setMonth(clamped)
       dayRef.current?.focus()
       dayRef.current?.select()
+    } else {
+      setMonth(raw)
     }
   }
 
   const handleDayChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
-    setDay(raw)
+    if (raw.length === 2) {
+      const n = clamp(parseInt(raw, 10) || 0, 1, 31)
+      setDay(pad(n, 2))
+    } else {
+      setDay(raw)
+    }
   }
 
   // On blur of any segment, validate + emit
