@@ -91,11 +91,13 @@ export function OrgChart({ members: _members }: { members?: User[] }) {
           </h1>
           <p className="text-xs md:text-sm text-gray-500">最新名簿 反映版</p>
         </div>
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-2 md:p-4 overflow-hidden">
-          <div className="org-tree flex justify-center overflow-x-auto" style={{ padding: '20px', paddingBottom: '60px' }}>
-            <ul className="org-tree-ul">
-              <OrgTreeNode node={orgData} />
-            </ul>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-2 md:p-4">
+          <div className="org-tree overflow-x-auto" style={{ padding: '20px', paddingBottom: '60px' }}>
+            <div className="inline-block min-w-full">
+              <ul className="org-tree-ul">
+                <OrgTreeNode node={orgData} />
+              </ul>
+            </div>
           </div>
         </div>
       </div>
