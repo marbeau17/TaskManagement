@@ -1,264 +1,80 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { User } from '@/types/database'
-import { Avatar } from '@/components/shared/Avatar'
 import { useI18n } from '@/hooks/useI18n'
 
-// ---------------------------------------------------------------------------
-// Types for the org structure
-// ---------------------------------------------------------------------------
-
-interface OrgDeptNode {
-  type: 'dept'
-  name: string
-  head?: string      // user name (display only, may include ACT label)
-  headColor?: string  // department color
-  children?: OrgTreeNode[]
+// Org node type matching docs/org.html
+export interface OrgNodeData {
+  role: string
+  name?: string
+  theme?: string
+  children?: OrgNodeData[]
 }
 
-interface OrgPersonNode {
-  type: 'person'
-  name: string       // user name or '採用予定N'
-  title: string
-  isPlanned?: boolean // true for planned hires (採用予定)
+// Theme colors matching docs/org.html
+const THEME_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  'navy':        { bg: 'bg-[#1e325c]', text: 'text-white',        border: 'border-[#1e325c]' },
+  'slate':       { bg: 'bg-[#3b4c6b]', text: 'text-white',        border: 'border-[#3b4c6b]' },
+  'blue':        { bg: 'bg-[#4a72b2]', text: 'text-white',        border: 'border-[#4a72b2]' },
+  'blue-light':  { bg: 'bg-[#eff6ff]', text: 'text-[#4a72b2]',    border: 'border-[#4a72b2]' },
+  'green':       { bg: 'bg-[#5b8045]', text: 'text-white',        border: 'border-[#5b8045]' },
+  'gold':        { bg: 'bg-[#b8860b]', text: 'text-white',        border: 'border-[#b8860b]' },
+  'gold-light':  { bg: 'bg-[#fffbeb]', text: 'text-[#b8860b]',    border: 'border-[#b8860b]' },
+  'red':         { bg: 'bg-[#a32a2a]', text: 'text-white',        border: 'border-[#a32a2a]' },
+  'red-light':   { bg: 'bg-[#fef2f2]', text: 'text-[#a32a2a]',    border: 'border-[#a32a2a]' },
+  'orange-light':{ bg: 'bg-[#fff7ed]', text: 'text-[#ea580c]',    border: 'border-[#ea580c]' },
 }
 
-type OrgTreeNode = OrgDeptNode | OrgPersonNode
-
-// ---------------------------------------------------------------------------
-// Department color scheme (matches the image)
-// ---------------------------------------------------------------------------
-
-const DEPT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  ceo:       { bg: 'bg-blue-900',       border: 'border-blue-800',   text: 'text-white' },
-  coo:       { bg: 'bg-blue-800',       border: 'border-blue-700',   text: 'text-white' },
-  sales:     { bg: 'bg-blue-600',       border: 'border-blue-500',   text: 'text-white' },
-  cs:        { bg: 'bg-amber-700',      border: 'border-amber-600',  text: 'text-white' },
-  solution:  { bg: 'bg-amber-800',      border: 'border-amber-700',  text: 'text-white' },
-  consulting:{ bg: 'bg-yellow-700',     border: 'border-yellow-600', text: 'text-white' },
-  sysdev:    { bg: 'bg-amber-600',      border: 'border-amber-500',  text: 'text-white' },
-  biz:       { bg: 'bg-red-700',        border: 'border-red-600',    text: 'text-white' },
-}
-
-// ---------------------------------------------------------------------------
-// Static org structure matching the provided image
-// ---------------------------------------------------------------------------
-
-const ORG_STRUCTURE: OrgTreeNode = {
-  type: 'dept',
-  name: '代表取締役社長 CEO',
-  head: '伊藤 祐太',
-  headColor: 'ceo',
-  children: [
-    {
-      type: 'dept',
-      name: '専務取締役 COO',
-      head: '安田 修',
-      headColor: 'coo',
-      children: [
-        {
-          type: 'dept',
-          name: 'セールス&マーケティング本部',
-          head: '部長 伊藤 祐太 (ACT)',
-          headColor: 'sales',
-          children: [
-            { type: 'person', name: '渡邊 梨紗', title: 'アライアンス&セールスマネージャー' },
-            { type: 'person', name: '採用予定①', title: '', isPlanned: true },
-            { type: 'person', name: '採用予定②', title: '', isPlanned: true },
-            { type: 'person', name: '採用予定③', title: '', isPlanned: true },
-          ],
-        },
-        {
-          type: 'dept',
-          name: 'カスタマーサクセス部',
-          head: '部長 安田 修 (ACT)',
-          headColor: 'cs',
-          children: [
-            { type: 'person', name: '採用予定①', title: '', isPlanned: true },
-            { type: 'person', name: '採用予定②', title: '', isPlanned: true },
-            { type: 'person', name: '採用予定③', title: '', isPlanned: true },
-          ],
-        },
-        {
-          type: 'dept',
-          name: 'ソリューション本部',
-          head: '本部長 安田 修 (ACT)',
-          headColor: 'solution',
-          children: [
-            {
-              type: 'dept',
-              name: 'コンサルティング&\nオペレーション部',
-              headColor: 'consulting',
-              children: [
-                { type: 'person', name: '伊藤 祐太', title: '経営コンサルタント' },
-                { type: 'person', name: '安田 修', title: 'DX&Iコンサルタント' },
-                {
-                  type: 'dept',
-                  name: 'ECマネージャー',
-                  head: '瀧宮 誠',
-                  headColor: 'consulting',
-                  children: [
-                    { type: 'person', name: '太田 晴瑠', title: 'スペシャリスト' },
-                    { type: 'person', name: '竹内 美鈴', title: 'スペシャリスト' },
-                    { type: 'person', name: '桑原 和海', title: 'スペシャリスト' },
-                    { type: 'person', name: '採用予定①', title: 'ECコンサルタント', isPlanned: true },
-                    { type: 'person', name: '採用予定②', title: 'スペシャリスト', isPlanned: true },
-                  ],
-                },
-              ],
-            },
-            {
-              type: 'dept',
-              name: 'システム開発部',
-              headColor: 'sysdev',
-              children: [
-                { type: 'person', name: '採用予定①', title: 'マネージャー', isPlanned: true },
-                { type: 'person', name: 'Yudi Dharma Putra', title: 'シニアエンジニア' },
-                { type: 'person', name: 'Luca Trabuio', title: 'エンジニア' },
-                { type: 'person', name: 'Rafael Agcaoili', title: 'エンジニア' },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'dept',
-          name: 'ビジネスサポート本部',
-          head: '部長 伊藤 祐太 (ACT)',
-          headColor: 'biz',
-          children: [
-            { type: 'person', name: '秋元 由美子', title: 'スペシャリスト' },
-            { type: 'person', name: '採用予定①', title: '', isPlanned: true },
-          ],
-        },
-      ],
-    },
-  ],
-}
-
-// ---------------------------------------------------------------------------
-// Render helpers
-// ---------------------------------------------------------------------------
-
-function findUser(name: string, members: User[]): User | undefined {
-  return members.find(m => m.name === name || m.name.replace(/\s/g, '') === name.replace(/\s/g, ''))
-}
-
-function DeptBox({ node, colorKey }: { node: OrgDeptNode; colorKey?: string }) {
-  const colors = DEPT_COLORS[colorKey || node.headColor || 'ceo']
+function NodeCard({ node }: { node: OrgNodeData }) {
+  const styles = THEME_STYLES[node.theme || ''] || { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' }
   return (
-    <div className={`rounded-[8px] px-[14px] py-[8px] min-w-[140px] text-center border ${colors.bg} ${colors.border}`}>
-      <div className={`text-[11px] font-bold ${colors.text} leading-tight whitespace-pre-line`}>
-        {node.name}
+    <div className={`relative flex flex-col items-center justify-center min-w-[130px] max-w-[160px] p-2 rounded-lg border-2 shadow-sm z-10 transition-transform hover:-translate-y-1 hover:shadow-md ${styles.bg} ${styles.text} ${styles.border}`}>
+      <div className="text-[0.75rem] font-bold text-center whitespace-pre-wrap leading-tight mb-1">
+        {node.role}
       </div>
-      {node.head && (
-        <div className={`text-[10px] ${colors.text} opacity-80 mt-[2px]`}>
-          {node.head}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function PersonBox({ node, user }: { node: OrgPersonNode; user?: User }) {
-  if (node.isPlanned) {
-    return (
-      <div className="rounded-[8px] px-[10px] py-[6px] min-w-[100px] text-center border-2 border-dashed border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/30">
-        {node.title && (
-          <div className="text-[9px] text-orange-600 dark:text-orange-400 mb-[1px]">{node.title}</div>
-        )}
-        <div className="text-[10px] font-medium text-orange-500 dark:text-orange-400">
+      {node.name && (
+        <div className="text-[0.8rem] text-center mt-1">
           {node.name}
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-surface border border-border2 rounded-[8px] px-[10px] py-[6px] min-w-[100px] text-center shadow-sm hover:border-mint/40 transition-colors">
-      {user && (
-        <div className="flex justify-center mb-[3px]">
-          <Avatar
-            name_short={user.name_short || user.name.charAt(0)}
-            color={user.avatar_color}
-            avatar_url={user.avatar_url}
-            size="sm"
-          />
-        </div>
-      )}
-      {node.title && (
-        <div className="text-[9px] text-text3 mb-[1px]">{node.title}</div>
-      )}
-      <div className="text-[11px] font-bold text-text leading-tight">
-        {node.name}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Recursive OrgNode renderer
-// ---------------------------------------------------------------------------
-
-function OrgNode({ node, members }: { node: OrgTreeNode; members: User[] }) {
-  if (node.type === 'person') {
-    const user = findUser(node.name, members)
-    return (
-      <div className="flex flex-col items-center">
-        <PersonBox node={node} user={user} />
-      </div>
-    )
-  }
-
-  // Department node
-  const children = node.children ?? []
-
-  return (
-    <div className="flex flex-col items-center">
-      <DeptBox node={node} />
-
-      {children.length > 0 && (
-        <div className="flex flex-col items-center mt-0">
-          {/* Vertical connector from parent */}
-          <div className="w-[1px] h-[20px] bg-border2" />
-
-          {/* Horizontal bar connecting children */}
-          {children.length > 1 && (
-            <div className="relative w-full flex justify-center">
-              <div
-                className="h-[1px] bg-border2"
-                style={{
-                  width: `calc(100% - 100px)`,
-                  minWidth: '80px',
-                }}
-              />
-            </div>
-          )}
-
-          {/* Children nodes */}
-          <div className="flex gap-[16px] items-start">
-            {children.map((child, idx) => (
-              <div key={`${child.type}-${child.type === 'dept' ? child.name : child.name}-${idx}`} className="flex flex-col items-center">
-                {/* Vertical connector to child */}
-                <div className="w-[1px] h-[16px] bg-border2" />
-                <OrgNode node={child} members={members} />
-              </div>
-            ))}
-          </div>
-        </div>
       )}
     </div>
   )
 }
 
-// ---------------------------------------------------------------------------
-// OrgChart -- main component
-// ---------------------------------------------------------------------------
+function OrgTreeNode({ node }: { node: OrgNodeData }) {
+  return (
+    <li>
+      <NodeCard node={node} />
+      {node.children && node.children.length > 0 && (
+        <ul>
+          {node.children.map((child, index) => (
+            <OrgTreeNode key={index} node={child} />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
 
-export function OrgChart({ members }: { members: User[] }) {
+export function OrgChart({ members: _members }: { members?: User[] }) {
   const { t } = useI18n()
-  const activeMembers = members.filter((m) => m.is_active)
+  const [orgData, setOrgData] = useState<OrgNodeData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (activeMembers.length === 0) {
+  useEffect(() => {
+    fetch('/api/org-chart')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setOrgData(data))
+      .catch(() => setOrgData(null))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return <div className="text-center py-[40px] text-[12px] text-text3">読み込み中...</div>
+  }
+
+  if (!orgData) {
     return (
       <div className="flex items-center justify-center py-[40px] text-[12px] text-text3">
         {t('members.orgChartEmpty')}
@@ -267,13 +83,81 @@ export function OrgChart({ members }: { members: User[] }) {
   }
 
   return (
-    <div className="overflow-auto p-[24px]">
-      <div className="text-center mb-[8px]">
-        <span className="text-[10px] text-text3">最新名簿 反映版</span>
+    <div className="p-4 md:p-8">
+      <div className="w-full mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e325c] tracking-wider mb-2">
+            Meets Consulting <span className="text-lg md:text-xl font-normal text-gray-500">組織図</span>
+          </h1>
+          <p className="text-xs md:text-sm text-gray-500">最新名簿 反映版</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-2 md:p-4 overflow-hidden">
+          <div className="org-tree flex justify-center overflow-x-auto" style={{ padding: '20px', paddingBottom: '60px' }}>
+            <ul className="org-tree-ul">
+              <OrgTreeNode node={orgData} />
+            </ul>
+          </div>
+        </div>
       </div>
-      <div className="flex justify-center items-start min-w-[1200px]">
-        <OrgNode node={ORG_STRUCTURE} members={activeMembers} />
-      </div>
+      <style jsx global>{`
+        .org-tree ul {
+          padding-top: 20px;
+          position: relative;
+          display: flex;
+          justify-content: center;
+          margin: 0;
+          padding-left: 0;
+        }
+        .org-tree li {
+          text-align: center;
+          list-style-type: none;
+          position: relative;
+          padding: 20px 4px 0 4px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .org-tree ul::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          border-left: 2px solid #94a3b8;
+          width: 0;
+          height: 20px;
+          transform: translateX(-50%);
+        }
+        .org-tree li::before, .org-tree li::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 50%;
+          border-top: 2px solid #94a3b8;
+          width: 50%;
+          height: 20px;
+        }
+        .org-tree li::after {
+          right: auto;
+          left: 50%;
+          border-left: 2px solid #94a3b8;
+        }
+        .org-tree li:only-child::after, .org-tree li:only-child::before {
+          display: none;
+        }
+        .org-tree li:only-child {
+          padding-top: 0;
+        }
+        .org-tree li:first-child::before, .org-tree li:last-child::after {
+          border: 0 none;
+        }
+        .org-tree li:last-child::before {
+          border-right: 2px solid #94a3b8;
+          border-radius: 0 4px 0 0;
+        }
+        .org-tree li:first-child::after {
+          border-radius: 4px 0 0 0;
+        }
+      `}</style>
     </div>
   )
 }

@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { InviteMemberModal } from '@/components/members/InviteMemberModal'
 import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
 import { OrgChart } from '@/components/members/OrgChart'
+import { OrgChartEditor } from '@/components/members/OrgChartEditor'
 import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
 import { usePermission } from '@/hooks/usePermission'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,6 +27,41 @@ type TabId = 'list' | 'orgchart' | 'roles'
 // ---------------------------------------------------------------------------
 // Feedback message component
 // ---------------------------------------------------------------------------
+
+function OrgChartTabContent({
+  isLoading,
+  members,
+  canEdit,
+}: {
+  isLoading: boolean
+  members: User[] | undefined
+  canEdit: boolean
+}) {
+  const [editMode, setEditMode] = useState(false)
+  if (isLoading) {
+    return <div className="py-[32px] text-center text-[12px] text-text3">読み込み中...</div>
+  }
+  if (!members) return null
+  return (
+    <div className="overflow-x-auto">
+      {canEdit && (
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className="text-xs px-3 py-1.5 rounded-md border border-wf-border text-text2 hover:bg-surf2 transition-colors"
+          >
+            {editMode ? '📊 表示に戻る' : '✏ 編集'}
+          </button>
+        </div>
+      )}
+      {editMode ? (
+        <OrgChartEditor onClose={() => setEditMode(false)} />
+      ) : (
+        <OrgChart members={members} />
+      )}
+    </div>
+  )
+}
 
 function FeedbackMessage({
   type,
@@ -710,15 +746,7 @@ export default function MembersPage() {
         )}
 
         {activeTab === 'orgchart' && (
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="py-[32px] text-center text-[12px] text-text3">
-                {t('common.loading')}
-              </div>
-            ) : members ? (
-              <OrgChart members={members} />
-            ) : null}
-          </div>
+          <OrgChartTabContent isLoading={isLoading} members={members} canEdit={user?.role === 'admin' || user?.role === 'director'} />
         )}
 
         {activeTab === 'roles' && <RoleManagementPanel />}
