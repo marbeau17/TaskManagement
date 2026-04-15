@@ -183,9 +183,12 @@ export async function POST(request: NextRequest) {
           const startDateStr = new Date(evtStart.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10)
           const endDateStr = new Date(evtEnd.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10)
 
+          const titlePrefix = '📅 '
+          const rawTitle = evt.subject || '(会議)'
+          const taskTitle = rawTitle.startsWith('📅') ? rawTitle : titlePrefix + rawTitle
           const { error: createErr } = await db.from('tasks').insert({
             client_id: meetingClientId,
-            title: evt.subject || '(会議)',
+            title: taskTitle,
             description: evt.location ? `場所: ${evt.location}` : null,
             requested_by: user_id,
             assigned_to: user_id,
