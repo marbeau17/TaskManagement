@@ -54,7 +54,16 @@ function NodeCard({ node, user }: { node: OrgNodeData; user?: User }) {
 }
 
 function findMatchingUser(name: string, members: User[]): User | undefined {
-  return members.find(u => u.name === name) || members.find(u => u.name?.includes(name) || name.includes(u.name ?? ''))
+  const exact = members.find(u => u.name === name)
+  if (exact) return exact
+  const partial = members.find(u => u.name?.includes(name) || name.includes(u.name ?? ''))
+  if (partial) return partial
+  const nameWords = new Set(name.toLowerCase().split(/\s+/))
+  return members.find(u => {
+    if (!u.name) return false
+    const userWords = u.name.toLowerCase().split(/\s+/)
+    return userWords.length > 0 && userWords.every(w => nameWords.has(w))
+  })
 }
 
 function OrgTreeNode({ node, members }: { node: OrgNodeData; members: User[] }) {
