@@ -302,23 +302,26 @@ export default function ProjectsPage() {
     return filteredProjects.slice(start, start + pageSize)
   }, [filteredProjects, currentPage, pageSize])
 
-  // Compute task/issue counts per project
+  // Compute task/issue counts + hours per project
   const projectStats = useMemo(() => {
-    const stats: Record<string, { taskCount: number; doneCount: number; issueCount: number }> = {}
+    const stats: Record<string, { taskCount: number; doneCount: number; issueCount: number; estimatedHours: number; actualHours: number; inProgressCount: number }> = {}
     if (allTasks) {
       for (const task of allTasks) {
         if (!task.project_id) continue
         if (!stats[task.project_id]) {
-          stats[task.project_id] = { taskCount: 0, doneCount: 0, issueCount: 0 }
+          stats[task.project_id] = { taskCount: 0, doneCount: 0, issueCount: 0, estimatedHours: 0, actualHours: 0, inProgressCount: 0 }
         }
         stats[task.project_id].taskCount++
         if (task.status === 'done') stats[task.project_id].doneCount++
+        if (task.status === 'in_progress') stats[task.project_id].inProgressCount++
+        stats[task.project_id].estimatedHours += task.estimated_hours ?? 0
+        stats[task.project_id].actualHours += task.actual_hours ?? 0
       }
     }
     if (allIssues) {
       for (const issue of allIssues) {
         if (!stats[issue.project_id]) {
-          stats[issue.project_id] = { taskCount: 0, doneCount: 0, issueCount: 0 }
+          stats[issue.project_id] = { taskCount: 0, doneCount: 0, issueCount: 0, estimatedHours: 0, actualHours: 0, inProgressCount: 0 }
         }
         stats[issue.project_id].issueCount++
       }
@@ -406,9 +409,12 @@ export default function ProjectsPage() {
         {/* Project grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
           {paginatedProjects.map((project) => {
-            const stats = projectStats[project.id] ?? { taskCount: 0, doneCount: 0, issueCount: 0 }
+            const stats = projectStats[project.id] ?? { taskCount: 0, doneCount: 0, issueCount: 0, estimatedHours: 0, actualHours: 0, inProgressCount: 0 }
             const completionRate = stats.taskCount > 0
               ? Math.round((stats.doneCount / stats.taskCount) * 100)
+              : 0
+            const hoursRate = stats.estimatedHours > 0
+              ? Math.round((stats.actualHours / stats.estimatedHours) * 100)
               : 0
 
             return (
@@ -535,16 +541,80 @@ export default function ProjectsPage() {
                   </div>
                 )}
 
+                {/* Dates */}
+                <div className="flex items-center gap-[8px] mb-[8px] text-[10px]">
+                  <span className="text-text3">期間:</span>
+                  {editingProject?.id === project.id && editingProject.field === 'start_date' ? (
+                    <input type="date" value={editDraft} autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        updateProjectMutation.mutate({ id: project.id, data: { start_date: e.target.value || null } })
+                        setEditingProject(null)
+                      }}
+                      onBlur={() => setEditingProject(null)}
+                      className="text-[10px] border border-mint rounded px-1 py-0.5 bg-surface text-text focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-text2 cursor-pointer hover:text-mint" onDoubleClick={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setEditDraft(project.start_date ?? '')
+                      setEditingProject({ id: project.id, field: 'start_date' })
+                    }}>
+                      {project.start_date ? project.start_date.slice(5).replace('-', '/') : '未設定'}
+                    </span>
+                  )}
+                  <span className="text-text3">〜</span>
+                  {editingProject?.id === project.id && editingProject.field === 'end_date' ? (
+                    <input type="date" value={editDraft} autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        updateProjectMutation.mutate({ id: project.id, data: { end_date: e.target.value || null } })
+                        setEditingProject(null)
+                      }}
+                      onBlur={() => setEditingProject(null)}
+                      className="text-[10px] border border-mint rounded px-1 py-0.5 bg-surface text-text focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-text2 cursor-pointer hover:text-mint" onDoubleClick={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setEditDraft(project.end_date ?? '')
+                      setEditingProject({ id: project.id, field: 'end_date' })
+                    }}>
+                      {project.end_date ? project.end_date.slice(5).replace('-', '/') : '未設定'}
+                    </span>
+                  )}
+                </div>
+
+                {/* KPI row */}
+                <div className="grid grid-cols-4 gap-[6px] mb-[10px]">
+                  <div className="text-center px-[4px] py-[4px] bg-surf2/50 rounded-[4px]">
+                    <div className="text-[14px] font-bold text-text">{stats.taskCount}</div>
+                    <div className="text-[8px] text-text3">タスク</div>
+                  </div>
+                  <div className="text-center px-[4px] py-[4px] bg-surf2/50 rounded-[4px]">
+                    <div className="text-[14px] font-bold text-mint">{completionRate}%</div>
+                    <div className="text-[8px] text-text3">完了率</div>
+                  </div>
+                  <div className="text-center px-[4px] py-[4px] bg-surf2/50 rounded-[4px]">
+                    <div className="text-[14px] font-bold text-blue-600">{stats.estimatedHours.toFixed(0)}h</div>
+                    <div className="text-[8px] text-text3">見積</div>
+                  </div>
+                  <div className="text-center px-[4px] py-[4px] bg-surf2/50 rounded-[4px]">
+                    <div className={`text-[14px] font-bold ${hoursRate > 100 ? 'text-danger' : 'text-text'}`}>{stats.actualHours.toFixed(0)}h</div>
+                    <div className="text-[8px] text-text3">実績</div>
+                  </div>
+                </div>
+
                 {/* Stats row */}
                 <div className="flex items-center gap-[16px] mb-[8px]">
                   <span className="text-[11px] text-text2">
-                    {t('projects.tasks')} <span className="font-semibold text-text">{stats.taskCount}</span>
+                    進行中 <span className="font-semibold text-text">{stats.inProgressCount}</span>
                   </span>
                   <span className="text-[11px] text-text2">
                     {t('projects.issues')} <span className="font-semibold text-text">{stats.issueCount}</span>
                   </span>
                   <span className="text-[11px] text-text2 ml-auto">
-                    {completionRate}%
+                    {stats.doneCount}/{stats.taskCount}
                   </span>
                 </div>
 
