@@ -169,7 +169,7 @@ export default function PublicFormPage() {
   const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
-  // fetch form definition
+  // fetch form definition — only use API data if it has proper sections structure
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -177,7 +177,7 @@ export default function PublicFormPage() {
         const res = await fetch(`/api/crm/forms?slug=${encodeURIComponent(slug)}`)
         if (res.ok) {
           const data = await res.json()
-          if (data && !cancelled) {
+          if (data && !cancelled && data.sections && Array.isArray(data.sections) && data.sections.length > 0) {
             setForm(data)
             setLoading(false)
             return
