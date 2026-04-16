@@ -254,50 +254,40 @@ export default function PublicFormPage() {
     if (!validate() || !form) return
     setSubmitting(true)
     try {
-      // try form-specific endpoint first, fall back to generic
-      const endpoints = [
-        `/api/crm/forms/${form.id}/submit`,
-        `/api/form/submit`,
-      ]
-      let success = false
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ formId: form.id, slug, values }),
-          })
-          if (res.ok) { success = true; break }
-        } catch {
-          // try next
-        }
+      const payload = { ...values, booking_slot_id: selectedSlot }
+      const res = await fetch('/api/form/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || '送信に失敗しました。もう一度お試しください。')
+        return
       }
-      // Book selected slot if any
+
+      // Book selected slot
       if (selectedSlot && values.name && values.email) {
-        try {
-          await fetch('/api/booking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slot_id: selectedSlot,
-              name: values.name as string,
-              email: values.email as string,
-              company: (values.company as string) || '',
-            }),
-          })
-        } catch {
-          console.warn('Booking failed')
-        }
+        await fetch('/api/booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slot_id: selectedSlot,
+            name: values.name as string,
+            email: values.email as string,
+            company: (values.company as string) || '',
+          }),
+        }).catch(() => {})
       }
 
       setSubmitted(true)
-      if (!success) {
-        console.warn('Form data could not be saved to server – endpoints may not be implemented yet.')
-      }
+    } catch (err) {
+      alert('送信に失敗しました。ネットワーク接続を確認してください。')
+      console.error('Submit error:', err)
     } finally {
       setSubmitting(false)
     }
-  }, [form, slug, values, validate])
+  }, [form, values, validate, selectedSlot])
 
   // ---------- loading ----------
   if (loading) {

@@ -151,6 +151,28 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     })
 
+    // --- send thank you email ---
+    try {
+      const { sendFormThankYouEmail } = await import('@/lib/email/form-thank-you')
+
+      // Resolve booked slot info if booking_slot_id provided
+      let bookedSlot: { number: number; startTime: string; endTime: string } | null = null
+      if (body.booking_slot_id) {
+        const { data: slot } = await db.from('booking_slots').select('slot_number, start_time, end_time').eq('id', body.booking_slot_id).single()
+        if (slot) bookedSlot = { number: slot.slot_number, startTime: slot.start_time, endTime: slot.end_time }
+      }
+
+      await sendFormThankYouEmail({
+        recipientName: body.name,
+        recipientEmail: body.email,
+        company: body.company,
+        bookedSlot,
+        themes: Array.isArray(body.themes) ? body.themes : undefined,
+      })
+    } catch (emailErr) {
+      console.error('[form/submit] Thank-you email failed:', emailErr)
+    }
+
     return NextResponse.json(
       { success: true, contactId, companyId },
       { headers: corsHeaders },
