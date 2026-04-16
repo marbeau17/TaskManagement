@@ -14,7 +14,9 @@ export function OPTIONS() {
 /* ---------- POST: public form submission ---------- */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const rawBody = await req.json()
+    // Support both direct fields and { values: {...} } wrapper from form page
+    const body = rawBody.values ? { ...rawBody.values, formId: rawBody.formId, slug: rawBody.slug } : rawBody
 
     // --- validate required fields ---
     const missing: string[] = []
@@ -84,26 +86,61 @@ export async function POST(req: NextRequest) {
       contactId = newContact?.id
     }
 
-    // --- create CRM lead ---
+    // --- create CRM lead with all form data ---
+    const themes = Array.isArray(body.themes) ? body.themes.join(', ') : (body.themes || '')
+    const expectations = Array.isArray(body.expectations) ? body.expectations.join(', ') : (body.expectations || '')
+    const budgetLabels = ['未定', '〜5万円', '5〜15万円', '15〜30万円', '30〜50万円', '制限なし']
+    const budgetDisplay = body.budget !== undefined ? (budgetLabels[parseInt(body.budget)] || body.budget) : '未定'
+
     await db.from('crm_leads').insert({
       title: `${body.company} - 経営相談会`,
       contact_id: contactId,
       company_id: companyId,
       status: 'new',
       notes: [
-        `相談テーマ: ${(body.themes || []).join(', ')}`,
-        `課題: ${body.issue}`,
-        `過去の施策: ${body.tried || 'なし'}`,
-        `課題期間: ${body.duration || '未選択'}`,
-        `緊急度: ${body.urgency || '未選択'}`,
-        `予算: ${body.budget || '未定'}`,
-        `意思決定: ${body.authority || '未選択'}`,
-        `期待すること: ${(body.goals || []).join(', ')}`,
-        body.freeText ? `その他: ${body.freeText}` : '',
+        `【基本情報】`,
+        `会社名: ${body.company}`,
+        `業種: ${body.industry || '未回答'}`,
+        `担当者: ${body.name}`,
+        `役職: ${body.position || '未回答'}`,
+        `従業員数: ${body.employees || '未回答'}`,
+        `年商: ${body.revenue || '未回答'}`,
+        `メール: ${body.email}`,
+        ``,
+        `【相談テーマ】`,
+        themes || '未選択',
+        ``,
+        `【課題】`,
+        `現在の課題: ${body.issue}`,
+        body.tried ? `過去の施策: ${body.tried}` : '',
+        body.duration ? `課題期間: ${body.duration}` : '',
+        ``,
+        `【緊急度】${body.urgency || body.decision_maker ? '' : ''}`,
+        body.urgency ? `緊急度: ${body.urgency}` : '',
+        ``,
+        `【予算】${budgetDisplay}`,
+        ``,
+        `【意思決定】${body.decision_maker || body.authority || '未回答'}`,
+        ``,
+        `【期待すること】`,
+        expectations || '未選択',
+        body.expectations_other || body.freeText ? `その他: ${body.expectations_other || body.freeText}` : '',
       ]
-        .filter(Boolean)
+        .filter(line => line !== undefined)
         .join('\n'),
     })
+
+    // --- also create CRM form submission if formId provided ---
+    if (body.formId) {
+      try {
+        await db.from('crm_form_submissions').insert({
+          form_id: body.formId,
+          contact_id: contactId,
+          data: body,
+          status: 'new',
+        })
+      } catch {}
+    }
 
     // --- activity log ---
     await db.from('crm_activities').insert({
