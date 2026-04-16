@@ -3,6 +3,7 @@ interface EmailOptions {
   to: string
   subject: string
   html: string
+  fromName?: string
 }
 
 const MAX_RETRIES = 3
@@ -79,7 +80,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await transporter.sendMail({
-        from: `"${config.fromName}" <${config.fromEmail}>`,
+        from: `"${options.fromName || config.fromName}" <${config.fromEmail}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,

@@ -127,6 +127,7 @@ export async function sendFormThankYouEmail(params: ThankYouEmailParams): Promis
     to: params.recipientEmail,
     subject: '【Meets Consulting】事前ヒアリングシートを受け付けました ─ 経営相談会 2026.5.20',
     html,
+    fromName: 'Meets Consulting Inc.',
   }).catch(err => {
     console.error('[FormThankYou] Email failed:', err)
   })
