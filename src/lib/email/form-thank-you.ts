@@ -107,8 +107,8 @@ export async function sendFormThankYouEmail(params: ThankYouEmailParams): Promis
   <tr><td style="padding:20px 40px;border-top:1px solid #e4e4e7;background:#faf9f5">
     <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center;line-height:1.8;letter-spacing:0.05em">
       Meets Consulting 株式会社<br>
-      〒107-0062 東京都港区南青山2-2-15 ウィン青山942<br>
-      TEL: 03-6555-3921<br><br>
+      〒100-0005 東京都千代田区丸の内2-5-1 丸の内二丁目ビル 7F<br>
+      TEL: 03-6868-8789<br><br>
       このメールはシステムより自動送信されています。<br>
       ご不明な点がございましたら、上記までお問い合わせください。
     </p>

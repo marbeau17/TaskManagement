@@ -153,7 +153,7 @@ const DEFAULT_FORM: FormDefinition = {
   ],
 }
 
-const BUDGET_LABELS = ['未定', '〜5万円', '5〜15万円', '15〜30万円', '30〜50万円', '制限なし']
+const BUDGET_LABELS = ['未定', '〜30万円', '30〜50万円', '50〜100万円', '100万円〜', '制限なし']
 
 // ---------- component ----------
 export default function PublicFormPage() {
@@ -413,8 +413,8 @@ export default function PublicFormPage() {
             <p className="mb-3">
               <strong>お問い合わせ先：</strong><br />
               Meets Consulting 株式会社　個人情報管理責任者<br />
-              〒107-0062 東京都港区南青山2-2-15 ウィン青山942<br />
-              TEL: 03-6555-3921　E-mail: info@meetsc.co.jp
+              〒100-0005 東京都千代田区丸の内2-5-1 丸の内二丁目ビル 7F<br />
+              TEL: 03-6868-8789　E-mail: info@meetsc.co.jp
             </p>
             <label className="flex items-start gap-2 cursor-pointer mt-3 p-3 rounded" style={{ backgroundColor: 'rgba(13,31,60,0.04)' }}>
               <input type="checkbox" id="privacy_agree" className="mt-0.5 accent-[#0d1f3c]" required />

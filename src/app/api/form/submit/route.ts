@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     // --- create CRM lead with all form data ---
     const themes = Array.isArray(body.themes) ? body.themes.join(', ') : (body.themes || '')
     const expectations = Array.isArray(body.expectations) ? body.expectations.join(', ') : (body.expectations || '')
-    const budgetLabels = ['未定', '〜5万円', '5〜15万円', '15〜30万円', '30〜50万円', '制限なし']
+    const budgetLabels = ['未定', '〜30万円', '30〜50万円', '50〜100万円', '100万円〜', '制限なし']
     const budgetDisplay = body.budget !== undefined ? (budgetLabels[parseInt(body.budget)] || body.budget) : '未定'
 
     await db.from('crm_leads').insert({
