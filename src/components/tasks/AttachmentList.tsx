@@ -9,7 +9,7 @@ interface AttachmentListProps {
   taskId: string
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
