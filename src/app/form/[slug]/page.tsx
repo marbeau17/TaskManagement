@@ -195,9 +195,11 @@ export default function PublicFormPage() {
     return () => { cancelled = true }
   }, [slug])
 
-  // fetch booking slots
+  // fetch booking slots — use event_date from URL search params or default
   useEffect(() => {
-    fetch('/api/booking?date=2026-05-20')
+    const urlParams = new URLSearchParams(window.location.search)
+    const eventDate = urlParams.get('event_date') || '2026-05-20'
+    fetch(`/api/booking?date=${eventDate}`)
       .then(r => r.ok ? r.json() : [])
       .then(data => { if (Array.isArray(data)) setBookingSlots(data) })
       .catch(() => {})

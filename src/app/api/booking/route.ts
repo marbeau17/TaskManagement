@@ -85,10 +85,29 @@ export async function PUT(request: NextRequest) {
     const db = createAdminClient() as any
 
     if (action === 'seed' && Array.isArray(slots)) {
-      // Bulk create slots
-      const { error } = await db.from('booking_slots').upsert(slots, { onConflict: 'event_date,slot_number' })
+      // Bulk create slots — insert individually to avoid unique constraint conflicts
+      let inserted = 0
+      for (const slot of slots) {
+        const { error } = await db.from('booking_slots').insert(slot)
+        if (!error) inserted++
+      }
+      return NextResponse.json({ success: true, count: inserted }, { headers: corsHeaders })
+    }
+
+    if (action === 'delete' && slot_id) {
+      const { error } = await db.from('booking_slots').delete().eq('id', slot_id)
       if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: corsHeaders })
-      return NextResponse.json({ success: true, count: slots.length }, { headers: corsHeaders })
+      return NextResponse.json({ success: true }, { headers: corsHeaders })
+    }
+
+    if (action === 'update' && slot_id) {
+      const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (body.start_time) updateData.start_time = body.start_time
+      if (body.end_time) updateData.end_time = body.end_time
+      if (body.event_name) updateData.event_name = body.event_name
+      const { error } = await db.from('booking_slots').update(updateData).eq('id', slot_id)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: corsHeaders })
+      return NextResponse.json({ success: true }, { headers: corsHeaders })
     }
 
     if (action === 'cancel' && slot_id) {
