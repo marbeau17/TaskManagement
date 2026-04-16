@@ -4,6 +4,7 @@
 
 import type { TimeLog, TimeLogSummary } from '@/types/database'
 import { isMockMode } from '@/lib/utils'
+import { getMonday } from '@/lib/workload-utils'
 
 // ---------------------------------------------------------------------------
 // Mock data helpers
@@ -82,6 +83,10 @@ export async function addTimeLog(data: AddTimeLogData): Promise<TimeLog> {
     .single()
 
   if (error) { console.warn("[Data]", error.message); return undefined as any }
+
+  // Sync time logs → weekly_actual + actual_hours + progress
+  syncTimeLogsToWeeklyActual(data.task_id)
+
   return row as unknown as TimeLog
 }
 
@@ -89,7 +94,7 @@ export async function addTimeLog(data: AddTimeLogData): Promise<TimeLog> {
 // deleteTimeLog — remove a time entry
 // ---------------------------------------------------------------------------
 
-export async function deleteTimeLog(id: string): Promise<void> {
+export async function deleteTimeLog(id: string, taskId?: string): Promise<void> {
   if (isMockMode()) {
     const idx = mockTimeLogs.findIndex((tl) => tl.id === id)
     if (idx >= 0) mockTimeLogs.splice(idx, 1)
@@ -99,8 +104,80 @@ export async function deleteTimeLog(id: string): Promise<void> {
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
+  // If taskId not provided, fetch it before deleting
+  let resolvedTaskId = taskId
+  if (!resolvedTaskId) {
+    const { data: log } = await supabase.from('time_logs').select('task_id').eq('id', id).single()
+    resolvedTaskId = log?.task_id
+  }
+
   const { error } = await supabase.from('time_logs').delete().eq('id', id)
   if (error) { console.warn("[Data]", error.message); return undefined as any }
+
+  // Sync time logs → weekly_actual + actual_hours + progress
+  if (resolvedTaskId) syncTimeLogsToWeeklyActual(resolvedTaskId)
+}
+
+// ---------------------------------------------------------------------------
+// syncTimeLogsToWeeklyActual — aggregate time logs by week → weekly_actual
+// ---------------------------------------------------------------------------
+
+async function syncTimeLogsToWeeklyActual(taskId: string): Promise<void> {
+  if (isMockMode()) return
+  try {
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+
+    // Fetch all time logs for this task
+    const { data: logs } = await supabase
+      .from('time_logs')
+      .select('hours, logged_date')
+      .eq('task_id', taskId)
+
+    // Aggregate by week (Monday key)
+    const weeklyActual: Record<string, number> = {}
+    let totalActual = 0
+    for (const log of logs ?? []) {
+      const hours = Number(log.hours) || 0
+      totalActual += hours
+      const monday = getMonday(new Date(log.logged_date))
+      const y = monday.getFullYear()
+      const m = String(monday.getMonth() + 1).padStart(2, '0')
+      const d = String(monday.getDate()).padStart(2, '0')
+      const key = `${y}-${m}-${d}`
+      weeklyActual[key] = (weeklyActual[key] ?? 0) + Math.round(hours * 10) / 10
+    }
+
+    // Round values
+    for (const k of Object.keys(weeklyActual)) {
+      weeklyActual[k] = Math.round(weeklyActual[k] * 10) / 10
+    }
+
+    // Fetch current task template_data and estimated_hours
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: task } = await (supabase as any)
+      .from('tasks')
+      .select('template_data, estimated_hours')
+      .eq('id', taskId)
+      .single()
+
+    const existingTd = (task?.template_data ?? {}) as Record<string, unknown>
+    const est = task?.estimated_hours ?? 0
+    const progress = est > 0 ? Math.min(100, Math.round((totalActual / est) * 100)) : undefined
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('tasks')
+      .update({
+        template_data: { ...existingTd, weekly_actual: weeklyActual },
+        actual_hours: Math.round(totalActual * 10) / 10,
+        ...(progress !== undefined ? { progress } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', taskId)
+  } catch (err) {
+    console.error('[syncTimeLogsToWeeklyActual]', err)
+  }
 }
 
 // ---------------------------------------------------------------------------
