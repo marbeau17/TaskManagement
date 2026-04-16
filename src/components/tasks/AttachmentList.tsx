@@ -2,7 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { useAttachments } from '@/hooks/useTasks'
-import { useUploadAttachment } from '@/hooks/useAttachments'
+import { useUploadAttachment, useDeleteAttachment } from '@/hooks/useAttachments'
+import { getFileUrl } from '@/lib/data/storage'
 import { useI18n } from '@/hooks/useI18n'
 
 interface AttachmentListProps {
@@ -26,8 +27,30 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
   const { t } = useI18n()
   const { data: attachments, isLoading } = useAttachments(taskId)
   const uploadMutation = useUploadAttachment()
+  const deleteMutation = useDeleteAttachment()
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const handleDownload = async (storagePath: string, fileName: string) => {
+    try {
+      const url = await getFileUrl(storagePath)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.target = '_blank'
+      a.click()
+    } catch {
+      setError('ダウンロードに失敗しました')
+    }
+  }
+
+  const handleDelete = (attachmentId: string, storagePath: string, fileName: string) => {
+    if (!confirm(`「${fileName}」を削除しますか？`)) return
+    deleteMutation.mutate(
+      { attachmentId, storagePath, taskId },
+      { onError: () => setError('削除に失敗しました') }
+    )
+  }
 
   const handleButtonClick = () => {
     setError(null)
@@ -75,15 +98,32 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
         {attachments?.map((file) => (
           <div
             key={file.id}
-            className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-surf2 transition-colors"
+            className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-surf2 transition-colors group"
           >
             <span className="text-[14px]">{getFileIcon(file.mime_type)}</span>
-            <span className="text-[12px] text-info font-medium truncate flex-1">
+            <button
+              onClick={() => handleDownload(file.storage_path, file.file_name)}
+              className="text-[12px] text-info font-medium truncate flex-1 text-left hover:underline cursor-pointer"
+            >
               {file.file_name}
-            </span>
+            </button>
             <span className="text-[10px] text-text3 shrink-0">
               {formatFileSize(file.file_size)}
             </span>
+            <button
+              onClick={() => handleDownload(file.storage_path, file.file_name)}
+              className="text-[10px] text-mint hover:text-mint-d opacity-0 group-hover:opacity-100 transition-opacity"
+              title="ダウンロード"
+            >
+              ⬇
+            </button>
+            <button
+              onClick={() => handleDelete(file.id, file.storage_path, file.file_name)}
+              className="text-[10px] text-text3 hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
+              title="削除"
+            >
+              ✕
+            </button>
           </div>
         ))}
       </div>
