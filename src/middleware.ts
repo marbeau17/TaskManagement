@@ -20,7 +20,7 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Paths that should never require authentication
-const PUBLIC_PATHS = ['/login', '/api/']
+const PUBLIC_PATHS = ['/login', '/api/', '/form']
 
 // Paths allowed when must_change_password is true (avoid redirect loops)
 const PASSWORD_CHANGE_ALLOWED_PATHS = ['/change-password']
