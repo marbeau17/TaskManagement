@@ -97,7 +97,8 @@ export async function POST(req: NextRequest) {
       contact_id: contactId,
       company_id: companyId,
       status: 'new',
-      notes: [
+      source: 'hearing_form',
+      description: [
         `【基本情報】`,
         `会社名: ${body.company}`,
         `業種: ${body.industry || '未回答'}`,
@@ -130,16 +131,24 @@ export async function POST(req: NextRequest) {
         .join('\n'),
     })
 
-    // --- also create CRM form submission if formId provided ---
-    if (body.formId) {
-      try {
+    // --- create CRM form submission for inbox ---
+    try {
+      let formId = body.formId
+      if (!formId) {
+        // Look up the hearing form by name
+        const { data: form } = await db.from('crm_forms').select('id').ilike('name', '%ヒアリング%').limit(1).maybeSingle()
+        formId = form?.id
+      }
+      if (formId) {
         await db.from('crm_form_submissions').insert({
-          form_id: body.formId,
+          form_id: formId,
           contact_id: contactId,
           data: body,
           status: 'new',
         })
-      } catch {}
+      }
+    } catch (subErr) {
+      console.error('[form/submit] Submission record failed:', subErr)
     }
 
     // --- activity log ---
