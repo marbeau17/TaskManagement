@@ -20,6 +20,7 @@ import { CrmCampaignList } from '@/components/crm/CrmCampaignList'
 import { CrmSourceChart } from '@/components/crm/CrmSourceChart'
 import { CrmFormList } from '@/components/crm/CrmFormList'
 import { CrmInbox } from '@/components/crm/CrmInbox'
+import { CrmBookingManager } from '@/components/crm/CrmBookingManager'
 import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
 import { CrmDetailPanel } from '@/components/crm/CrmDetailPanel'
 import { useAuth } from '@/hooks/useAuth'
@@ -34,6 +35,7 @@ const TABS = [
   { id: 'campaigns', labelKey: 'crm.campaign.title' },
   { id: 'forms', labelKey: 'crm.forms.title' },
   { id: 'inbox', labelKey: 'crm.inbox.title' },
+  { id: 'booking', labelKey: 'crm.booking.title' },
   { id: 'import', labelKey: 'crm.import.title' },
   { id: 'line', labelKey: 'crm.line.title' },
 ]
@@ -110,6 +112,7 @@ export default function CrmPage() {
           {activeTab === 'campaigns' && <CrmCampaignList />}
           {activeTab === 'forms' && <CrmFormList />}
           {activeTab === 'inbox' && <CrmInbox />}
+          {activeTab === 'booking' && <CrmBookingManager />}
           {activeTab === 'import' && <CrmImportWizard />}
           {activeTab === 'line' && <CrmLineSettings />}
         </div>
