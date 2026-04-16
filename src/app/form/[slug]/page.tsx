@@ -338,6 +338,48 @@ export default function PublicFormPage() {
 
       {/* form body */}
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 py-10 space-y-10">
+        {/* Booking Calendar — shown first for easy slot selection */}
+        {bookingSlots.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border-2 border-[#b8922a]/30">
+            <h2 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
+              <span className="text-xl">📅</span>
+              ご希望の相談枠を選択してください
+            </h2>
+            <p className="text-xs mb-4" style={{ color: '#8a8a9a' }}>2026年5月20日（水）｜30分 × 10社 ※ 空き枠のみ選択可</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {bookingSlots.map(slot => {
+                const isBooked = !slot.is_available
+                const isSelected = selectedSlot === slot.id
+                return (
+                  <button key={slot.id} type="button" disabled={isBooked}
+                    onClick={() => setSelectedSlot(isSelected ? null : slot.id)}
+                    className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                      isBooked ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-50'
+                      : isSelected ? 'border-[#b8922a] bg-[#fffbeb] shadow-md'
+                      : 'border-gray-200 hover:border-[#b8922a] hover:bg-[#fffdf5]'
+                    }`}>
+                    <div className={`flex items-center justify-center w-8 h-8 rounded text-sm font-bold text-white shrink-0 ${isBooked ? 'bg-gray-300' : 'bg-[#0d1f3c]'}`}>
+                      {slot.slot_number}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold" style={{ color: '#0d1f3c' }}>{slot.start_time} 〜 {slot.end_time}</div>
+                      <div className="text-xs" style={{ color: isBooked ? '#999' : '#b8922a' }}>
+                        {isBooked ? '予約済み' : isSelected ? '✓ 選択中' : '空き'}
+                      </div>
+                    </div>
+                    {isSelected && <span className="text-lg">✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+            {selectedSlot && (
+              <div className="mt-3 p-3 rounded-lg bg-[#fffbeb] border border-[#b8922a]/30 text-sm" style={{ color: '#0d1f3c' }}>
+                ✓ 第{bookingSlots.find(s => s.id === selectedSlot)?.slot_number}回（{bookingSlots.find(s => s.id === selectedSlot)?.start_time}〜{bookingSlots.find(s => s.id === selectedSlot)?.end_time}）を選択しました
+              </div>
+            )}
+          </section>
+        )}
+
         {form.sections.map((section, si) => (
           <section key={si} className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
@@ -361,55 +403,6 @@ export default function PublicFormPage() {
             </div>
           </section>
         ))}
-
-        {/* Booking Calendar Section */}
-        {bookingSlots.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-            <h2 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-sm font-bold" style={{ backgroundColor: '#0d1f3c' }}>📅</span>
-              ご希望の相談枠を選択してください
-            </h2>
-            <p className="text-xs mb-4" style={{ color: '#8a8a9a' }}>2026年5月20日（水）｜30分 × 10社 ※ 空き枠のみ選択可</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {bookingSlots.map(slot => {
-                const isBooked = !slot.is_available
-                const isSelected = selectedSlot === slot.id
-                return (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    disabled={isBooked}
-                    onClick={() => setSelectedSlot(isSelected ? null : slot.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
-                      isBooked
-                        ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-50'
-                        : isSelected
-                          ? 'border-[#b8922a] bg-[#fffbeb] shadow-md'
-                          : 'border-gray-200 hover:border-[#b8922a] hover:bg-[#fffdf5]'
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center w-8 h-8 rounded text-sm font-bold text-white shrink-0 ${isBooked ? 'bg-gray-300' : 'bg-[#0d1f3c]'}`}>
-                      {slot.slot_number}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold" style={{ color: '#0d1f3c' }}>
-                        {slot.start_time} 〜 {slot.end_time}
-                      </div>
-                      <div className="text-xs" style={{ color: isBooked ? '#999' : '#b8922a' }}>
-                        {isBooked ? '予約済み' : isSelected ? '✓ 選択中' : '空き'}
-                      </div>
-                    </div>
-                    {isSelected && <span className="text-lg">✓</span>}
-                  </button>
-                )
-              })}
-            </div>
-            {!selectedSlot && availableSlots.length > 0 && (
-              <p className="text-xs mt-3" style={{ color: '#c0392b' }}>※ 相談枠を1つお選びください</p>
-            )}
-          </section>
-        )}
 
         {/* submit */}
         <div className="text-center pt-2 pb-10">
