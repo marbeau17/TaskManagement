@@ -394,11 +394,31 @@ export default function PublicFormPage() {
           </section>
         )}
 
-        {/* Privacy note + submit */}
+        {/* Privacy policy + submit */}
         <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-          <p className="text-xs mb-6 p-4 rounded-lg" style={{ color: '#8a8a9a', backgroundColor: '#f5f3ef', borderLeft: '3px solid #b8922a' }}>
-            ご入力いただいた情報は、相談会の運営および担当コンサルタントの事前準備のみに使用します。第三者への提供は行いません。
-          </p>
+          <div className="mb-6 p-5 rounded-lg text-xs leading-relaxed" style={{ color: '#4a4a5a', backgroundColor: '#f5f3ef', borderLeft: '4px solid #0d1f3c' }}>
+            <p className="font-bold text-sm mb-3" style={{ color: '#0d1f3c', letterSpacing: '0.1em' }}>個人情報の取り扱いについて</p>
+            <p className="mb-2">
+              Meets Consulting 株式会社（以下「当社」）は、本フォームにてご提供いただく個人情報を、以下の目的の範囲内で適切に取り扱います。
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 mb-3">
+              <li><strong>利用目的：</strong>経営相談会の運営、担当コンサルタントによる事前準備、相談当日のご提案資料の作成、およびアフターフォローのご連絡に使用いたします。</li>
+              <li><strong>第三者提供：</strong>ご本人の同意なく、第三者に個人情報を提供することはありません。ただし、法令に基づく場合を除きます。</li>
+              <li><strong>委託：</strong>利用目的の達成に必要な範囲で、個人情報の取り扱いを外部に委託する場合がありますが、適切な管理・監督を行います。</li>
+              <li><strong>任意性：</strong>個人情報のご提供は任意ですが、必須項目にご記入いただけない場合、適切なご相談対応ができない場合があります。</li>
+              <li><strong>開示等の請求：</strong>ご本人からの個人情報の開示・訂正・削除等のご請求には、合理的な範囲で速やかに対応いたします。</li>
+            </ol>
+            <p className="mb-3">
+              <strong>お問い合わせ先：</strong><br />
+              Meets Consulting 株式会社　個人情報管理責任者<br />
+              〒107-0062 東京都港区南青山2-2-15 ウィン青山942<br />
+              TEL: 03-6555-3921　E-mail: info@meetsc.co.jp
+            </p>
+            <label className="flex items-start gap-2 cursor-pointer mt-3 p-3 rounded" style={{ backgroundColor: 'rgba(13,31,60,0.04)' }}>
+              <input type="checkbox" id="privacy_agree" className="mt-0.5 accent-[#0d1f3c]" required />
+              <span>上記の個人情報の取り扱いに<strong style={{ color: '#0d1f3c' }}>同意</strong>の上、送信します。</span>
+            </label>
+          </div>
           <button
             type="submit"
             disabled={submitting}
