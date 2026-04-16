@@ -1,7 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
+
+// ---------- Booking slot type ----------
+interface BookingSlot {
+  id: string
+  event_date: string
+  start_time: string
+  end_time: string
+  slot_number: number
+  is_available: boolean
+  booked_by_name?: string | null
+}
 
 // ---------- types ----------
 interface FormField {
@@ -155,6 +166,8 @@ export default function PublicFormPage() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>([])
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
   // fetch form definition
   useEffect(() => {
@@ -181,6 +194,16 @@ export default function PublicFormPage() {
     load()
     return () => { cancelled = true }
   }, [slug])
+
+  // fetch booking slots
+  useEffect(() => {
+    fetch('/api/booking?date=2026-05-20')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (Array.isArray(data)) setBookingSlots(data) })
+      .catch(() => {})
+  }, [])
+
+  const availableSlots = useMemo(() => bookingSlots.filter(s => s.is_available), [bookingSlots])
 
   // ---------- helpers ----------
   const set = useCallback((name: string, value: string | string[]) => {
@@ -249,7 +272,24 @@ export default function PublicFormPage() {
           // try next
         }
       }
-      // treat as submitted even if endpoints don't exist yet
+      // Book selected slot if any
+      if (selectedSlot && values.name && values.email) {
+        try {
+          await fetch('/api/booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slot_id: selectedSlot,
+              name: values.name as string,
+              email: values.email as string,
+              company: (values.company as string) || '',
+            }),
+          })
+        } catch {
+          console.warn('Booking failed')
+        }
+      }
+
       setSubmitted(true)
       if (!success) {
         console.warn('Form data could not be saved to server – endpoints may not be implemented yet.')
@@ -321,6 +361,55 @@ export default function PublicFormPage() {
             </div>
           </section>
         ))}
+
+        {/* Booking Calendar Section */}
+        {bookingSlots.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+            <h2 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-sm font-bold" style={{ backgroundColor: '#0d1f3c' }}>📅</span>
+              ご希望の相談枠を選択してください
+            </h2>
+            <p className="text-xs mb-4" style={{ color: '#8a8a9a' }}>2026年5月20日（水）｜30分 × 10社 ※ 空き枠のみ選択可</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {bookingSlots.map(slot => {
+                const isBooked = !slot.is_available
+                const isSelected = selectedSlot === slot.id
+                return (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    disabled={isBooked}
+                    onClick={() => setSelectedSlot(isSelected ? null : slot.id)}
+                    className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                      isBooked
+                        ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-50'
+                        : isSelected
+                          ? 'border-[#b8922a] bg-[#fffbeb] shadow-md'
+                          : 'border-gray-200 hover:border-[#b8922a] hover:bg-[#fffdf5]'
+                    }`}
+                  >
+                    <div className={`flex items-center justify-center w-8 h-8 rounded text-sm font-bold text-white shrink-0 ${isBooked ? 'bg-gray-300' : 'bg-[#0d1f3c]'}`}>
+                      {slot.slot_number}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold" style={{ color: '#0d1f3c' }}>
+                        {slot.start_time} 〜 {slot.end_time}
+                      </div>
+                      <div className="text-xs" style={{ color: isBooked ? '#999' : '#b8922a' }}>
+                        {isBooked ? '予約済み' : isSelected ? '✓ 選択中' : '空き'}
+                      </div>
+                    </div>
+                    {isSelected && <span className="text-lg">✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+            {!selectedSlot && availableSlots.length > 0 && (
+              <p className="text-xs mt-3" style={{ color: '#c0392b' }}>※ 相談枠を1つお選びください</p>
+            )}
+          </section>
+        )}
 
         {/* submit */}
         <div className="text-center pt-2 pb-10">
