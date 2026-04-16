@@ -20,8 +20,13 @@ export async function POST(
 
     if (leadFetchError) return NextResponse.json({ error: leadFetchError.message }, { status: 500 })
 
-    // 1. Create crm_deals record
-    const dealPayload: Record<string, unknown> = { title: dealTitle, lead_id: id }
+    // 1. Create crm_deals record — carry contact_id and company_id from lead
+    const dealPayload: Record<string, unknown> = {
+      title: dealTitle,
+      lead_id: id,
+      contact_id: leadData.contact_id ?? null,
+      company_id: leadData.company_id ?? null,
+    }
     if (stage) dealPayload.stage = stage
     if (amount !== undefined) dealPayload.amount = amount
     if (owner_id) dealPayload.owner_id = owner_id
@@ -38,11 +43,18 @@ export async function POST(
     // 2. Create a project from the lead title
     const stripped = (dealTitle || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase()
     const keyPrefix = stripped.length >= 2 ? stripped : 'PRJ'
+    // Look up client_id from crm_companies for the project
+    let projectClientId: string | null = null
+    if (leadData.company_id) {
+      const { data: comp } = await db.from('crm_companies').select('client_id').eq('id', leadData.company_id).maybeSingle()
+      projectClientId = comp?.client_id ?? null
+    }
     const projectPayload: Record<string, unknown> = {
       name: dealTitle,
       description: `CRMリード「${dealTitle}」から自動作成`,
       status: 'planning',
       key_prefix: keyPrefix,
+      client_id: projectClientId,
     }
     if (owner_id) projectPayload.pm_id = owner_id
 
