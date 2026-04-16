@@ -414,7 +414,7 @@ export default function PublicFormPage() {
               <strong>お問い合わせ先：</strong><br />
               Meets Consulting 株式会社　個人情報管理責任者<br />
               〒100-0005 東京都千代田区丸の内2-5-1 丸の内二丁目ビル 7F<br />
-              TEL: 03-6868-8789　E-mail: info@meetsc.co.jp
+              TEL: 03-6868-8789　E-mail: contact@meetsc.co.jp
             </p>
             <label className="flex items-start gap-2 cursor-pointer mt-3 p-3 rounded" style={{ backgroundColor: 'rgba(13,31,60,0.04)' }}>
               <input type="checkbox" id="privacy_agree" className="mt-0.5 accent-[#0d1f3c]" required />
