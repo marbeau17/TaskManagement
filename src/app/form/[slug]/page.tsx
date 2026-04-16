@@ -337,8 +337,32 @@ export default function PublicFormPage() {
       </header>
 
       {/* form body */}
-      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 py-10 space-y-10">
-        {/* Booking Calendar — shown first for easy slot selection */}
+      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 py-10 pb-32 space-y-10">
+        {form.sections.map((section, si) => (
+          <section key={si} className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-sm font-bold" style={{ backgroundColor: '#b8922a' }}>
+                {si + 1}
+              </span>
+              {section.title}
+            </h2>
+
+            <div className={section.title === '基本情報' ? 'grid grid-cols-1 md:grid-cols-2 gap-5' : 'space-y-5'}>
+              {section.fields.map(field => (
+                <FieldRenderer
+                  key={field.name}
+                  field={field}
+                  value={values[field.name]}
+                  error={errors[field.name]}
+                  onChange={set}
+                  onToggle={toggleCheckbox}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {/* Booking Calendar — after all sections, before submit */}
         {bookingSlots.length > 0 && (
           <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border-2 border-[#b8922a]/30">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
@@ -380,39 +404,18 @@ export default function PublicFormPage() {
           </section>
         )}
 
-        {form.sections.map((section, si) => (
-          <section key={si} className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-sm font-bold" style={{ backgroundColor: '#b8922a' }}>
-                {si + 1}
-              </span>
-              {section.title}
-            </h2>
-
-            <div className={section.title === '基本情報' ? 'grid grid-cols-1 md:grid-cols-2 gap-5' : 'space-y-5'}>
-              {section.fields.map(field => (
-                <FieldRenderer
-                  key={field.name}
-                  field={field}
-                  value={values[field.name]}
-                  error={errors[field.name]}
-                  onChange={set}
-                  onToggle={toggleCheckbox}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-
-        {/* submit */}
-        <div className="text-center pt-2 pb-10">
+        {/* Privacy note + submit */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+          <p className="text-xs mb-6 p-4 rounded-lg" style={{ color: '#8a8a9a', backgroundColor: '#f5f3ef', borderLeft: '3px solid #b8922a' }}>
+            ご入力いただいた情報は、相談会の運営および担当コンサルタントの事前準備のみに使用します。第三者への提供は行いません。
+          </p>
           <button
             type="submit"
             disabled={submitting}
-            className="px-12 py-4 rounded-full text-white font-bold text-lg shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #b8922a 0%, #d4af37 100%)' }}
+            className="w-full py-4 rounded-lg text-white font-bold text-lg shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ background: '#0d1f3c' }}
           >
-            {submitting ? '送信中...' : '送信する'}
+            {submitting ? '送信中...' : '送信する →'}
           </button>
         </div>
       </form>
