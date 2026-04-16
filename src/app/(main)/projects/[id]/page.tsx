@@ -6,6 +6,7 @@ import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProje
 import { useTasks } from '@/hooks/useTasks'
 import { useIssues } from '@/hooks/useIssues'
 import { useMembers } from '@/hooks/useMembers'
+import { useClients } from '@/hooks/useClients'
 import {
   useProjectMembers,
   useAddProjectMember,
@@ -147,6 +148,7 @@ export default function ProjectDetailPage() {
   const { data: allIssues } = useIssues()
   const { data: allProjectMembers } = useProjectMembers()
   const { data: users } = useMembers()
+  const { data: clients } = useClients()
   const addMutation = useAddProjectMember()
   const removeMutation = useRemoveProjectMember()
   const updateProject = useUpdateProject()
@@ -336,14 +338,31 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                   )}
+                  <div>
+                    <div className="text-[10.5px] text-text2 mb-[2px]">クライアント</div>
+                    <select
+                      value={(project as any).client_id ?? ''}
+                      onChange={e => updateProject.mutate({ id: project.id, data: { client_id: e.target.value || null } })}
+                      className="text-[12px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none cursor-pointer"
+                    >
+                      <option value="">未設定</option>
+                      {(clients ?? []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
                   <div className="flex gap-[16px]">
                     <div>
                       <div className="text-[10.5px] text-text2 mb-[2px]">{t('projects.startDate')}</div>
-                      <div className="text-[12px] text-text">{project.start_date ? formatDate(project.start_date) : '-'}</div>
+                      <input type="date" defaultValue={project.start_date ?? ''} onBlur={e => {
+                        const v = e.target.value || null
+                        if (v !== (project.start_date ?? null)) updateProject.mutate({ id: project.id, data: { start_date: v } })
+                      }} className="text-[12px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none cursor-pointer" />
                     </div>
                     <div>
                       <div className="text-[10.5px] text-text2 mb-[2px]">{t('projects.endDate')}</div>
-                      <div className="text-[12px] text-text">{project.end_date ? formatDate(project.end_date) : '-'}</div>
+                      <input type="date" defaultValue={project.end_date ?? ''} onBlur={e => {
+                        const v = e.target.value || null
+                        if (v !== (project.end_date ?? null)) updateProject.mutate({ id: project.id, data: { end_date: v } })
+                      }} className="text-[12px] text-text bg-transparent border-b border-transparent focus:border-mint outline-none cursor-pointer" />
                     </div>
                   </div>
                 </div>
