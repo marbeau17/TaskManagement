@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { User } from '@/types/database'
 import { useI18n } from '@/hooks/useI18n'
+import { Avatar } from '@/components/shared/Avatar'
 
 // Org node type matching docs/org.html
 export interface OrgNodeData {
@@ -26,7 +27,7 @@ const THEME_STYLES: Record<string, { bg: string; text: string; border: string }>
   'orange-light':{ bg: 'bg-[#fff7ed]', text: 'text-[#ea580c]',    border: 'border-[#ea580c]' },
 }
 
-function NodeCard({ node }: { node: OrgNodeData }) {
+function NodeCard({ node, user }: { node: OrgNodeData; user?: User }) {
   const styles = THEME_STYLES[node.theme || ''] || { bg: 'bg-white', text: 'text-gray-800', border: 'border-gray-300' }
   return (
     <div className={`relative flex flex-col items-center justify-center min-w-[130px] max-w-[160px] p-2 rounded-lg border-2 shadow-sm z-10 transition-transform hover:-translate-y-1 hover:shadow-md ${styles.bg} ${styles.text} ${styles.border}`}>
@@ -34,22 +35,37 @@ function NodeCard({ node }: { node: OrgNodeData }) {
         {node.role}
       </div>
       {node.name && (
-        <div className="text-[0.8rem] text-center mt-1">
-          {node.name}
+        <div className="flex flex-col items-center gap-1 mt-1">
+          {user && (
+            <Avatar
+              name_short={user.name_short}
+              color={user.avatar_color}
+              avatar_url={user.avatar_url}
+              size="sm"
+            />
+          )}
+          <div className="text-[0.8rem] text-center">
+            {node.name}
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-function OrgTreeNode({ node }: { node: OrgNodeData }) {
+function findMatchingUser(name: string, members: User[]): User | undefined {
+  return members.find(u => u.name === name) || members.find(u => u.name?.includes(name) || name.includes(u.name ?? ''))
+}
+
+function OrgTreeNode({ node, members }: { node: OrgNodeData; members: User[] }) {
+  const user = node.name ? findMatchingUser(node.name, members) : undefined
   return (
     <li>
-      <NodeCard node={node} />
+      <NodeCard node={node} user={user} />
       {node.children && node.children.length > 0 && (
         <ul>
           {node.children.map((child, index) => (
-            <OrgTreeNode key={index} node={child} />
+            <OrgTreeNode key={index} node={child} members={members} />
           ))}
         </ul>
       )}
@@ -57,7 +73,7 @@ function OrgTreeNode({ node }: { node: OrgNodeData }) {
   )
 }
 
-export function OrgChart({ members: _members }: { members?: User[] }) {
+export function OrgChart({ members = [] }: { members?: User[] }) {
   const { t } = useI18n()
   const [orgData, setOrgData] = useState<OrgNodeData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -95,7 +111,7 @@ export function OrgChart({ members: _members }: { members?: User[] }) {
           <div className="org-tree overflow-x-auto" style={{ padding: '20px', paddingBottom: '60px' }}>
             <div className="inline-block min-w-full">
               <ul className="org-tree-ul">
-                <OrgTreeNode node={orgData} />
+                <OrgTreeNode node={orgData} members={members} />
               </ul>
             </div>
           </div>

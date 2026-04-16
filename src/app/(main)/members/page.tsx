@@ -653,8 +653,10 @@ export default function MembersPage() {
 
             <div className="bg-surface border border-border2 rounded-[10px] overflow-hidden shadow overflow-x-auto">
               {/* Header */}
-              <div className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
+              <div className="min-w-[800px] grid grid-cols-[1fr_100px_120px_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] bg-surf2 border-b border-border2 text-[10.5px] font-bold text-text2">
                 <div>{t('members.name')}</div>
+                <div>{t('members.titleField')}</div>
+                <div>部署</div>
                 <div>{t('members.email')}</div>
                 <div className="text-center">{t('members.role')}</div>
                 <div className="text-right">{t('members.weeklyCapacity')}</div>
@@ -671,7 +673,7 @@ export default function MembersPage() {
                 paginatedMembers?.map((member) => (
                   <div
                     key={member.id}
-                    className="min-w-[600px] grid grid-cols-[1fr_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
+                    className="min-w-[800px] grid grid-cols-[1fr_100px_120px_1fr_100px_80px_80px_110px] gap-[8px] px-[16px] py-[10px] border-b border-border2 last:border-b-0 items-center text-[12px] text-text hover:bg-surf2/50 transition-colors"
                   >
                     {/* Name */}
                     <div className="flex items-center gap-[8px]">
@@ -682,6 +684,16 @@ export default function MembersPage() {
                         size="sm"
                       />
                       <span className="font-medium truncate">{member.name}</span>
+                    </div>
+
+                    {/* Title (役職) */}
+                    <div className="text-[11px] text-text2 truncate">
+                      {member.title || '-'}
+                    </div>
+
+                    {/* Department (部署) */}
+                    <div className="text-[11px] text-text2 truncate">
+                      {member.department || '-'}
                     </div>
 
                     {/* Email */}
