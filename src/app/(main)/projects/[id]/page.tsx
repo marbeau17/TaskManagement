@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Avatar, ProgressBar, KpiCard } from '@/components/shared'
 import { IssueStatusBadge, SeverityBadge, IssueTypeBadge } from '@/components/shared'
 import { TaskTable } from '@/components/tasks/TaskTable'
+import { GanttChart } from '@/components/tasks/GanttChart'
 import { CustomFieldManager } from '@/components/projects/CustomFieldManager'
 import { WorkflowEditor } from '@/components/projects/WorkflowEditor'
 import { formatDate } from '@/lib/utils'
@@ -113,12 +114,13 @@ function AddMemberModal({
 // Tabs
 // ---------------------------------------------------------------------------
 
-const TAB_IDS = ['overview', 'tasks', 'issues', 'members', 'workflow', 'customFields'] as const
+const TAB_IDS = ['overview', 'tasks', 'gantt', 'issues', 'members', 'workflow', 'customFields'] as const
 type TabId = (typeof TAB_IDS)[number]
 
 const TAB_KEYS: Record<TabId, string> = {
   overview: 'projects.tabOverview',
   tasks: 'projects.tabTasks',
+  gantt: 'projects.tabGantt',
   issues: 'projects.tabIssues',
   members: 'projects.tabMembers',
   workflow: 'projects.tabWorkflow',
@@ -382,6 +384,18 @@ export default function ProjectDetailPage() {
             <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
               <TaskTable tasks={projectTasks} />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'gantt' && (
+          <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden min-h-[400px]">
+            {projectTasks.length > 0 ? (
+              <GanttChart tasks={projectTasks} />
+            ) : (
+              <div className="text-center py-[40px] text-[13px] text-text3">
+                タスクがありません
+              </div>
+            )}
           </div>
         )}
 
