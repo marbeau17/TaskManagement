@@ -13,6 +13,37 @@ import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
 
 type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook' | 'line'
 
+function StorageUsageCard() {
+  const [usage, setUsage] = useState<{ used_mb: number; limit_mb: number; file_count: number; usage_percent: number } | null>(null)
+  useEffect(() => {
+    fetch('/api/storage/usage').then(r => r.ok ? r.json() : null).then(setUsage).catch(() => {})
+  }, [])
+  if (!usage) return null
+  const barColor = usage.usage_percent >= 80 ? 'bg-red-500' : usage.usage_percent >= 50 ? 'bg-amber-500' : 'bg-mint'
+  return (
+    <div className="bg-surface border border-border2 rounded-[10px] p-[20px] shadow">
+      <h3 className="text-[14px] font-bold text-text mb-[12px]">💾 ストレージ使用状況</h3>
+      <div className="flex items-end justify-between mb-[8px]">
+        <div>
+          <span className="text-[22px] font-bold text-text">{usage.used_mb}</span>
+          <span className="text-[12px] text-text3 ml-[4px]">MB</span>
+          <span className="text-[12px] text-text3 ml-[8px]">/ {usage.limit_mb} MB</span>
+        </div>
+        <div className="text-[12px] text-text2">
+          {usage.file_count} ファイル
+        </div>
+      </div>
+      <div className="w-full h-[8px] bg-border2 rounded-full overflow-hidden mb-[6px]">
+        <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${Math.min(usage.usage_percent, 100)}%` }} />
+      </div>
+      <div className="flex justify-between text-[10px] text-text3">
+        <span>{usage.usage_percent}% 使用中</span>
+        <span>上限: 5MB/ファイル</span>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { t } = useI18n()
   const { user } = useAuth()
@@ -527,6 +558,9 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+
+        {/* Storage Usage */}
+        {can('settings', 'update') && <StorageUsageCard />}
 
         {/* Save button */}
         {can('settings', 'update') && (

@@ -90,7 +90,11 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
 
       {/* Error message */}
       {error && (
-        <p className="text-[11px] text-red-500 mb-2">{error}</p>
+        <div className="flex items-center gap-2 px-3 py-2 mb-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <span className="text-red-500 text-sm">⚠</span>
+          <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600 text-xs">✕</button>
+        </div>
       )}
 
       {/* Hidden file input */}
