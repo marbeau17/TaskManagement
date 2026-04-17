@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const maxDuration = 60
+
 async function getApiKeyFromDb(): Promise<string | null> {
   try {
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const db = createAdminClient() as any
-    const { data } = await db
+    const { data, error } = await db
       .from('app_settings')
       .select('value')
       .eq('key', 'gemini_api_key')
       .maybeSingle()
+    if (error) {
+      console.error('[diagnosis] DB lookup error:', error.message)
+      return null
+    }
     return data?.value || null
-  } catch {
+  } catch (err) {
+    console.error('[diagnosis] DB lookup threw:', err)
     return null
   }
 }
@@ -142,20 +149,25 @@ export async function POST(request: NextRequest) {
 
     // Get Gemini API key
     let apiKey = process.env.GEMINI_API_KEY || ''
+    let keySource: 'env' | 'db' | 'none' = apiKey ? 'env' : 'none'
     if (!apiKey) {
       apiKey = (await getApiKeyFromDb()) || ''
+      if (apiKey) keySource = 'db'
     }
     if (!apiKey) {
+      console.error('[diagnosis] No Gemini API key found (env or DB)')
       return NextResponse.json(
         { error: 'Gemini API key not configured' },
         { status: 400 }
       )
     }
+    console.log(`[diagnosis] Using Gemini key from ${keySource} (len=${apiKey.length})`)
 
     const prompt = buildPrompt(formData)
 
+    const model = 'gemini-2.0-flash'
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -167,15 +179,25 @@ export async function POST(request: NextRequest) {
     )
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
+      const errorText = await res.text().catch(() => '')
+      console.error(
+        `[diagnosis] Gemini ${model} failed: status=${res.status} body=${errorText.slice(0, 500)}`
+      )
       return NextResponse.json(
-        { error: 'Gemini API call failed', details: errorData },
+        {
+          error: 'Gemini API call failed',
+          status: res.status,
+          details: errorText.slice(0, 1000),
+        },
         { status: 502 }
       )
     }
 
     const data = await res.json()
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    if (!rawText) {
+      console.error('[diagnosis] Empty response from Gemini:', JSON.stringify(data).slice(0, 500))
+    }
 
     // Parse JSON from Gemini response (may be wrapped in markdown code block)
     let diagnosis: Record<string, any>
@@ -194,9 +216,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ diagnosis })
   } catch (err) {
-    console.error('Diagnosis API error:', err)
+    const msg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err)
+    console.error('[diagnosis] Unhandled error:', msg)
     return NextResponse.json(
-      { error: 'Diagnosis generation failed' },
+      { error: 'Diagnosis generation failed', details: msg.slice(0, 500) },
       { status: 500 }
     )
   }
