@@ -858,9 +858,12 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                         onChange={(e) => {
                           handleInlineSave(task.id, 'status', e.target.value)
                         }}
-                        onBlur={() => setEditingCell(null)}
+                        // WEB-4: defer close so the option-click change event completes before unmount
+                        // (some browsers fire blur before change on <select>, which otherwise ate the update).
+                        onBlur={() => setTimeout(() => setEditingCell(null), 150)}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
                         className="text-[11px] text-text bg-surface border border-mint rounded px-1 py-0.5 focus:outline-none"
                       >
                         {Object.entries(statusLabels).map(([value, label]) => (

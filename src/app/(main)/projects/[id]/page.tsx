@@ -18,6 +18,7 @@ import { Avatar, ProgressBar, KpiCard } from '@/components/shared'
 import { IssueStatusBadge, SeverityBadge, IssueTypeBadge } from '@/components/shared'
 import { TaskTable } from '@/components/tasks/TaskTable'
 import { GanttChart } from '@/components/tasks/GanttChart'
+import { BacklogPanel } from '@/components/backlog/BacklogPanel'
 import { CustomFieldManager } from '@/components/projects/CustomFieldManager'
 import { WorkflowEditor } from '@/components/projects/WorkflowEditor'
 import { formatDate } from '@/lib/utils'
@@ -115,13 +116,14 @@ function AddMemberModal({
 // Tabs
 // ---------------------------------------------------------------------------
 
-const TAB_IDS = ['overview', 'tasks', 'gantt', 'issues', 'members', 'workflow', 'customFields'] as const
+const TAB_IDS = ['overview', 'tasks', 'gantt', 'backlog', 'issues', 'members', 'workflow', 'customFields'] as const
 type TabId = (typeof TAB_IDS)[number]
 
 const TAB_KEYS: Record<TabId, string> = {
   overview: 'projects.tabOverview',
   tasks: 'projects.tabTasks',
   gantt: 'projects.tabGantt',
+  backlog: 'projects.tabBacklog',
   issues: 'projects.tabIssues',
   members: 'projects.tabMembers',
   workflow: 'projects.tabWorkflow',
@@ -394,7 +396,7 @@ export default function ProjectDetailPage() {
             <div className="flex items-center justify-between mb-[12px]">
               <h3 className="text-[13px] font-bold text-text">{t('projects.tasks')} ({projectTasks.length})</h3>
               <button
-                onClick={() => router.push('/tasks/new')}
+                onClick={() => router.push(`/tasks/new?project=${params.id}`)}
                 className="px-[14px] py-[6px] text-[12px] font-semibold text-white bg-mint rounded-[6px] hover:bg-mint-d transition-colors"
               >
                 {t('projects.addTask')}
@@ -415,6 +417,12 @@ export default function ProjectDetailPage() {
                 タスクがありません
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'backlog' && (
+          <div className="bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+            <BacklogPanel projectId={project.id} showProjectColumn={false} />
           </div>
         )}
 

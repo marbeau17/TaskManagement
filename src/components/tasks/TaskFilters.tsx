@@ -7,6 +7,7 @@ import { useFilterStore } from '@/stores/filterStore'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useI18n } from '@/hooks/useI18n'
 import { useMembers } from '@/hooks/useMembers'
+import { useProjects } from '@/hooks/useProjects'
 import { getClients } from '@/lib/data/clients'
 
 export function TaskFilters() {
@@ -44,13 +45,9 @@ export function TaskFilters() {
     queryFn: () => getClients(),
   })
 
-  const { data: projects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      const res = await fetch('/api/projects')
-      return res.ok ? res.json() : []
-    },
-  })
+  // Uses the data-layer hook directly (there is no GET /api/projects route —
+  // the previous fetch silently 404'd, leaving the project dropdown empty).
+  const { data: projects } = useProjects()
 
   const memberOptions = (members ?? []).map((m) => ({
     label: m.name,

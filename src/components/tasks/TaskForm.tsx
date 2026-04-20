@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,7 +73,8 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
   const { data: projectList } = useProjects()
   const { data: clientList } = useClients()
   const createProject = useCreateProject()
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const projectParam = searchParams.get('project') ?? ''
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectParam)
   const [showNewProject, setShowNewProject] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectPrefix, setNewProjectPrefix] = useState('')
@@ -91,6 +92,18 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
       if (client) setValue('client_name', client.name)
     }
   }, [projectList, clientList, setValue])
+
+  // When ?project=<id> is present, auto-fill the client name once the project list loads.
+  // (selectedProjectId is already seeded from the URL above; this just runs the same
+  // side-effect handleProjectChange would run if the user had picked it manually.)
+  useEffect(() => {
+    if (!projectParam || !projectList || !clientList) return
+    const project = projectList.find((p) => p.id === projectParam)
+    if (project && (project as any).client_id) {
+      const client = clientList.find((c) => c.id === (project as any).client_id)
+      if (client) setValue('client_name', client.name)
+    }
+  }, [projectParam, projectList, clientList, setValue])
 
   const handleCreateProject = useCallback(() => {
     if (!newProjectName.trim() || !newProjectPrefix.trim()) return

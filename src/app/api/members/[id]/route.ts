@@ -20,23 +20,72 @@ async function verifyAdminOrDirector() {
   return { authorized: true, response: null }
 }
 
+// WEB-42: Helper that allows self-updates (by any authenticated user) OR admin/director updates on others.
+async function verifyCanUpdateMember(targetId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return {
+      authorized: false,
+      isSelf: false,
+      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    }
+  }
+  if (user.id === targetId) {
+    return { authorized: true, isSelf: true, response: null }
+  }
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'director')) {
+    return {
+      authorized: false,
+      isSelf: false,
+      response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+    }
+  }
+  return { authorized: true, isSelf: false, response: null }
+}
+
+// Fields a user is allowed to change on their own profile. Role/active/admin fields stay admin-only.
+const SELF_EDITABLE_FIELDS = new Set([
+  'name',
+  'name_short',
+  'avatar_color',
+  'avatar_url',
+  'email',
+  'phone',
+  'title',
+  'department',
+  'bio',
+])
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // WEB-15: Role check
-    const auth = await verifyAdminOrDirector()
+    const { id } = await params
+
+    // WEB-42: self-update allowed; elevated changes still require admin/director.
+    const auth = await verifyCanUpdateMember(id)
     if (!auth.authorized) return auth.response!
 
-    const { id } = await params
     const body = await request.json()
+    const payload = auth.isSelf
+      ? Object.fromEntries(
+          Object.entries(body).filter(([key]) => SELF_EDITABLE_FIELDS.has(key)),
+        )
+      : body
+
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
       .from('users')
-      .update(body)
+      .update(payload)
       .eq('id', id)
       .select()
 

@@ -355,6 +355,135 @@ export interface Database {
           },
         ]
       }
+      backlog_items: {
+        Row: {
+          id: string
+          project_id: string | null
+          title: string
+          description: string | null
+          priority: number
+          estimated_hours: number | null
+          status: string
+          assignee_id: string | null
+          promoted_task_id: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id?: string | null
+          title: string
+          description?: string | null
+          priority?: number
+          estimated_hours?: number | null
+          status?: string
+          assignee_id?: string | null
+          promoted_task_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string | null
+          title?: string
+          description?: string | null
+          priority?: number
+          estimated_hours?: number | null
+          status?: string
+          assignee_id?: string | null
+          promoted_task_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'backlog_items_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'backlog_items_assignee_id_fkey'
+            columns: ['assignee_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'backlog_items_promoted_task_id_fkey'
+            columns: ['promoted_task_id']
+            isOneToOne: false
+            referencedRelation: 'tasks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      assets: {
+        Row: {
+          id: string
+          seq_no: number | null
+          name: string
+          acquired_date: string | null
+          acquired_price: number | null
+          management_id: string | null
+          owner_name: string | null
+          owner_user_id: string | null
+          category: string
+          status: string
+          serial_number: string | null
+          location: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          seq_no?: number | null
+          name: string
+          acquired_date?: string | null
+          acquired_price?: number | null
+          management_id?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          category?: string
+          status?: string
+          serial_number?: string | null
+          location?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          seq_no?: number | null
+          name?: string
+          acquired_date?: string | null
+          acquired_price?: number | null
+          management_id?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          category?: string
+          status?: string
+          serial_number?: string | null
+          location?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'assets_owner_user_id_fkey'
+            columns: ['owner_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       attachments: {
         Row: {
           id: string

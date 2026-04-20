@@ -88,6 +88,8 @@ export async function POST() {
 
     const resolve = (alias: string): string | null => userMap[alias] ?? null
 
+    const { syncPipelineToCrm } = await import('@/lib/data/pipeline-crm-sync')
+
     let inserted = 0
     for (const row of PIPELINE_DATA) {
       const { data: opp, error: oppErr } = await db.from('pipeline_opportunities').insert({
@@ -103,7 +105,7 @@ export async function POST() {
         pm_user_id: resolve(row.pm),
         consultant1_user_id: resolve(row.c1),
         consultant2_user_id: resolve(row.c2),
-      }).select('id').single()
+      }).select('*').single()
 
       if (oppErr) { console.error('Insert opp error:', oppErr.message); continue }
 
@@ -117,6 +119,8 @@ export async function POST() {
       if (monthlyRows.length > 0) {
         await db.from('pipeline_monthly_data').insert(monthlyRows)
       }
+
+      await syncPipelineToCrm(db, opp)
       inserted++
     }
 

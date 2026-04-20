@@ -107,6 +107,47 @@ export interface TaskWatcher {
   user?: User
 }
 
+export type BacklogStatus = 'new' | 'ready' | 'promoted' | 'archived'
+
+export interface BacklogItem {
+  id: string
+  project_id: string | null
+  title: string
+  description: string | null
+  priority: number
+  estimated_hours: number | null
+  status: BacklogStatus
+  assignee_id: string | null
+  promoted_task_id: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  assignee?: User | null
+  project?: { id: string; name: string; key_prefix: string } | null
+}
+
+export type AssetCategory = 'pc' | 'monitor' | 'tablet' | 'peripheral' | 'furniture' | 'license' | 'other'
+export type AssetStatus = 'in_use' | 'spare' | 'disposed' | 'loaned'
+
+export interface Asset {
+  id: string
+  seq_no: number | null
+  name: string
+  acquired_date: string | null
+  acquired_price: number | null
+  management_id: string | null
+  owner_name: string | null
+  owner_user_id: string | null
+  category: AssetCategory
+  status: AssetStatus
+  serial_number: string | null
+  location: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  owner?: User | null
+}
+
 export type NotificationType =
   | 'task_assigned'
   | 'task_status_changed'

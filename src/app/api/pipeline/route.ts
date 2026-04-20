@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    const { syncPipelineToCrm } = await import('@/lib/data/pipeline-crm-sync')
+    await syncPipelineToCrm(db, data)
+
     return NextResponse.json(data)
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })

@@ -266,10 +266,30 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
   }, [emitChange])
 
   // Segment handlers
+  // BD-1: if the user pastes "2026-04-20" or "2026/04/20" into the year field,
+  // distribute the parts across year/month/day instead of cramming everything into year
+  // (which previously produced absurd years like "0420" → clamped to 1900 on blur).
   const handleYearChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 4)
-    setYear(raw)
-    if (raw.length === 4) {
+    const raw = e.target.value
+    if (/[-/]/.test(raw)) {
+      const parts = raw.split(/[-/]+/).filter(Boolean)
+      const y = (parts[0] ?? '').replace(/\D/g, '').slice(0, 4)
+      const m = (parts[1] ?? '').replace(/\D/g, '').slice(0, 2)
+      const d = (parts[2] ?? '').replace(/\D/g, '').slice(0, 2)
+      setYear(y)
+      setMonth(m)
+      setDay(d)
+      if (d) {
+        emitChange(pad(y, 4), pad(m, 2), pad(d, 2))
+      } else if (y.length === 4) {
+        monthRef.current?.focus()
+        monthRef.current?.select()
+      }
+      return
+    }
+    const digits = raw.replace(/\D/g, '').slice(0, 4)
+    setYear(digits)
+    if (digits.length === 4) {
       monthRef.current?.focus()
       monthRef.current?.select()
     }
@@ -310,6 +330,9 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
 
     if (segment === 'year' && y) {
       if (y.length >= 4) {
+        // BD-1: Only clamp if the value is already a 4-digit number. Shorter entries
+        // (e.g. "420" from a user who typed "4/20") are left untouched so we don't
+        // surprise them with "1900".
         const n = clamp(parseInt(y, 10) || 0, 1900, 2100)
         y = pad(n, 4)
         setYear(y)
@@ -401,13 +424,14 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
         required={required}
       />
 
-      {/* Calendar button */}
+      {/* Calendar button — WEB-39: larger hitbox + clearer icon so users notice it */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); if (!disabled) setShowCalendar(!showCalendar) }}
         disabled={disabled}
-        className="mr-[4px] text-[14px] text-text3 hover:text-mint transition-colors leading-none"
+        className="mr-[6px] w-[22px] h-[22px] flex items-center justify-center rounded hover:bg-surf2 text-text2 hover:text-mint transition-colors leading-none text-[15px]"
         aria-label="Open calendar"
+        title="カレンダーを開く"
         tabIndex={-1}
       >
         📅

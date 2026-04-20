@@ -36,6 +36,8 @@ const MAIN_NAV = [
   { id: 'request', labelKey: 'nav.taskRequest', icon: '📝', href: '/tasks/new', domain: 'tasks' },
   { id: 'tasks', labelKey: 'nav.taskList', icon: '📋', href: '/tasks', badgeDynamic: true, domain: 'tasks' },
   { id: 'issues', labelKey: 'nav.issues', icon: '🐛', href: '/issues', domain: 'issues' },
+  { id: 'backlog', labelKey: 'nav.backlog', icon: '🗂', href: '/backlog', domain: 'tasks' },
+  { id: 'assets', labelKey: 'nav.assets', icon: '📦', href: '/assets' },
   { id: 'clients', labelKey: 'nav.clients', icon: '🏢', href: '/clients' },
   { id: 'projects', labelKey: 'nav.projects', icon: '📁', href: '/projects', domain: 'projects' },
   { id: 'workload', labelKey: 'nav.workload', icon: '⏱', href: '/workload', domain: 'workload' },

@@ -107,6 +107,14 @@ export async function getFileUrl(path: string): Promise<string> {
 
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
-  const { data } = supabase.storage.from('attachments').getPublicUrl(path)
-  return data.publicUrl
+
+  // WEB-40: 'attachments' bucket is private, so getPublicUrl returns an unsigned URL that 403s on download.
+  // Use createSignedUrl with a 1h expiry so authenticated users get a working download link.
+  const { data, error } = await supabase.storage
+    .from('attachments')
+    .createSignedUrl(path, 60 * 60)
+  if (error || !data?.signedUrl) {
+    throw new Error(error?.message || 'Failed to create download URL')
+  }
+  return data.signedUrl
 }
