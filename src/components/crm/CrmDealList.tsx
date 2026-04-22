@@ -5,7 +5,8 @@ import { useI18n } from '@/hooks/useI18n'
 import { useCrmDeals, useCreateCrmDeal, useUpdateCrmDeal, useDeleteCrmDeal } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
 import { toast } from '@/stores/toastStore'
-import type { CrmDealFilters, DealStage } from '@/types/crm'
+import type { CrmDealFilters, DealStage, DealType, ForecastCategory } from '@/types/crm'
+import { DealAmountEditor } from './DealAmountEditor'
 
 const STAGES: DealStage[] = ['proposal', 'negotiation', 'contract_sent', 'won', 'lost', 'churned']
 
@@ -18,12 +19,31 @@ const STAGE_BADGE: Record<DealStage, string> = {
   churned:       'bg-gray-100 text-gray-500',
 }
 
+const FORECAST_BADGE: Record<ForecastCategory, string> = {
+  commit: 'bg-emerald-100 text-emerald-700',
+  best_case: 'bg-amber-100 text-amber-700',
+  pipeline: 'bg-slate-100 text-slate-600',
+  omitted: 'bg-gray-50 text-gray-400',
+}
+
 const formatYen = (v: number) =>
-  new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(v)
+  new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(v ?? 0)
+
+const formatYenShort = (v: number) => {
+  if (!v) return '—'
+  if (v >= 10_000_000) return `¥${(v / 10_000_000).toFixed(1)}千万`
+  if (v >= 10_000) return `¥${(v / 10_000).toFixed(0)}万`
+  return `¥${v.toLocaleString()}`
+}
 
 const emptyForm = {
   title: '',
-  amount: '',
+  deal_type: 'spot' as DealType,
+  one_time_amount: 0,
+  monthly_recurring_amount: 0,
+  contract_term_months: null as number | null,
+  tcv: 0,
+  acv: 0,
   stage: 'proposal' as DealStage,
   probability: '',
   sales_contribution: '',
@@ -74,7 +94,11 @@ export function CrmDealList() {
     if (!formData.title.trim()) return
     await createMutation.mutateAsync({
       title: formData.title,
-      amount: formData.amount ? Number(formData.amount) : 0,
+      deal_type: formData.deal_type,
+      one_time_amount: formData.one_time_amount,
+      monthly_recurring_amount: formData.monthly_recurring_amount,
+      contract_term_months: formData.contract_term_months,
+      tcv: formData.tcv,
       stage: formData.stage,
       probability: formData.probability ? Number(formData.probability) : 0,
       sales_contribution: formData.sales_contribution ? Number(formData.sales_contribution) : 0,
@@ -118,14 +142,25 @@ export function CrmDealList() {
             placeholder={t('crm.deal.title')}
             className="w-full text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
           />
+          <DealAmountEditor
+            dealType={formData.deal_type}
+            oneTimeAmount={formData.one_time_amount}
+            monthlyRecurringAmount={formData.monthly_recurring_amount}
+            contractTermMonths={formData.contract_term_months}
+            tcv={formData.tcv}
+            onChange={(next) =>
+              setFormData((p) => ({
+                ...p,
+                deal_type: next.deal_type,
+                one_time_amount: next.one_time_amount,
+                monthly_recurring_amount: next.monthly_recurring_amount,
+                contract_term_months: next.contract_term_months,
+                tcv: next.tcv,
+                acv: next.acv,
+              }))
+            }
+          />
           <div className="flex gap-[8px]">
-            <input
-              type="number"
-              value={formData.amount}
-              onChange={e => setFormData(p => ({ ...p, amount: e.target.value }))}
-              placeholder={t('crm.deal.amount')}
-              className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
-            />
             <select
               value={formData.stage}
               onChange={e => setFormData(p => ({ ...p, stage: e.target.value as DealStage }))}
@@ -185,9 +220,12 @@ export function CrmDealList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.title')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.company')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.stage')}</th>
-                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.amount')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold">{t('crm.deal.tcv')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.mrr')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.contractTerm')}</th>
+                <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.forecastCategory')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.probability')}</th>
-                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.deal.salesContribution')}</th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.salesContribution')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.expectedClose')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.deal.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
@@ -196,10 +234,10 @@ export function CrmDealList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={9} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={12} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : deals.length === 0 ? (
-                <tr><td colSpan={9} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={12} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
                 deals.map(d => (
                   <tr key={d.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
@@ -216,10 +254,20 @@ export function CrmDealList() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-[12px] py-[8px] text-right font-medium text-text">{formatYen(d.amount)}</td>
+                    <td className="px-[12px] py-[8px] text-right font-medium text-text">{formatYen(d.tcv ?? d.amount ?? 0)}</td>
+                    <td className="px-[12px] py-[8px] text-right text-text2 hidden lg:table-cell">{d.monthly_recurring_amount ? formatYenShort(d.monthly_recurring_amount) : '—'}</td>
+                    <td className="px-[12px] py-[8px] text-right text-text2 hidden lg:table-cell">{d.contract_term_months ? `${d.contract_term_months}ヶ月` : '—'}</td>
+                    <td className="px-[12px] py-[8px] hidden md:table-cell">
+                      <span className={`text-[10px] font-semibold px-[6px] py-[2px] rounded-full ${FORECAST_BADGE[(d.forecast_category ?? 'pipeline') as ForecastCategory]}`}>
+                        {t(`crm.deal.forecast${(() => {
+                          const fc = (d.forecast_category ?? 'pipeline') as ForecastCategory
+                          return fc === 'best_case' ? 'BestCase' : fc.charAt(0).toUpperCase() + fc.slice(1)
+                        })()}`)}
+                      </span>
+                    </td>
                     <td className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell">{d.probability}%</td>
                     <td
-                      className="px-[12px] py-[8px] text-right text-text2 hidden md:table-cell cursor-pointer hover:bg-mint/10"
+                      className="px-[12px] py-[8px] text-right text-text2 hidden lg:table-cell cursor-pointer hover:bg-mint/10"
                       onClick={() => {
                         setEditingSalesContrib(d.id)
                         setEditSalesContribValue(d.sales_contribution ?? 0)

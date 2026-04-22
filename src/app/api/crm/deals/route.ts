@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { normalizeDealBody } from '@/lib/crm/normalize-deal'
 
 const SELECT = '*, company:crm_companies(id, name), contact:crm_contacts(id, first_name, last_name, email), owner:users!crm_deals_owner_id_fkey(id, name, avatar_color), items:crm_deal_items(*)'
 
@@ -44,12 +45,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const normalized = normalizeDealBody(body)
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const db = createAdminClient() as any
 
     const { data, error } = await db
       .from('crm_deals')
-      .insert(body)
+      .insert(normalized)
       .select(SELECT)
       .single()
 
