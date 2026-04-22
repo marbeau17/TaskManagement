@@ -6,7 +6,8 @@ import { useI18n } from '@/hooks/useI18n'
 import { useCrmActivities } from '@/hooks/useCrm'
 import { CrmActivityTimeline } from './CrmActivityTimeline'
 import { CrmQuickActions } from './CrmQuickActions'
-import type { CrmEntityType } from '@/types/crm'
+import { LeadQualificationChecklist } from './LeadQualificationChecklist'
+import type { CrmEntityType, ForecastCategory } from '@/types/crm'
 
 interface Props {
   open: boolean
@@ -98,7 +99,10 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
               )}
               {entityType === 'deal' && (
                 <>
-                  <InfoRow icon={DollarSign} label={t('crm.deal.amount')} value={`¥${(entity.amount ?? 0).toLocaleString()}`} />
+                  <InfoRow icon={DollarSign} label={t('crm.deal.tcv')} value={`¥${(entity.tcv ?? entity.amount ?? 0).toLocaleString()}`} />
+                  {entity.monthly_recurring_amount > 0 && (
+                    <InfoRow icon={DollarSign} label={t('crm.deal.mrr')} value={`¥${entity.monthly_recurring_amount.toLocaleString()} / ${entity.contract_term_months ?? '?'}ヶ月`} />
+                  )}
                   <InfoRow icon={Building2} label={t('crm.company.name')} value={entity.company?.name} />
                   <InfoRow icon={Calendar} label={t('crm.deal.closeDate')} value={entity.expected_close_date} />
                   <InfoRow icon={User} label={t('crm.company.owner')} value={entity.owner?.name} />
@@ -109,17 +113,27 @@ export function CrmDetailPanel({ open, onClose, entityType, entity, onUpdate }: 
                     </div>
                     <span className="text-[11px] font-bold text-text">{entity.probability ?? 0}%</span>
                   </div>
+                  <ForecastCategorySelect
+                    value={(entity.forecast_category ?? 'pipeline') as ForecastCategory}
+                    entityType="deal"
+                    entityId={entity.id}
+                    onSaved={(v) => { entity.forecast_category = v; onUpdate?.({ ...entity, forecast_category: v }) }}
+                  />
                   <EditableSalesContribution
                     value={entity.sales_contribution ?? 0}
                     entityType="deal"
                     entityId={entity.id}
                     onSaved={(v) => { entity.sales_contribution = v; onUpdate?.({ ...entity, sales_contribution: v }) }}
                   />
+                  {entity.next_action && (
+                    <InfoRow icon={Calendar} label={t('crm.deal.dealType')} value={`${entity.deal_type ?? 'spot'} / ${t('crm.deal.calculatedTcv')}`} />
+                  )}
                 </>
               )}
               {entityType === 'lead' && (
                 <>
-                  <InfoRow icon={DollarSign} label={t('crm.lead.value')} value={`¥${(entity.estimated_value ?? 0).toLocaleString()}`} />
+                  <LeadQualificationChecklist lead={entity} />
+                  <InfoRow icon={DollarSign} label={t('crm.lead.value')} value={`¥${(entity.tcv ?? entity.estimated_value ?? 0).toLocaleString()}`} />
                   <InfoRow icon={Building2} label={t('crm.company.name')} value={entity.company?.name} />
                   <InfoRow icon={User} label={t('crm.company.owner')} value={entity.owner?.name} />
                   <EditableSalesContribution
@@ -265,6 +279,54 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
         <div className={`${color} h-full rounded-full`} style={{ width: `${value}%` }} />
       </div>
       <span className="text-[11px] font-bold text-text">{value}</span>
+    </div>
+  )
+}
+
+function ForecastCategorySelect({
+  value,
+  entityType,
+  entityId,
+  onSaved,
+}: {
+  value: ForecastCategory
+  entityType: 'deal'
+  entityId: string
+  onSaved?: (v: ForecastCategory) => void
+}) {
+  const { t } = useI18n()
+  const [current, setCurrent] = useState<ForecastCategory>(value)
+
+  const save = async (next: ForecastCategory) => {
+    setCurrent(next)
+    try {
+      const endpoint = entityType === 'deal'
+        ? `/api/crm/deals/${entityId}`
+        : `/api/crm/leads/${entityId}`
+      await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forecast_category: next }),
+      })
+      onSaved?.(next)
+    } catch {
+      setCurrent(value)
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-[8px]">
+      <span className="text-[11px] text-text2 w-[100px] shrink-0">{t('crm.deal.forecastCategory')}</span>
+      <select
+        value={current}
+        onChange={(e) => save(e.target.value as ForecastCategory)}
+        className="flex-1 h-[28px] px-[8px] text-[12px] bg-surf2 border border-border2 rounded-[6px] text-text outline-none focus:border-mint"
+      >
+        <option value="commit">{t('crm.deal.forecastCommit')}</option>
+        <option value="best_case">{t('crm.deal.forecastBestCase')}</option>
+        <option value="pipeline">{t('crm.deal.forecastPipeline')}</option>
+        <option value="omitted">{t('crm.deal.forecastOmitted')}</option>
+      </select>
     </div>
   )
 }

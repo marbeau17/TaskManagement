@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/hooks/useI18n'
 import { useCrmLeads, useCreateCrmLead, useConvertLead, useUpdateCrmLead } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
+import { scoreLead, QUAL_THRESHOLD_PASSING, QUAL_THRESHOLD_HARD_WARN } from '@/lib/crm/qualification'
 import type { CrmLeadFilters, LeadStatus } from '@/types/crm'
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
@@ -41,9 +42,31 @@ export function CrmLeadList() {
     setShowForm(false)
   }
 
-  const handleConvert = (id: string, title: string) => {
-    if (!confirm(t('crm.lead.convertConfirm'))) return
-    convertMutation.mutate({ id, data: { dealTitle: title } })
+  const handleConvert = (lead: { id: string; title: string; decision_maker_role: string | null; pain_point: string | null; expected_start_period: string; budget_range: string; next_action_date: string | null; last_contact_date: string | null }) => {
+    const result = scoreLead(lead as any)
+    let promotion_blocked_reason: string | undefined
+
+    if (result.score >= QUAL_THRESHOLD_PASSING) {
+      if (!confirm(t('crm.lead.convertConfirm'))) return
+    } else if (result.score >= QUAL_THRESHOLD_HARD_WARN) {
+      // 2..3: soft warn
+      const msg = t('crm.lead.convertWarn').replace('{score}', String(result.score))
+      if (!confirm(msg)) return
+    } else {
+      // 0..1: hard warn — require reason
+      const promptMsg = t('crm.lead.convertHardWarn').replace('{score}', String(result.score))
+      const reason = window.prompt(promptMsg)
+      if (!reason || !reason.trim()) return
+      promotion_blocked_reason = reason.trim()
+    }
+
+    convertMutation.mutate({
+      id: lead.id,
+      data: {
+        dealTitle: lead.title,
+        ...(promotion_blocked_reason ? { promotion_blocked_reason } : {}),
+      } as any,
+    })
   }
 
   const formatCurrency = (v: number) => {
@@ -106,6 +129,7 @@ export function CrmLeadList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.lead.company')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold">{t('crm.lead.status')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.estimatedValue')}</th>
+                <th className="text-center px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell w-[60px]">{t('crm.lead.qual.title')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.salesContribution')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.lead.owner')}</th>
                 <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[80px]"></th>
@@ -114,12 +138,14 @@ export function CrmLeadList() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={8} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={9} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
               ) : leads.length === 0 ? (
-                <tr><td colSpan={8} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+                <tr><td colSpan={9} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
-                leads.map(l => (
+                leads.map(l => {
+                  const qual = scoreLead(l as any)
+                  return (
                   <tr key={l.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
                     <td className="px-[12px] py-[8px] font-medium text-text">{l.title}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">
@@ -131,7 +157,21 @@ export function CrmLeadList() {
                         {l.status}
                       </span>
                     </td>
-                    <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{formatCurrency(l.estimated_value)}</td>
+                    <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{formatCurrency(l.tcv ?? l.estimated_value ?? 0)}</td>
+                    <td className="px-[12px] py-[8px] text-center hidden md:table-cell">
+                      <span
+                        title={t('crm.lead.qual.thresholdHint').replace('{n}', String(QUAL_THRESHOLD_PASSING))}
+                        className={`inline-block text-[11px] font-bold px-[6px] py-[1px] rounded-full ${
+                          qual.score >= QUAL_THRESHOLD_PASSING
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : qual.score >= QUAL_THRESHOLD_HARD_WARN
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-50 text-red-600'
+                        }`}
+                      >
+                        {qual.score}/6
+                      </span>
+                    </td>
                     <td
                       className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell cursor-pointer hover:bg-mint/10"
                       onClick={() => { setEditingSalesContrib(l.id); setEditSalesContribValue(l.sales_contribution ?? 0) }}
@@ -157,16 +197,26 @@ export function CrmLeadList() {
                     <td className="px-[12px] py-[8px] text-right">
                       {l.status === 'qualified' && (
                         <button
-                          onClick={() => handleConvert(l.id, l.title)}
+                          onClick={() => handleConvert(l)}
                           disabled={convertMutation.isPending}
-                          className="text-[11px] font-semibold text-emerald-600 hover:underline disabled:opacity-50"
+                          className={`text-[11px] font-semibold hover:underline disabled:opacity-50 ${
+                            qual.score >= QUAL_THRESHOLD_PASSING
+                              ? 'text-emerald-600'
+                              : 'text-amber-600'
+                          }`}
+                          title={
+                            qual.score >= QUAL_THRESHOLD_PASSING
+                              ? undefined
+                              : t('crm.lead.convertWarn').replace('{score}', String(qual.score))
+                          }
                         >
                           {t('crm.lead.convert')}
                         </button>
                       )}
                     </td>
                   </tr>
-                ))
+                  )
+                })
               )}
             </tbody>
           </table>

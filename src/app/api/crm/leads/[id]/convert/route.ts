@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { normalizeForSave } from '@/lib/crm/amount-calc'
 
 export async function POST(
   request: NextRequest,
@@ -6,12 +7,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const { dealTitle, stage, amount, owner_id } = await request.json()
+    const { dealTitle, stage, amount, owner_id, promotion_blocked_reason } = await request.json()
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const supabase = createAdminClient()
     const db = supabase as any
 
-    // 0. Fetch the lead to carry over fields (e.g. sales_contribution)
+    // 0. Fetch the lead to carry over fields (e.g. sales_contribution + v2 amount triple)
     const { data: leadData, error: leadFetchError } = await db
       .from('crm_leads')
       .select('*')
@@ -20,15 +21,38 @@ export async function POST(
 
     if (leadFetchError) return NextResponse.json({ error: leadFetchError.message }, { status: 500 })
 
-    // 1. Create crm_deals record — carry contact_id and company_id from lead
+    // Resolve canonical amount fields once so deal + lead end up consistent.
+    const resolvedAmount = normalizeForSave({
+      deal_type: leadData.deal_type ?? 'spot',
+      one_time_amount: leadData.one_time_amount ?? 0,
+      monthly_recurring_amount: leadData.monthly_recurring_amount ?? 0,
+      contract_term_months: leadData.contract_term_months ?? null,
+      tcv: amount ?? leadData.tcv ?? leadData.estimated_value ?? 0,
+    })
+
+    // 1. Create crm_deals record — carry contact_id, company_id, v2 amount fields, and forecast defaults from lead
     const dealPayload: Record<string, unknown> = {
       title: dealTitle,
       lead_id: id,
       contact_id: leadData.contact_id ?? null,
       company_id: leadData.company_id ?? null,
+      deal_type: leadData.deal_type ?? 'spot',
+      one_time_amount: resolvedAmount.one_time_amount,
+      monthly_recurring_amount: resolvedAmount.monthly_recurring_amount,
+      contract_term_months: resolvedAmount.contract_term_months,
+      contract_start_date: leadData.contract_start_date ?? null,
+      tcv: resolvedAmount.tcv,
+      acv: resolvedAmount.acv,
+      amount: resolvedAmount.amount,
+      forecast_category: 'pipeline',
+      stage_changed_at: new Date().toISOString(),
+      next_action: leadData.next_action ?? null,
+      next_action_date: leadData.next_action_date ?? null,
+      decision_maker_role: leadData.decision_maker_role ?? null,
+      pain_point: leadData.pain_point ?? null,
+      competitor: leadData.competitor ?? null,
     }
     if (stage) dealPayload.stage = stage
-    if (amount !== undefined) dealPayload.amount = amount
     if (owner_id) dealPayload.owner_id = owner_id
     dealPayload.sales_contribution = leadData.sales_contribution ?? 0
 
@@ -74,15 +98,20 @@ export async function POST(
 
     if (linkError) return NextResponse.json({ error: linkError.message }, { status: 500 })
 
-    // 4. Update crm_leads: status='converted', converted_deal_id, converted_at
+    // 4. Update crm_leads: status='converted', converted_deal_id, converted_at,
+    //    record promotion_blocked_reason if user pushed through a low-score gate.
+    const leadUpdate: Record<string, unknown> = {
+      status: 'converted',
+      converted_deal_id: deal.id,
+      converted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    if (promotion_blocked_reason && typeof promotion_blocked_reason === 'string') {
+      leadUpdate.promotion_blocked_reason = promotion_blocked_reason
+    }
     const { data: lead, error: leadError } = await db
       .from('crm_leads')
-      .update({
-        status: 'converted',
-        converted_deal_id: deal.id,
-        converted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .update(leadUpdate)
       .eq('id', id)
       .select('*')
       .single()
