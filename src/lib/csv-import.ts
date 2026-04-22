@@ -95,11 +95,17 @@ export function cell(row: string[], index: number): string {
  * Parse a date-like value into YYYY-MM-DD. Accepts:
  *   - 2021-02-23, 2021/02/23, 2021.02.23
  *   - Excel ISO with time (2021-02-23T00:00:00)
+ *   - 2021年2月23日 (Japanese long form)
  * Returns null for empty or unparseable input.
  */
 export function parseDateCell(value: string): string | null {
   const v = value.trim()
   if (!v) return null
+  const jp = v.match(/^(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/)
+  if (jp) {
+    const [, y, m, d] = jp
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
   const match = v.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/)
   if (!match) return null
   const [, y, m, d] = match
