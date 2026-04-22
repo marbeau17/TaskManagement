@@ -57,6 +57,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    try {
+      const { syncDealToPipeline } = await import('@/lib/data/pipeline-crm-sync')
+      await syncDealToPipeline(db, data)
+    } catch (syncErr) {
+      console.warn('[crm/deals PATCH] pipeline sync skipped:', syncErr)
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
