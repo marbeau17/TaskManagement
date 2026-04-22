@@ -25,6 +25,10 @@ interface PreviewRow {
   input: CreateAssetInput
   action: 'insert' | 'update'
   rawOwner: string
+  /** management_id appears in 2+ rows of the same CSV file */
+  dupInFile: boolean
+  /** name appears in 2+ rows with no / empty management_id in the same CSV */
+  dupByName: boolean
 }
 
 interface PreviewError {
@@ -118,6 +122,9 @@ export function AssetImportModal({ onClose }: Props) {
 
   const insertCount = preview.filter((p) => p.action === 'insert').length
   const updateCount = preview.filter((p) => p.action === 'update').length
+  const dupInFileCount = preview.filter((p) => p.dupInFile).length
+  const dupByNameCount = preview.filter((p) => p.dupByName).length
+  const hasDuplicates = dupInFileCount > 0 || dupByNameCount > 0
 
   const handleFile = async (file: File) => {
     setParsing(true)
@@ -152,6 +159,22 @@ export function AssetImportModal({ onClose }: Props) {
 
       const nextPreview: PreviewRow[] = []
       const nextErrors: PreviewError[] = []
+
+      // Pre-scan for in-file duplicates so we can flag them in the preview.
+      const fileMgmtIdCounts = new Map<string, number>()
+      const fileNameCounts = new Map<string, number>()
+      rows.forEach((row) => {
+        const name = cell(row, col.name)
+        if (!name) return
+        const mid = cell(row, col.managementId)
+        if (mid) {
+          fileMgmtIdCounts.set(mid, (fileMgmtIdCounts.get(mid) ?? 0) + 1)
+        } else {
+          // Track name-based duplicates only when management_id is missing
+          // (rows with management_id are deduped by that key).
+          fileNameCounts.set(name, (fileNameCounts.get(name) ?? 0) + 1)
+        }
+      })
 
       rows.forEach((row, i) => {
         const lineNo = i + 2 // 1-based + header row
@@ -191,7 +214,11 @@ export function AssetImportModal({ onClose }: Props) {
 
         const action: PreviewRow['action'] =
           managementId && existingMgmtIds.has(managementId) ? 'update' : 'insert'
-        nextPreview.push({ input, action, rawOwner })
+
+        const dupInFile = !!managementId && (fileMgmtIdCounts.get(managementId) ?? 0) > 1
+        const dupByName = !managementId && (fileNameCounts.get(name) ?? 0) > 1
+
+        nextPreview.push({ input, action, rawOwner, dupInFile, dupByName })
       })
 
       setPreview(nextPreview)
@@ -205,6 +232,13 @@ export function AssetImportModal({ onClose }: Props) {
 
   const handleCommit = async () => {
     if (preview.length === 0) return
+    if (hasDuplicates) {
+      const total = dupInFileCount + dupByNameCount
+      const ok = window.confirm(
+        t('asset.importDupConfirm').replace('{n}', String(total)),
+      )
+      if (!ok) return
+    }
     try {
       const result = await upsertMut.mutateAsync(preview.map((p) => p.input))
       toast.success(
@@ -263,19 +297,39 @@ export function AssetImportModal({ onClose }: Props) {
 
           {!parsing && (preview.length > 0 || errors.length > 0) && (
             <>
-              <div className="flex items-center gap-[16px] mb-[12px] text-[12px]">
+              <div className="flex items-center gap-[16px] mb-[12px] text-[12px] flex-wrap">
                 <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                   {t('asset.importNewRows').replace('{n}', String(insertCount))}
                 </span>
                 <span className="text-blue-700 dark:text-blue-400 font-semibold">
                   {t('asset.importUpdatedRows').replace('{n}', String(updateCount))}
                 </span>
+                {hasDuplicates && (
+                  <span className="text-amber-700 dark:text-amber-400 font-semibold">
+                    {t('asset.importDupRows').replace('{n}', String(dupInFileCount + dupByNameCount))}
+                  </span>
+                )}
                 {errors.length > 0 && (
                   <span className="text-danger font-semibold">
                     {t('asset.importErrorRows').replace('{n}', String(errors.length))}
                   </span>
                 )}
               </div>
+
+              {hasDuplicates && (
+                <div className="mb-[12px] border border-amber-300/50 bg-amber-50 dark:bg-amber-950/20 rounded-[6px] p-[10px]">
+                  <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-[2px]">
+                    {t('asset.importDupTitle')}
+                  </div>
+                  <div className="text-[10px] text-amber-700 dark:text-amber-400">
+                    {dupInFileCount > 0 &&
+                      t('asset.importDupInFile').replace('{n}', String(dupInFileCount))}
+                    {dupInFileCount > 0 && dupByNameCount > 0 && ' / '}
+                    {dupByNameCount > 0 &&
+                      t('asset.importDupByName').replace('{n}', String(dupByNameCount))}
+                  </div>
+                </div>
+              )}
 
               {errors.length > 0 && (
                 <div className="mb-[12px] border border-danger/30 bg-danger/5 rounded-[6px] p-[10px]">
@@ -322,19 +376,38 @@ export function AssetImportModal({ onClose }: Props) {
                     </thead>
                     <tbody>
                       {preview.map((p, i) => (
-                        <tr key={i} className="border-t border-border2">
+                        <tr
+                          key={i}
+                          className={`border-t border-border2 ${
+                            p.dupInFile || p.dupByName ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''
+                          }`}
+                        >
                           <td className="px-[8px] py-[5px]">
-                            <span
-                              className={`text-[10px] px-[6px] py-[1px] rounded-full font-semibold ${
-                                p.action === 'insert'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
-                              }`}
-                            >
-                              {p.action === 'insert'
-                                ? t('asset.importActionInsert')
-                                : t('asset.importActionUpdate')}
-                            </span>
+                            <div className="flex items-center gap-[4px]">
+                              <span
+                                className={`text-[10px] px-[6px] py-[1px] rounded-full font-semibold ${
+                                  p.action === 'insert'
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
+                                }`}
+                              >
+                                {p.action === 'insert'
+                                  ? t('asset.importActionInsert')
+                                  : t('asset.importActionUpdate')}
+                              </span>
+                              {(p.dupInFile || p.dupByName) && (
+                                <span
+                                  className="text-[10px] px-[5px] py-[1px] rounded-full font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                                  title={
+                                    p.dupInFile
+                                      ? t('asset.importDupInFileTooltip')
+                                      : t('asset.importDupByNameTooltip')
+                                  }
+                                >
+                                  ⚠ {t('asset.importActionDup')}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-[8px] py-[5px] text-right text-text2">
                             {p.input.seq_no ?? ''}
