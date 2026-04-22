@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Upload, Download } from 'lucide-react'
 import {
   useAssets,
   useCreateAsset,
@@ -11,7 +11,9 @@ import {
 import { useMembers } from '@/hooks/useMembers'
 import { useI18n } from '@/hooks/useI18n'
 import { formatDate } from '@/lib/utils'
+import { exportAssetsCsv } from '@/lib/csv-export-assets'
 import type { Asset, AssetCategory, AssetStatus } from '@/types/database'
+import { AssetImportModal } from './AssetImportModal'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -304,12 +306,13 @@ function ItemEditor({ item, onClose }: EditorProps) {
 // ---------------------------------------------------------------------------
 
 export function AssetPanel() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { data: items, isLoading } = useAssets()
   const { data: members } = useMembers()
   const deleteMut = useDeleteAsset()
 
   const [editing, setEditing] = useState<Asset | null | undefined>(undefined)
+  const [importing, setImporting] = useState(false)
   const [statusFilter, setStatusFilter] = useState<AssetStatus | ''>('')
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | ''>('')
   const [searchText, setSearchText] = useState('')
@@ -338,6 +341,10 @@ export function AssetPanel() {
   const handleDelete = (id: string) => {
     if (!window.confirm(t('asset.deleteConfirm'))) return
     deleteMut.mutate(id)
+  }
+
+  const handleExport = () => {
+    exportAssetsCsv(filtered, locale, memberMap)
   }
 
   return (
@@ -376,6 +383,22 @@ export function AssetPanel() {
           className="text-[12px] text-text px-[10px] py-[5px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint w-[220px]"
         />
         <div className="flex-1" />
+        <button
+          onClick={handleExport}
+          disabled={filtered.length === 0}
+          title={t('asset.exportCsv')}
+          className="flex items-center gap-[6px] px-[12px] py-[6px] text-[12px] font-semibold bg-surface border border-border2 text-text rounded-[6px] hover:bg-surf2 transition-colors disabled:opacity-50"
+        >
+          <Download className="w-[14px] h-[14px]" />
+          {t('asset.exportCsv')}
+        </button>
+        <button
+          onClick={() => setImporting(true)}
+          className="flex items-center gap-[6px] px-[12px] py-[6px] text-[12px] font-semibold bg-surface border border-border2 text-text rounded-[6px] hover:bg-surf2 transition-colors"
+        >
+          <Upload className="w-[14px] h-[14px]" />
+          {t('asset.importCsv')}
+        </button>
         <button
           onClick={() => setEditing(null)}
           className="flex items-center gap-[6px] px-[12px] py-[6px] text-[12px] font-semibold bg-mint text-white rounded-[6px] hover:bg-mint-d transition-colors"
@@ -504,6 +527,9 @@ export function AssetPanel() {
       {editing !== undefined && (
         <ItemEditor item={editing} onClose={() => setEditing(undefined)} />
       )}
+
+      {/* Import modal */}
+      {importing && <AssetImportModal onClose={() => setImporting(false)} />}
     </div>
   )
 }

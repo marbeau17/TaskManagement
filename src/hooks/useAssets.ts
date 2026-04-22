@@ -7,8 +7,10 @@ import {
   updateAsset,
   deleteAsset,
   bulkCreateAssets,
+  bulkUpsertAssetsByManagementId,
   type CreateAssetInput,
   type UpdateAssetInput,
+  type BulkUpsertResult,
 } from '@/lib/data/assets'
 import { toast } from '@/stores/toastStore'
 
@@ -53,5 +55,14 @@ export function useBulkCreateAssets() {
     mutationFn: (inputs: CreateAssetInput[]) => bulkCreateAssets(inputs),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['assets'] }),
     onError: (e: any) => toast.error(e?.message || 'Failed to bulk create assets'),
+  })
+}
+
+export function useBulkUpsertAssets() {
+  const qc = useQueryClient()
+  return useMutation<BulkUpsertResult, Error, CreateAssetInput[]>({
+    mutationFn: (inputs) => bulkUpsertAssetsByManagementId(inputs),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['assets'] }),
+    onError: (e: any) => toast.error(e?.message || 'Failed to import assets'),
   })
 }

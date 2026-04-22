@@ -14,7 +14,6 @@ import { MyWeekTasks } from '@/components/mypage/MyWeekTasks'
 import { MyIssues } from '@/components/mypage/MyIssues'
 import { MyRecentActivity } from '@/components/mypage/MyRecentActivity'
 import { ReleaseNoteBanner } from '@/components/mypage/ReleaseNoteBanner'
-import { MyTodayMeetings } from '@/components/mypage/MyTodayMeetings'
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -58,10 +57,9 @@ export default function MyPagePage() {
         {/* Warnings */}
         <MyPageWarnings warnings={pageData.warnings} isLoading={isLoading} />
 
-        {/* Today Tasks + Meetings + Issues (3-col on desktop) */}
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_0.8fr_1fr] gap-[16px]">
+        {/* Today Tasks + Issues (2-col on desktop) */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-[16px]">
           <MyTodayTasks tasks={pageData.today_tasks} isLoading={isLoading} />
-          <MyTodayMeetings isLoading={isLoading} />
           <MyIssues issues={pageData.my_issues} isLoading={isLoading} />
         </div>
 

@@ -221,3 +221,109 @@ export async function bulkCreateAssets(inputs: CreateAssetInput[]): Promise<Asse
   if (error) throw error
   return (data ?? []) as Asset[]
 }
+
+// ---------------------------------------------------------------------------
+// bulkUpsertAssetsByManagementId
+// Upsert rows keyed by management_id: rows with a matching management_id
+// update the existing asset, rows without one (or with no match) are inserted.
+// ---------------------------------------------------------------------------
+
+export interface BulkUpsertResult {
+  created: number
+  updated: number
+}
+
+export async function bulkUpsertAssetsByManagementId(
+  inputs: CreateAssetInput[],
+): Promise<BulkUpsertResult> {
+  if (inputs.length === 0) return { created: 0, updated: 0 }
+
+  const withId = inputs.filter((i) => i.management_id && i.management_id.trim())
+  const withoutId = inputs.filter((i) => !i.management_id || !i.management_id.trim())
+
+  if (isMockMode()) {
+    const now = new Date().toISOString()
+    let created = 0
+    let updated = 0
+    for (const input of withId) {
+      const idx = mockAssets.findIndex((a) => a.management_id === input.management_id)
+      if (idx >= 0) {
+        mockAssets[idx] = { ...mockAssets[idx], ...input, updated_at: now }
+        updated++
+      } else {
+        mockAssets.push({
+          id: `mock-asset-${mockIdCounter++}`,
+          seq_no: input.seq_no ?? null,
+          name: input.name,
+          acquired_date: input.acquired_date ?? null,
+          acquired_price: input.acquired_price ?? null,
+          management_id: input.management_id ?? null,
+          owner_name: input.owner_name ?? null,
+          owner_user_id: input.owner_user_id ?? null,
+          category: input.category ?? 'other',
+          status: input.status ?? 'in_use',
+          serial_number: input.serial_number ?? null,
+          location: input.location ?? null,
+          notes: input.notes ?? null,
+          created_at: now,
+          updated_at: now,
+        })
+        created++
+      }
+    }
+    const inserted = await bulkCreateAssets(withoutId)
+    return { created: created + inserted.length, updated }
+  }
+
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+
+  let updated = 0
+  let created = 0
+
+  // Rows with management_id — look up existing rows by management_id in one
+  // round-trip, then split into update vs insert sets.
+  if (withId.length > 0) {
+    const ids = withId.map((r) => r.management_id as string)
+    const { data: existing, error: lookupErr } = await supabase
+      .from('assets')
+      .select('id, management_id')
+      .in('management_id', ids)
+    if (lookupErr) throw lookupErr
+
+    const existingMap = new Map<string, string>()
+    for (const row of existing ?? []) {
+      if (row.management_id) existingMap.set(row.management_id, row.id)
+    }
+
+    const toInsert: CreateAssetInput[] = []
+    const toUpdate: { id: string; patch: CreateAssetInput }[] = []
+    for (const input of withId) {
+      const id = existingMap.get(input.management_id as string)
+      if (id) toUpdate.push({ id, patch: input })
+      else toInsert.push(input)
+    }
+
+    for (const { id, patch } of toUpdate) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('assets')
+        .update(patch)
+        .eq('id', id)
+      if (error) throw error
+      updated++
+    }
+
+    if (toInsert.length > 0) {
+      const inserted = await bulkCreateAssets(toInsert)
+      created += inserted.length
+    }
+  }
+
+  if (withoutId.length > 0) {
+    const inserted = await bulkCreateAssets(withoutId)
+    created += inserted.length
+  }
+
+  return { created, updated }
+}
