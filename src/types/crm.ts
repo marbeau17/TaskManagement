@@ -15,6 +15,12 @@ export type DealPriority = 'low' | 'medium' | 'high' | 'critical'
 export type CrmActivityType = 'note' | 'call' | 'email' | 'meeting' | 'task' | 'stage_change' | 'status_change' | 'system'
 export type CrmEntityType = 'contact' | 'company' | 'lead' | 'deal'
 
+// v2 (SPEC_CRM_LEAD_DEAL_V2)
+export type DealType = 'spot' | 'retainer' | 'hybrid'
+export type ForecastCategory = 'commit' | 'best_case' | 'pipeline' | 'omitted'
+export type BudgetRange = '<100万' | '100-500万' | '500万-1000万' | '1000万+' | '未確認'
+export type ExpectedStartPeriod = '1M以内' | '3M以内' | '6M以内' | '未定'
+
 // ---------------------------------------------------------------------------
 // Core Entities
 // ---------------------------------------------------------------------------
@@ -116,6 +122,28 @@ export interface CrmLead {
   sales_contribution: number
   created_at: string
   updated_at: string
+  // v2 fields (SPEC_CRM_LEAD_DEAL_V2)
+  deal_type: DealType
+  one_time_amount: number
+  monthly_recurring_amount: number
+  contract_term_months: number | null
+  contract_start_date: string | null
+  tcv: number
+  acv: number
+  next_action: string | null
+  next_action_date: string | null
+  last_contact_date: string | null
+  decision_maker_role: string | null
+  pain_point: string | null
+  competitor: string | null
+  forecast_category: ForecastCategory
+  stage_changed_at: string | null
+  reopen_count: number
+  budget_range: BudgetRange
+  expected_start_period: ExpectedStartPeriod
+  qualification_score: number
+  promotion_blocked_reason: string | null
+  // relations
   contact?: { id: string; first_name: string; last_name: string; email: string } | null
   company?: { id: string; name: string } | null
   owner?: { id: string; name: string; avatar_color: string } | null
@@ -130,6 +158,7 @@ export interface CrmDeal {
   pipeline_opportunity_id: string | null
   project_id: string | null
   stage: DealStage
+  /** @deprecated use tcv. Kept for backwards compat; mirrored from tcv on save. */
   amount: number
   currency: string
   probability: number
@@ -144,6 +173,24 @@ export interface CrmDeal {
   sales_contribution: number
   created_at: string
   updated_at: string
+  // v2 fields (SPEC_CRM_LEAD_DEAL_V2)
+  deal_type: DealType
+  one_time_amount: number
+  monthly_recurring_amount: number
+  contract_term_months: number | null
+  contract_start_date: string | null
+  tcv: number
+  acv: number
+  next_action: string | null
+  next_action_date: string | null
+  last_contact_date: string | null
+  decision_maker_role: string | null
+  pain_point: string | null
+  competitor: string | null
+  forecast_category: ForecastCategory
+  stage_changed_at: string | null
+  reopen_count: number
+  // relations
   company?: { id: string; name: string } | null
   contact?: { id: string; first_name: string; last_name: string; email: string } | null
   owner?: { id: string; name: string; avatar_color: string } | null
