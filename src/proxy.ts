@@ -1,18 +1,14 @@
 // =============================================================================
-// Next.js Middleware – Defense-in-depth authentication layer
+// Next.js Proxy – Defense-in-depth authentication layer
 //
-// MIGRATION STATUS (Next.js 16):
-// Primary auth checks (login redirect, must_change_password enforcement) have
-// been moved to the (main)/layout.tsx Server Component. This middleware now
-// serves as a defense-in-depth layer that:
+// Primary auth checks (login redirect, must_change_password enforcement) live
+// in the (main)/layout.tsx Server Component. This proxy is a defense-in-depth
+// layer that:
 //   1. Refreshes Supabase session cookies on every request
 //   2. Catches unauthenticated requests before they reach server components
 //
-// The middleware runs via the Next.js 16 compatibility layer. A deprecation
-// warning will appear at build time; this is expected and can be ignored.
-//
-// TODO: Remove this file entirely once Next.js provides a first-class
-// replacement for cookie-refresh in middleware (e.g. instrumentation hooks).
+// Renamed from middleware.ts in Next.js 16 per the proxy file convention
+// (B-028). API surface is identical; runtime defaults to Node.js.
 // =============================================================================
 
 import { NextResponse } from 'next/server'
@@ -25,7 +21,7 @@ const PUBLIC_PATHS = ['/login', '/api/', '/form', '/book']
 // Paths allowed when must_change_password is true (avoid redirect loops)
 const PASSWORD_CHANGE_ALLOWED_PATHS = ['/change-password']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip auth check for public paths

@@ -1,7 +1,7 @@
 # バックログ — WorkFlow タスク管理ツール
 
-**最終更新**: 2026-03-30
-**全アイテム数**: 29件（完了: 28 / 部分完了: 0 / 未着手: 1）
+**最終更新**: 2026-04-23
+**全アイテム数**: 29件（完了: 29 / 部分完了: 0 / 未着手: 0）
 
 ---
 
@@ -64,7 +64,7 @@
 | B-025 | E2Eテスト: ファイルアップロード | ✅ 完了 | S12 E2E test spec created |
 | B-026 | E2Eテスト: 通知 | ✅ 完了 | 設定UIテスト実装済み |
 | B-027 | E2Eテスト: 複数アサイン | ✅ 完了 | S13 E2E test spec created |
-| B-028 | middleware→proxy移行 | 未着手 | Next.js 16互換レイヤーで動作中 |
+| B-028 | middleware→proxy移行 | ✅ 完了 | src/middleware.ts → src/proxy.ts、関数名も proxy にリネーム（Next.js 16 正式対応） |
 | B-029 | Supabase型自動生成 | ✅ 完了 | npm run gen:types |
 
 ---

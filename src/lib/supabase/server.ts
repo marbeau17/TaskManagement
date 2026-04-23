@@ -20,7 +20,7 @@ export async function createServerSupabaseClient() {
             } catch {
               // setAll is called from a Server Component where cookies
               // cannot be mutated. This can safely be ignored when the
-              // middleware is handling the refresh via its own setAll.
+              // proxy is handling the refresh via its own setAll.
             }
           })
         },

@@ -3,8 +3,8 @@
 //
 // This layout performs authentication and must_change_password checks on the
 // server side, replacing the previous client-side useEffect approach. This is
-// the recommended pattern for Next.js 16+ where middleware is deprecated for
-// auth guards.
+// the recommended pattern for Next.js 16+ where auth guards live in Server
+// Components; proxy.ts remains as a defense-in-depth cookie refresh layer.
 // =============================================================================
 
 import { redirect } from 'next/navigation'
