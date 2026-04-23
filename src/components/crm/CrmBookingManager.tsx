@@ -1,7 +1,22 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { Calendar, Tag, Users, Clock, Loader2 } from 'lucide-react'
 import { toast } from '@/stores/toastStore'
+
+// Lazy-loaded admin sub-tabs so the bundle only grows when the tab is opened.
+const CategoriesTab = lazy(() => import('./booking/CategoriesTab'))
+const ConsultantAssignmentTab = lazy(() => import('./booking/ConsultantAssignmentTab'))
+const WorkingHoursTab = lazy(() => import('./booking/WorkingHoursTab'))
+
+type BookingTab = 'categories' | 'consultants' | 'workingHours' | 'slots'
+
+const TABS: Array<{ id: BookingTab; label: string; icon: typeof Tag }> = [
+  { id: 'categories', label: 'カテゴリ設定', icon: Tag },
+  { id: 'consultants', label: 'コンサルタント割当', icon: Users },
+  { id: 'workingHours', label: '勤務時間設定', icon: Clock },
+  { id: 'slots', label: '予約一覧', icon: Calendar },
+]
 
 interface BookingSlot {
   id: string
@@ -18,6 +33,53 @@ interface BookingSlot {
 }
 
 export function CrmBookingManager() {
+  const [tab, setTab] = useState<BookingTab>('categories')
+
+  return (
+    <div>
+      {/* Top-level tab nav */}
+      <div className="flex items-center gap-[4px] mb-[16px] border-b border-border2 overflow-x-auto">
+        {TABS.map(tabDef => {
+          const Icon = tabDef.icon
+          const active = tab === tabDef.id
+          return (
+            <button
+              key={tabDef.id}
+              onClick={() => setTab(tabDef.id)}
+              className={`flex items-center gap-[6px] px-[14px] py-[8px] text-[12px] font-semibold transition-colors border-b-2 whitespace-nowrap ${
+                active
+                  ? 'border-mint text-mint'
+                  : 'border-transparent text-text2 hover:text-text'
+              }`}
+            >
+              <Icon className="w-[13px] h-[13px]" />
+              {tabDef.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Tab content */}
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center p-[40px] text-text3 text-[12px]">
+            <Loader2 className="w-[16px] h-[16px] mr-[8px] animate-spin" /> 読み込み中...
+          </div>
+        }
+      >
+        {tab === 'categories' && <CategoriesTab />}
+        {tab === 'consultants' && <ConsultantAssignmentTab />}
+        {tab === 'workingHours' && <WorkingHoursTab />}
+        {tab === 'slots' && <BookingSlotList />}
+      </Suspense>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// BookingSlotList — the original list view, kept intact as Tab 4.
+// ---------------------------------------------------------------------------
+function BookingSlotList() {
   const [slots, setSlots] = useState<BookingSlot[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddSlot, setShowAddSlot] = useState(false)
@@ -193,7 +255,7 @@ export function CrmBookingManager() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-4">
-          <h3 className="text-[14px] font-bold text-text">📅 予約管理</h3>
+          <h3 className="text-[14px] font-bold text-text">📅 予約一覧</h3>
           <span className="text-[11px] text-text2">
             予約 <span className="font-bold text-mint">{bookedCount}</span> / 空き <span className="font-bold text-text">{availableCount}</span> / 全 {filteredSlots.length}
           </span>
