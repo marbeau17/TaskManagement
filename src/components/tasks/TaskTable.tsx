@@ -20,7 +20,7 @@ interface TaskTableProps {
   onSelectionChange?: (ids: Set<string>) => void
 }
 
-type SortField = 'wbs' | 'client' | 'project' | 'title' | 'assignee' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
+type SortField = 'wbs' | 'client' | 'project' | 'title' | 'assignee' | 'requester' | 'progress' | 'deadline' | 'estimate' | 'actual' | 'status' | 'priority'
 type SortDir = 'asc' | 'desc'
 
 interface ColumnConfig {
@@ -36,6 +36,7 @@ const ALL_COLUMNS: ColumnConfig[] = [
   { key: 'tasks.col.project', field: 'project', defaultWidth: 120, optional: true },
   { key: 'tasks.col.taskName', field: 'title', defaultWidth: 250, optional: false },
   { key: 'tasks.col.assignee', field: 'assignee', defaultWidth: 120, optional: false },
+  { key: 'tasks.col.requester', field: 'requester', defaultWidth: 120, optional: true },
   { key: 'tasks.col.status', field: 'status', defaultWidth: 90, optional: false },
   { key: 'tasks.col.priority', field: 'priority', defaultWidth: 70, optional: true },
   { key: 'tasks.col.progress', field: 'progress', defaultWidth: 120, optional: true },
@@ -370,6 +371,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
         case 'assignee': {
           const nameA = a.assigned_user?.name ?? ''
           const nameB = b.assigned_user?.name ?? ''
+          return dir * nameA.localeCompare(nameB, 'ja')
+        }
+        case 'requester': {
+          const nameA = a.requester?.name ?? ''
+          const nameB = b.requester?.name ?? ''
           return dir * nameA.localeCompare(nameB, 'ja')
         }
         case 'status': {
@@ -843,6 +849,27 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                       <span className="text-[11.5px] italic text-warn">
                         {t('tasks.unassigned')}
                       </span>
+                    )}
+                  </td>
+                  )}
+
+                  {/* Requester */}
+                  {isColVisible('requester') && (
+                  <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.requester'] }}>
+                    {task.requester ? (
+                      <div className="flex items-center gap-[6px]">
+                        <Avatar
+                          name_short={task.requester.name_short}
+                          color={task.requester.avatar_color}
+                          avatar_url={task.requester.avatar_url}
+                          size="sm"
+                        />
+                        <span className="text-[11.5px] text-text whitespace-nowrap">
+                          {task.requester.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[11.5px] text-text3">-</span>
                     )}
                   </td>
                   )}
