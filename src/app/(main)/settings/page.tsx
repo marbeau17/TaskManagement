@@ -10,6 +10,7 @@ import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
 import { WebhookSettings } from '@/components/settings/WebhookSettings'
 import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
+import { APP_CONFIG } from '@/lib/config'
 
 type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook' | 'line'
 
@@ -38,7 +39,7 @@ function StorageUsageCard() {
       </div>
       <div className="flex justify-between text-[10px] text-text3">
         <span>{usage.usage_percent}% 使用中</span>
-        <span>上限: 5MB/ファイル</span>
+        <span>上限: {APP_CONFIG.upload.maxFileSizeLabel}/ファイル</span>
       </div>
     </div>
   )

@@ -73,7 +73,7 @@ export function CommentSection({ taskId, currentUserId }: CommentSectionProps) {
     try {
       const { uploadFile, getFileUrl } = await import('@/lib/data/storage')
       const result = await uploadFile(taskId, file)
-      const url = await getFileUrl(result.path)
+      const url = await getFileUrl(result.path, file.name)
       setBody((prev) => prev + (prev ? '\n' : '') + `📎 [${file.name}](${url})`)
     } catch (err) {
       console.error('File attach failed:', err)

@@ -4,8 +4,9 @@
 // =============================================================================
 
 import { isMockMode } from '@/lib/utils'
+import { APP_CONFIG } from '@/lib/config'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = APP_CONFIG.upload.maxFileSizeBytes
 
 // ---------------------------------------------------------------------------
 // Allowed file types
@@ -44,7 +45,7 @@ export const FILE_INPUT_ACCEPT = ALLOWED_MIME_TYPES.join(',')
 
 export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_SIZE) {
-    return 'ファイルサイズが10MBを超えています'
+    return `ファイルサイズが${APP_CONFIG.upload.maxFileSizeLabel}を超えています`
   }
   if (
     !(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)
@@ -74,6 +75,14 @@ export async function deleteFile(path: string): Promise<void> {
 // uploadFile
 // ---------------------------------------------------------------------------
 
+// Supabase Storage はキーに ASCII セーフ文字しか許さない（非 ASCII は HTTP 400 InvalidKey）。
+// オリジナル名は attachments.file_name に保持されるので、ストレージキーは UUID で合成し
+// 拡張子だけ残す。
+function buildStorageKey(taskId: string, file: File): string {
+  const ext = file.name.match(/\.[A-Za-z0-9]{1,8}$/)?.[0]?.toLowerCase() ?? ''
+  return `tasks/${taskId}/${Date.now()}_${crypto.randomUUID()}${ext}`
+}
+
 export async function uploadFile(
   taskId: string,
   file: File
@@ -96,13 +105,13 @@ export async function uploadFile(
 
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
-  const filePath = `tasks/${taskId}/${Date.now()}_${file.name}`
+  const filePath = buildStorageKey(taskId, file)
   const { error } = await supabase.storage.from('attachments').upload(filePath, file)
   if (error) throw new Error(error.message)
   return { path: filePath, name: file.name, size: file.size, type: file.type }
 }
 
-export async function getFileUrl(path: string): Promise<string> {
+export async function getFileUrl(path: string, downloadName?: string): Promise<string> {
   if (isMockMode()) return '#'
 
   const { createClient } = await import('@/lib/supabase/client')
@@ -110,9 +119,10 @@ export async function getFileUrl(path: string): Promise<string> {
 
   // WEB-40: 'attachments' bucket is private, so getPublicUrl returns an unsigned URL that 403s on download.
   // Use createSignedUrl with a 1h expiry so authenticated users get a working download link.
+  // download にオリジナル名を渡すと Storage 側が Content-Disposition を組み立て、UUID キーではなく日本語名で保存される。
   const { data, error } = await supabase.storage
     .from('attachments')
-    .createSignedUrl(path, 60 * 60)
+    .createSignedUrl(path, 60 * 60, downloadName ? { download: downloadName } : undefined)
   if (error || !data?.signedUrl) {
     throw new Error(error?.message || 'Failed to create download URL')
   }

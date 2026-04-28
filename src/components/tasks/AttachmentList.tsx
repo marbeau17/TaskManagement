@@ -5,12 +5,13 @@ import { useAttachments } from '@/hooks/useTasks'
 import { useUploadAttachment, useDeleteAttachment } from '@/hooks/useAttachments'
 import { getFileUrl } from '@/lib/data/storage'
 import { useI18n } from '@/hooks/useI18n'
+import { APP_CONFIG } from '@/lib/config'
 
 interface AttachmentListProps {
   taskId: string
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILE_SIZE = APP_CONFIG.upload.maxFileSizeBytes
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -33,7 +34,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
 
   const handleDownload = async (storagePath: string, fileName: string) => {
     try {
-      const url = await getFileUrl(storagePath)
+      const url = await getFileUrl(storagePath, fileName)
       const a = document.createElement('a')
       a.href = url
       a.download = fileName
