@@ -94,9 +94,16 @@ function TaskCard({
       </div>
 
       {/* Title */}
-      <div className="text-[12px] font-bold text-text mb-[8px] leading-tight line-clamp-2">
+      <div className="text-[12px] font-bold text-text mb-[4px] leading-tight line-clamp-2">
         {task.title}
       </div>
+
+      {/* Requester */}
+      {task.requester && (
+        <div className="text-[10px] text-text3 mb-[6px] truncate">
+          {t('tasks.col.requester')}: {task.requester.name}
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="flex items-center gap-[6px] mb-[8px]">

@@ -164,6 +164,27 @@ function SubtaskRows({
               </td>
             )}
 
+            {/* Requester */}
+            {isColVisible('requester') && (
+              <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.requester'] }}>
+                {task.requester ? (
+                  <div className="flex items-center gap-[6px]">
+                    <Avatar
+                      name_short={task.requester.name_short}
+                      color={task.requester.avatar_color}
+                      avatar_url={task.requester.avatar_url}
+                      size="sm"
+                    />
+                    <span className="text-[11.5px] text-text whitespace-nowrap">
+                      {task.requester.name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-[11.5px] text-text3">-</span>
+                )}
+              </td>
+            )}
+
             {/* Status */}
             {isColVisible('status') && (
               <td className="px-[12px] py-[10px]" style={{ width: columnWidths['tasks.col.status'] }}>
@@ -545,6 +566,11 @@ export function TaskTable({ tasks, selectedIds, onSelectionChange }: TaskTablePr
                 <div className="text-[13px] font-bold text-text mb-[6px] leading-tight">
                   {task.title}
                 </div>
+                {task.requester && (
+                  <div className="text-[11px] text-text3 mb-[6px] truncate">
+                    {t('tasks.col.requester')}: {task.requester.name}
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-[6px]">
                     {task.assignees && task.assignees.length > 0 ? (

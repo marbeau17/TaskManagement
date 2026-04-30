@@ -124,6 +124,12 @@ export function GanttRow({
               <span className="text-mint font-medium">{task.assigned_user.name}</span>
             </>
           )}
+          {task.requester && (
+            <>
+              <span className="text-text3/50">|</span>
+              <span className="text-text2">依頼: {task.requester.name}</span>
+            </>
+          )}
         </div>
       </div>
 
