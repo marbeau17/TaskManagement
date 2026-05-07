@@ -108,38 +108,19 @@ export async function addMember(data: InviteMemberForm): Promise<User> {
     return addMockMember({ ...data, password: 'workflow2026' })
   }
 
-  // Use admin client (service-role) because auth.admin.createUser requires it.
-  // This function must only be called server-side (e.g. from an API route).
-  const { createAdminClient } = await import('@/lib/supabase/admin')
-  const supabase = createAdminClient()
-
-  // Create auth user with default password
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: data.email,
-    password: 'workflow2026',
-    email_confirm: true,
-    user_metadata: { name: data.name, role: data.role },
+  // 本番では管理者(service-role)権限が必要なため、必ず API ルート経由で実行する。
+  // ブラウザから直接 admin client を呼ぶと SUPABASE_SERVICE_ROLE_KEY が undefined になり失敗する。
+  const res = await fetch('/api/members/invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
   })
 
-  if (authError) throw authError
-
-  // Insert into users table
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .insert({
-      id: authData.user.id,
-      email: data.email,
-      name: data.name,
-      name_short: data.name_short,
-      role: data.role,
-      weekly_capacity_hours: data.weekly_capacity_hours,
-      must_change_password: true,
-    })
-    .select()
-    .single()
-
-  if (userError) throw userError
-  return userData as User
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw new Error(payload.detail || payload.error || 'members.error.inviteFailed')
+  }
+  return (await res.json()) as User
 }
 
 // ---------------------------------------------------------------------------
@@ -221,58 +202,46 @@ export async function forceChangePassword(
     return forceChangeMockPassword(userId, newPassword)
   }
 
-  // Use browser client to update the current user's password via their session
+  const tag = '[forceChangePassword]'
+  console.log(`${tag} START userId=${userId}`)
+
+  // Step 1: ブラウザの自セッションで auth パスワードを更新
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
-  const { error: authError } = await supabase.auth.updateUser({ password: newPassword })
+  const { data: pre } = await supabase.auth.getUser()
+  console.log(`${tag} pre-update session uid=${pre?.user?.id ?? 'null'} email=${pre?.user?.email ?? 'null'}`)
+
+  const { data: authData, error: authError } = await supabase.auth.updateUser({ password: newPassword })
+  console.log(`${tag} auth.updateUser → uid=${authData?.user?.id ?? 'null'} err=${authError?.message ?? 'none'}`)
   if (authError) {
     return { success: false, error: authError.message }
   }
 
-  // Update the must_change_password flag in users table.
-  // Use admin client to ensure RLS doesn't block the update.
-  // Retry up to 3 times if the DB update fails, since the auth password
-  // has already been changed and the flag must stay in sync.
-  const { createAdminClient } = await import('@/lib/supabase/admin')
-  const adminSupabase = createAdminClient()
+  // Step 2: must_change_password フラグのクリアは admin 権限が要るため、API ルート経由で実行する。
+  // ブラウザから直接 admin client を呼ぶと SUPABASE_SERVICE_ROLE_KEY が undefined になり失敗する。
+  try {
+    console.log(`${tag} calling /api/auth/force-change-password for ${userId}`)
+    const res = await fetch('/api/auth/force-change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+      credentials: 'include',
+    })
+    const payload = await res.json().catch(() => ({}))
+    console.log(`${tag} api response status=${res.status} body=`, payload)
 
-  const MAX_RETRIES = 3
-  let lastDbError: unknown = null
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const { error: dbError } = await adminSupabase
-      .from('users')
-      .update({ must_change_password: false })
-      .eq('id', userId)
-
-    if (!dbError) {
-      return { success: true }
+    if (!res.ok) {
+      console.error(
+        `${tag} CRITICAL: Password changed in auth but must_change_password flag NOT cleared for user ${userId}. Server returned:`,
+        payload
+      )
+      return { success: false, error: payload.error || 'members.error.dbUpdateFailed' }
     }
-
-    lastDbError = dbError
-    console.error(
-      `[forceChangePassword] DB update failed (attempt ${attempt}/${MAX_RETRIES}) for user ${userId}:`,
-      dbError.message,
-      dbError.code
-    )
-
-    // Wait briefly before retrying (exponential backoff)
-    if (attempt < MAX_RETRIES) {
-      await new Promise((resolve) => setTimeout(resolve, attempt * 500))
-    }
-  }
-
-  // All retries exhausted. Password was changed in auth but the DB flag
-  // could not be updated. Log a critical error for manual resolution.
-  console.error(
-    `[forceChangePassword] CRITICAL: Password changed in auth but must_change_password flag NOT cleared for user ${userId}. Manual DB fix required.`
-  )
-  return {
-    success: false,
-    error: lastDbError instanceof Error
-      ? lastDbError.message
-      : 'members.error.dbUpdateFailed',
+    return { success: true }
+  } catch (err) {
+    console.error(`${tag} flag-clear API call failed:`, err)
+    return { success: false, error: 'members.error.dbUpdateFailed' }
   }
 }
 

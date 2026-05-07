@@ -31,7 +31,8 @@ function createInviteSchema(locale: Locale) {
     name_short: z
       .string()
       .min(1, t['members.validation.shortNameRequired'])
-      .max(1, t['members.validation.shortNameMax']),
+      .max(3, t['members.validation.shortNameMax'])
+      .regex(/^[A-Za-z]{1,3}$/, t['members.validation.shortNameMax']),
     role: z.string().min(1, t['members.validation.roleRequired']),
     weekly_capacity_hours: z.number().min(0).max(80),
   })
@@ -74,7 +75,7 @@ export function InviteMemberModal({
       name: '',
       name_short: '',
       role: 'creator',
-      weekly_capacity_hours: 16.0,
+      weekly_capacity_hours: 40,
     },
   })
 
@@ -164,7 +165,7 @@ export function InviteMemberModal({
             <input
               type="text"
               placeholder={t('members.shortNamePlaceholder')}
-              maxLength={1}
+              maxLength={3}
               className={inputClass}
               {...register('name_short')}
             />

@@ -23,10 +23,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, name, role } = body as {
+    const {
+      email,
+      name,
+      role,
+      name_short,
+      weekly_capacity_hours,
+    } = body as {
       email: string
       name: string
       role: string
+      name_short?: string
+      weekly_capacity_hours?: number
     }
 
     if (!email || !name || !role) {
@@ -36,15 +44,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 略称はフォームの値を優先。未指定時は名前先頭1文字をフォールバック。
+    const finalNameShort = (name_short && name_short.trim()) || name.charAt(0)
+    // 週キャパは指定があれば採用、未指定時は標準の40h。
+    const finalCapacity =
+      typeof weekly_capacity_hours === 'number' && !Number.isNaN(weekly_capacity_hours)
+        ? weekly_capacity_hours
+        : 40
+
     if (isMockMode()) {
       // In mock mode, use addMockMember handler with default password
       const { addMockMember } = await import('@/lib/mock/handlers')
       const mockMember = addMockMember({
         email,
         name,
-        name_short: name.charAt(0),
+        name_short: finalNameShort,
         role,
-        weekly_capacity_hours: 16,
+        weekly_capacity_hours: finalCapacity,
         password: 'workflow2026',
       })
       return NextResponse.json(mockMember, { status: 201 })
@@ -72,9 +88,9 @@ export async function POST(request: NextRequest) {
         id: authData.user.id,
         email,
         name,
-        name_short: name.charAt(0),
+        name_short: finalNameShort,
         role,
-        weekly_capacity_hours: 16,
+        weekly_capacity_hours: finalCapacity,
         must_change_password: true,
       })
       .select()
