@@ -55,6 +55,25 @@ const DEFAULT_PERMISSIONS: Permission[] = [
   { role: 'requester', resource: 'clients', action: 'read', allowed: true },
   { role: 'requester', resource: 'workload', action: 'read', allowed: true },
   { role: 'requester', resource: 'settings', action: 'read', allowed: true },
+
+  // Specialist: 課題管理・タスク・プロジェクトの基本 CRUD を許可。
+  // DB の permissions テーブルにも同等のエントリを投入済み (上書き先優先)。
+  // mock モードやフェッチ失敗時のフォールバックとしてここでも明示しておく。
+  { role: 'Specialist', resource: 'tasks', action: 'create', allowed: true },
+  { role: 'Specialist', resource: 'tasks', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'tasks', action: 'update', allowed: true },
+  { role: 'Specialist', resource: 'issues', action: 'create', allowed: true },
+  { role: 'Specialist', resource: 'issues', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'issues', action: 'update', allowed: true },
+  { role: 'Specialist', resource: 'projects', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'projects', action: 'update', allowed: true },
+  { role: 'Specialist', resource: 'members', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'clients', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'workload', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'settings', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'reports', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'chat', action: 'read', allowed: true },
+  { role: 'Specialist', resource: 'chat', action: 'create', allowed: true },
 ]
 
 // ---------------------------------------------------------------------------
