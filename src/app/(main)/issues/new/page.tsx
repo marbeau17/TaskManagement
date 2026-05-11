@@ -93,8 +93,34 @@ export default function NewIssuePage() {
       labels: labels.length > 0 ? labels : undefined,
     }
 
-    await createIssue.mutateAsync(data)
-    router.push('/issues')
+    const created = await createIssue.mutateAsync(data)
+    // Jump straight to the detail page so the reporter can attach screenshots / logs
+    // (the attachment UI lives there because it needs the issue ID).
+    if (created?.id) {
+      router.push(`/issues/${created.id}?fresh=1`)
+    } else {
+      router.push('/issues')
+    }
+  }
+
+  // よく使われるキーワード — 課題分類を揃えるためのプリセット。
+  // 障害管理者として横串集計が効くよう、用語を統一する目的で候補を提示する。
+  const SUGGESTED_LABELS = [
+    'UI', 'API', 'DB', '認証', 'メール', '通知',
+    'パフォーマンス', '表示崩れ', 'クラッシュ', 'モバイル',
+    '帳票', '権限', 'インポート', 'エクスポート', 'カレンダー', '添付',
+  ]
+
+  const currentLabels = labelsInput
+    .split(',')
+    .map((l) => l.trim())
+    .filter(Boolean)
+
+  const toggleLabel = (label: string) => {
+    const set = new Set(currentLabels)
+    if (set.has(label)) set.delete(label)
+    else set.add(label)
+    setLabelsInput(Array.from(set).join(', '))
   }
 
   return (
@@ -362,7 +388,7 @@ export default function NewIssuePage() {
                 </div>
               </div>
 
-              {/* Labels */}
+              {/* Labels with suggested chips — 集計時に表記揺れを抑えるための候補。 */}
               <div>
                 <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
                   {t('issues.labelsLabel')}
@@ -374,6 +400,38 @@ export default function NewIssuePage() {
                   placeholder={t('issues.labelsPlaceholder')}
                   className="w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text bg-surface placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint"
                 />
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {SUGGESTED_LABELS.map((label) => {
+                    const active = currentLabels.includes(label)
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => toggleLabel(label)}
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors ${
+                          active
+                            ? 'bg-mint text-white border-mint'
+                            : 'bg-surf2 text-text2 border-wf-border hover:border-mint hover:text-mint'
+                        }`}
+                      >
+                        {active ? '✓ ' : '+ '}{label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-[10px] text-text3 mt-1.5">
+                  クリックで候補を追加 / 解除。手入力 (カンマ区切り) も可能。
+                </p>
+              </div>
+
+              {/* Attachment hint — uploads happen on the detail page after create. */}
+              <div className="rounded-lg border border-dashed border-wf-border bg-surf2/40 px-3 py-2.5 text-[11.5px] text-text2 flex items-start gap-2">
+                <span className="text-[14px]">📎</span>
+                <span>
+                  <strong className="text-text">スクリーンショット / ログの添付</strong> は
+                  起票直後に表示される課題詳細画面から行えます。再現画面のキャプチャや
+                  エラーログを添付すると、担当者の調査が早くなります。
+                </span>
               </div>
             </div>
           </div>

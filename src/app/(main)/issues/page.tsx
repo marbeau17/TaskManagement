@@ -136,6 +136,13 @@ export default function IssuesPage() {
     <>
       <Topbar title={'🐛 ' + t('issues.title')}>
         <button
+          onClick={() => router.push('/issues/dashboard')}
+          className="px-[14px] py-[6px] text-[12px] font-semibold text-text bg-surf2 border border-wf-border rounded-[6px] hover:bg-wf-border transition-colors"
+          title="KPI ダッシュボード"
+        >
+          📊 ダッシュボード
+        </button>
+        <button
           onClick={() => {
             if (sortedIssues.length > 0) exportIssuesCsv(sortedIssues, locale)
           }}

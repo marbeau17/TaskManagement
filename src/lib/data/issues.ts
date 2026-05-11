@@ -177,11 +177,38 @@ export async function createIssue(data: CreateIssueData): Promise<Issue> {
       *,
       reporter:users!reported_by(*),
       assignee:users!assigned_to(*),
-      project:projects!project_id(*)
+      project:projects!project_id(*),
+      task:tasks!task_id(id, title)
     `)
     .single()
 
   if (error) throw error
+
+  // Notify the assignee by email (fire-and-forget; don't block the create flow).
+  try {
+    if (result?.assignee?.email && result.id) {
+      void fetch('/api/email/notify-issue-assigned', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueId: result.id,
+          issueKey: result.issue_key,
+          issueTitle: result.title,
+          issueType: result.type,
+          severity: result.severity,
+          projectName: result.project?.name ?? '',
+          taskTitle: result.task?.title ?? '',
+          description: result.description ?? '',
+          reporterName: result.reporter?.name ?? '',
+          assigneeEmail: result.assignee.email,
+          assigneeName: result.assignee.name,
+        }),
+      }).catch((err) => console.error('[createIssue] notify-issue-assigned failed:', err))
+    }
+  } catch (err) {
+    console.error('[createIssue] notify-issue-assigned dispatch failed:', err)
+  }
+
   return result as Issue
 }
 
@@ -201,6 +228,18 @@ export async function updateIssue(
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
 
+  // Capture prior assignee_id so we only notify on actual reassignment.
+  let priorAssigneeId: string | null = null
+  if ('assigned_to' in data) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: prev } = await (supabase as any)
+      .from('issues')
+      .select('assigned_to')
+      .eq('id', id)
+      .single()
+    priorAssigneeId = prev?.assigned_to ?? null
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: result, error } = await (supabase as any)
     .from('issues')
@@ -210,11 +249,43 @@ export async function updateIssue(
       *,
       reporter:users!reported_by(*),
       assignee:users!assigned_to(*),
-      project:projects!project_id(*)
+      project:projects!project_id(*),
+      task:tasks!task_id(id, title)
     `)
     .single()
 
   if (error) throw error
+
+  // Notify the assignee on (re)assignment.
+  try {
+    if (
+      'assigned_to' in data &&
+      data.assigned_to &&
+      data.assigned_to !== priorAssigneeId &&
+      result?.assignee?.email
+    ) {
+      void fetch('/api/email/notify-issue-assigned', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueId: result.id,
+          issueKey: result.issue_key,
+          issueTitle: result.title,
+          issueType: result.type,
+          severity: result.severity,
+          projectName: result.project?.name ?? '',
+          taskTitle: result.task?.title ?? '',
+          description: result.description ?? '',
+          reporterName: result.reporter?.name ?? '',
+          assigneeEmail: result.assignee.email,
+          assigneeName: result.assignee.name,
+        }),
+      }).catch((err) => console.error('[updateIssue] notify-issue-assigned failed:', err))
+    }
+  } catch (err) {
+    console.error('[updateIssue] notify dispatch failed:', err)
+  }
+
   return result as Issue
 }
 
@@ -346,4 +417,85 @@ export async function addIssueComment(
 
   if (error) throw error
   return data as IssueComment
+}
+
+// ---------------------------------------------------------------------------
+// Issue attachments — depends on migration 065 (issue_id column on attachments)
+// ---------------------------------------------------------------------------
+
+export interface IssueAttachment {
+  id: string
+  issue_id: string
+  task_id: string | null
+  uploaded_by: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  storage_path: string
+  created_at: string
+}
+
+export async function getIssueAttachments(issueId: string): Promise<IssueAttachment[]> {
+  if (isMockMode()) {
+    // Mock mode: attachments not modelled for issues — return empty.
+    return []
+  }
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('attachments')
+    .select('*')
+    .eq('issue_id', issueId)
+    .order('created_at', { ascending: false })
+  if (error) {
+    // 42703 = column does not exist (migration 065 not yet applied)
+    if ((error as { code?: string }).code === '42703') {
+      console.warn('[getIssueAttachments] migration 065 not applied yet — returning [].')
+      return []
+    }
+    throw error
+  }
+  return (data ?? []) as IssueAttachment[]
+}
+
+export async function addIssueAttachmentRecord(
+  issueId: string,
+  file: { file_name: string; file_size: number; mime_type: string; storage_path: string }
+): Promise<IssueAttachment> {
+  if (isMockMode()) {
+    throw new Error('Mock mode: issue attachments not supported')
+  }
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('attachments')
+    .insert({
+      issue_id: issueId,
+      task_id: null,
+      uploaded_by: authUser.id,
+      ...file,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as IssueAttachment
+}
+
+export async function deleteIssueAttachmentRecord(attachmentId: string): Promise<void> {
+  if (isMockMode()) return
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('attachments')
+    .delete()
+    .eq('id', attachmentId)
+  if (error) throw error
 }

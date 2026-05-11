@@ -12,6 +12,7 @@ import { parseMentions } from '@/lib/mention-utils'
 import { formatDate } from '@/lib/utils'
 import { isValidTransition } from '@/lib/data/issues'
 import { IssueRelations } from '@/components/issues/IssueRelations'
+import { IssueAttachmentList } from '@/components/issues/IssueAttachmentList'
 import { useI18n } from '@/hooks/useI18n'
 import type { IssueStatus } from '@/types/issue'
 
@@ -307,6 +308,41 @@ export default function IssueDetailPage() {
         })}
       </div>
 
+      {/* Reporter validation banner — shown when an issue is resolved waiting for the
+          reporter's sign-off. Pairs with the email CTA so the reporter can act either
+          way (one-click close, or reopen if the fix is insufficient). */}
+      {isReporter && issue.status === 'resolved' && (
+        <div className="shrink-0 border-b border-mint/40 bg-mint/10 px-3 md:px-6 py-3 flex flex-wrap items-center gap-3">
+          <span className="text-[18px]">🔍</span>
+          <div className="flex-1 min-w-[260px]">
+            <div className="text-[12.5px] font-bold text-mint-d">
+              修正内容を確認してください
+            </div>
+            <div className="text-[11.5px] text-text2">
+              担当者が解決したと報告しています。修正された動作を確認し、問題なければクローズ、問題が残っていれば再オープンしてください。
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleTransition('closed')}
+              disabled={transitionStatus.isPending}
+              className="px-3 py-1.5 rounded-md text-[12px] font-bold bg-mint text-white hover:bg-mint-d transition-colors disabled:opacity-50"
+            >
+              修正を確認してクローズ
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTransition('open')}
+              disabled={transitionStatus.isPending}
+              className="px-3 py-1.5 rounded-md text-[12px] font-bold border border-warn-b text-warn bg-warn-bg hover:bg-warn hover:text-white transition-colors disabled:opacity-50"
+            >
+              修正不十分・再オープン
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2-column layout */}
       <div className="flex-1 overflow-y-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4 lg:gap-6 items-start">
         {/* Left column */}
@@ -360,6 +396,9 @@ export default function IssueDetailPage() {
               </CollapsibleSection>
             </div>
           )}
+
+          {/* Attachments — screenshots, logs, related files */}
+          <IssueAttachmentList issueId={issue.id} />
 
           {/* Comments */}
           <IssueCommentSection issueId={issue.id} issueKey={issue.issue_key} issueTitle={issue.title} currentUserId={user?.id ?? ''} currentUserName={user?.name ?? ''} />
