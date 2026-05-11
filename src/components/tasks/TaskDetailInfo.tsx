@@ -196,6 +196,37 @@ export function TaskDetailInfo({ task }: TaskDetailInfoProps) {
         )}
       </div>
 
+      {/* IMP_MC-1 / WEB-41: People summary — who created (requester), who is in charge
+          (director), who's assigned. Was previously only visible in the activity log,
+          so users complained they could not see "who created" / "who was asked" at a
+          glance. ActivityLog still shows the full deadline / status history below. */}
+      <div className="mb-3 grid grid-cols-3 gap-3 text-[12px]">
+        <div>
+          <span className="text-text2 block mb-1">{t('taskDetailInfo.requester') || '依頼者 (起票)'}</span>
+          <span className="font-bold text-text">
+            {'👤 '}{task.requester?.name ?? '-'}
+          </span>
+        </div>
+        <div>
+          <span className="text-text2 block mb-1">{t('taskDetailInfo.director') || 'ディレクター'}</span>
+          <span className="font-bold text-text">
+            {'🎯 '}{task.director?.name ?? '-'}
+          </span>
+        </div>
+        <div>
+          <span className="text-text2 block mb-1">{t('taskDetailInfo.assignees') || '担当者'}</span>
+          <span className="font-bold text-text">
+            {'🛠 '}
+            {(task.assignees ?? []).length > 0
+              ? (task.assignees ?? [])
+                  .map((a: any) => a?.user?.name)
+                  .filter(Boolean)
+                  .join(', ') || '-'
+              : task.assigned_user?.name ?? '-'}
+          </span>
+        </div>
+      </div>
+
       {/* Task name */}
       <div className="mb-3">
         <span className="text-[12px] text-text2 block mb-1">{t('taskDetailInfo.taskName')}</span>

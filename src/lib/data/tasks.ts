@@ -26,23 +26,45 @@ import { buildWeeklyPlan, buildWeeklyActual } from '@/lib/workload-utils'
 // Activity log helper
 // ---------------------------------------------------------------------------
 
+// IMP_MC-1 / WEB-41: activity logging was silently failing because:
+//   1. The column is `detail` (JSONB) per migration 006 — the previous code sent
+//      `details` (plural string), which the DB rejected and the try/catch swallowed.
+//   2. Callers passed `'updated'` as the action, but the activity_action enum only
+//      accepts created|assigned|progress_updated|status_changed|hours_updated|
+//      comment_added|deadline_changed|rejected. Unknown actions were silently lost.
+// Callers must now pass a valid enum value. `detail` accepts free-form JSON
+// (we wrap string details into { message: ... } so future structured payloads work).
+const VALID_ACTIONS = new Set([
+  'created', 'assigned', 'progress_updated', 'status_changed',
+  'hours_updated', 'comment_added', 'deadline_changed', 'rejected',
+])
 async function logActivity(
   supabase: any,
   taskId: string,
   userId: string | null,
   action: string,
-  details?: string
+  details?: string | Record<string, unknown>
 ) {
+  if (!VALID_ACTIONS.has(action)) {
+    console.warn(`[activity_logs] skipping invalid action: ${action}`)
+    return
+  }
   try {
+    const detail =
+      details === undefined || details === null
+        ? null
+        : typeof details === 'string'
+          ? { message: details }
+          : details
     await supabase.from('activity_logs').insert({
       task_id: taskId,
       user_id: userId,
       action,
-      details: details ?? null,
+      detail,
       created_at: new Date().toISOString(),
     })
-  } catch {
-    // Activity logging is non-critical - don't fail the main operation
+  } catch (err) {
+    console.warn('[activity_logs] insert failed:', err)
   }
 }
 
@@ -395,8 +417,32 @@ export async function updateTask(
   if (result) {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser()
-      const fields = Object.keys(data).join(', ')
-      await logActivity(supabase, id, authUser?.id ?? null, 'updated', `Fields: ${fields}`)
+      const changedFields = Object.keys(data)
+      // IMP_MC-1 / WEB-41: emit specific activity_action values per field type so the
+      // activity log timeline (and the requester's "依頼履歴" view) can show what
+      // actually changed — previously a generic 'updated' action was silently
+      // rejected because it is not in the activity_action enum.
+      if (changedFields.includes('desired_deadline') || changedFields.includes('confirmed_deadline')) {
+        await logActivity(supabase, id, authUser?.id ?? null, 'deadline_changed', {
+          desired_deadline: data.desired_deadline ?? null,
+          confirmed_deadline: data.confirmed_deadline ?? null,
+        })
+      }
+      if (changedFields.includes('status')) {
+        await logActivity(supabase, id, authUser?.id ?? null, 'status_changed', {
+          status: data.status,
+        })
+      }
+      if (changedFields.includes('actual_hours')) {
+        await logActivity(supabase, id, authUser?.id ?? null, 'hours_updated', {
+          actual_hours: data.actual_hours ?? null,
+        })
+      }
+      if (changedFields.includes('assigned_to')) {
+        await logActivity(supabase, id, authUser?.id ?? null, 'assigned', {
+          assigned_to: data.assigned_to ?? null,
+        })
+      }
 
       // Send email notification when assigned_to changes (reassignment)
       if (data.assigned_to && authUser) {

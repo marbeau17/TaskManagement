@@ -92,10 +92,19 @@ export default function ProfilePage() {
         // Refresh page to update sidebar avatar
         window.location.reload()
       } else {
-        toast.error(t('profile.saveFailed'))
+        // WEB-42: surface the server-side reason so users can act on it instead of
+        // seeing a generic "保存に失敗しました" with no clue.
+        let detail = ''
+        try {
+          const body = await res.json()
+          detail = body?.error ? `: ${body.error}` : ''
+        } catch { /* response was not JSON */ }
+        console.error('[WEB-42] profile save failed', res.status, detail)
+        toast.error(`${t('profile.saveFailed')}${detail}`)
       }
-    } catch {
-      toast.error(t('profile.saveFailed'))
+    } catch (err) {
+      console.error('[WEB-42] profile save threw', err)
+      toast.error(`${t('profile.saveFailed')}: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setSaving(false)
     }

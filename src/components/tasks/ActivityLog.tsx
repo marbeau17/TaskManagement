@@ -24,6 +24,22 @@ function formatDate(dateStr: string): string {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
+// IMP_MC-1 / WEB-41: surface what actually changed so the requester can see
+// e.g. deadline changes / status moves in plain language.
+function formatDetail(detail: unknown): string {
+  if (!detail) return ''
+  if (typeof detail === 'string') return detail
+  if (typeof detail !== 'object') return String(detail)
+  const obj = detail as Record<string, unknown>
+  if (obj.message && typeof obj.message === 'string') return obj.message
+  const pairs: string[] = []
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === null || v === undefined || v === '') continue
+    pairs.push(`${k}: ${String(v)}`)
+  }
+  return pairs.join(' / ')
+}
+
 export function ActivityLog({ taskId }: ActivityLogProps) {
   const { t } = useI18n()
   const { data: logs, isLoading } = useActivityLogs(taskId)
@@ -75,6 +91,14 @@ export function ActivityLog({ taskId }: ActivityLogProps) {
               {t('activity.suffix') && (
                 <span className="text-text2">{t('activity.suffix')}</span>
               )}
+              {(() => {
+                const d = formatDetail(log.detail)
+                return d ? (
+                  <div className="text-text3 mt-0.5 pl-1 border-l-2 border-border2 ml-1">
+                    {d}
+                  </div>
+                ) : null
+              })()}
             </div>
           </div>
         ))}

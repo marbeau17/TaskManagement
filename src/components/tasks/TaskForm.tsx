@@ -507,8 +507,9 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
         </div>
       </div>
 
-      {/* Template fields */}
-      {selectedTemplate && selectedTemplate.fields.length > 0 && (
+      {/* Template fields — WEB-44: defensive fields?.length so null/undefined fields
+          (possible for DB-defined templates pre-migration) does not crash the form. */}
+      {selectedTemplate && (selectedTemplate.fields?.length ?? 0) > 0 && (
         <div className="bg-surface rounded-xl border border-wf-border shadow-sm">
           <div className="px-6 py-4 border-b border-wf-border">
             <h2 className="text-[15px] font-bold text-text1">
@@ -516,7 +517,7 @@ export function TaskForm({ defaultValues, onSubmit, onCancel }: TaskFormProps) {
             </h2>
           </div>
           <div className="px-6 py-5 space-y-5">
-            {selectedTemplate.fields.map((field) => (
+            {(selectedTemplate.fields ?? []).map((field) => (
               <TemplateFieldRenderer
                 key={field.key}
                 field={field}

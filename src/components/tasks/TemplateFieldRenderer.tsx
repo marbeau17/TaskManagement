@@ -1,5 +1,6 @@
 'use client'
 
+import { Component, type ReactNode } from 'react'
 import type { TemplateField } from '@/types/template'
 import { useI18n } from '@/hooks/useI18n'
 
@@ -9,13 +10,42 @@ interface Props {
   onChange: (value: string | number | string[]) => void
 }
 
+// WEB-44: prevent a single broken template field from white-screening the whole task
+// form (and dumping all entered data). Reported case: ECサイト運営保守 → モール選択画面
+// で選択すると画面が真っ白になる現象。
+class TemplateFieldErrorBoundary extends Component<
+  { children: ReactNode; fieldLabel: string },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fieldLabel: string }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error: Error) {
+    console.error('[WEB-44] Template field render error:', this.props.fieldLabel, error)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-lg border border-warning bg-warning/5 px-3 py-2 text-[12px] text-warning">
+          項目「{this.props.fieldLabel}」の表示でエラーが発生しました。管理者にご連絡ください。
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 const inputClass = `
   w-full rounded-lg border border-wf-border px-3 py-2 text-[13px] text-text1
   bg-surface placeholder:text-text3
   focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint
 `
 
-export function TemplateFieldRenderer({ field, value, onChange }: Props) {
+function FieldBody({ field, value, onChange }: Props) {
   const { t } = useI18n()
   const label = (
     <label className="block text-[12.5px] font-semibold text-text2 mb-1.5">
@@ -144,16 +174,18 @@ export function TemplateFieldRenderer({ field, value, onChange }: Props) {
     }
 
     case 'button_group': {
+      // WEB-44: be permissive about value shape — DB-defined templates can serialize
+      // value as null, string, number, or array regardless of the multiSelect flag.
       const selected = field.multiSelect
         ? (Array.isArray(value) ? value : [])
-        : value
+        : (Array.isArray(value) ? (value[0] ?? '') : value ?? '')
       return (
         <div>
           {label}
           <div className="flex flex-wrap gap-2 mt-1">
             {(field.options ?? []).map((opt) => {
               const isSelected = field.multiSelect
-                ? (selected as string[]).includes(opt)
+                ? (Array.isArray(selected) ? selected.includes(opt) : false)
                 : selected === opt
               return (
                 <button
@@ -186,6 +218,28 @@ export function TemplateFieldRenderer({ field, value, onChange }: Props) {
     }
 
     default:
-      return null
+      // WEB-44: unknown field type — render as plain text input fallback so the form
+      // does not silently swallow the field (which previously caused confusion when the
+      // DB schema introduced types like "mall_select" before the renderer learned them).
+      return (
+        <div>
+          {label}
+          <input
+            type="text"
+            value={typeof value === 'string' ? value : ''}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={`${field.type} (未対応の型 — テキスト入力)`}
+            className={inputClass}
+          />
+        </div>
+      )
   }
+}
+
+export function TemplateFieldRenderer(props: Props) {
+  return (
+    <TemplateFieldErrorBoundary fieldLabel={props.field?.label ?? props.field?.key ?? 'unknown'}>
+      <FieldBody {...props} />
+    </TemplateFieldErrorBoundary>
+  )
 }

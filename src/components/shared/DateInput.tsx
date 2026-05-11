@@ -328,27 +328,21 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
     let m = month
     let d = day
 
-    if (segment === 'year' && y) {
-      if (y.length >= 4) {
-        // BD-1: Only clamp if the value is already a 4-digit number. Shorter entries
-        // (e.g. "420" from a user who typed "4/20") are left untouched so we don't
-        // surprise them with "1900".
-        const n = clamp(parseInt(y, 10) || 0, 1900, 2100)
-        y = pad(n, 4)
-        setYear(y)
-      }
-    }
+    // BD-1: Do not mutate the user's input on blur. Pads/clamps would surprise users
+    // (e.g. "0420" → "1900", "3" → "03"). The validation check below only emits when
+    // values are coherent — invalid drafts are left visible so the user can correct them.
     if (segment === 'month' && m) {
-      if (m.length >= 2 || parseInt(m, 10) > 1) {
-        const n = clamp(parseInt(m, 10) || 0, 1, 12)
-        m = pad(n, 2)
+      const parsedM = parseInt(m, 10)
+      if (m.length === 2 && (parsedM < 1 || parsedM > 12)) {
+        // Truly out of range full input — clamp to nearest valid month
+        m = pad(clamp(parsedM || 1, 1, 12), 2)
         setMonth(m)
       }
     }
     if (segment === 'day' && d) {
-      if (d.length >= 2 || parseInt(d, 10) > 3) {
-        const n = clamp(parseInt(d, 10) || 0, 1, 31)
-        d = pad(n, 2)
+      const parsedD = parseInt(d, 10)
+      if (d.length === 2 && (parsedD < 1 || parsedD > 31)) {
+        d = pad(clamp(parsedD || 1, 1, 31), 2)
         setDay(d)
       }
     }
@@ -412,8 +406,18 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
     .filter(Boolean)
     .join(' ')
 
+  // WEB-39: open calendar when user clicks the wrapper (except on the segment inputs
+  // themselves). Users were not noticing the small 📅 icon and reported "calendar does
+  // not appear". Now any click on the field background opens the picker.
+  const handleWrapperClick = (e: React.MouseEvent) => {
+    if (disabled) return
+    const target = e.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.closest('button')) return
+    setShowCalendar(true)
+  }
+
   return (
-    <span className={wrapperClass}>
+    <span className={wrapperClass} onClick={handleWrapperClick}>
       {/* Hidden input for react-hook-form / form submission */}
       <input
         ref={hiddenRef}
@@ -424,7 +428,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
         required={required}
       />
 
-      {/* Calendar button — WEB-39: larger hitbox + clearer icon so users notice it */}
+      {/* Calendar button — WEB-39: explicit toggle remains for keyboard / a11y users */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); if (!disabled) setShowCalendar(!showCalendar) }}
