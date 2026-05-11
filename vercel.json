@@ -3,6 +3,10 @@
     {
       "path": "/api/email/daily-overdue",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/password-expiry-reminder",
+      "schedule": "0 9 * * *"
     }
   ]
 }

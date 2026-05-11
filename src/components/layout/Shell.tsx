@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { GlobalSearch } from '@/components/shared/GlobalSearch'
 import { useI18n } from '@/hooks/useI18n'
 import { ToastContainer } from '@/components/shared/ToastContainer'
+import { PasswordExpiryBanner } from '@/components/security/PasswordExpiryBanner'
 
 interface ShellProps {
   children: React.ReactNode
@@ -79,6 +80,7 @@ export function Shell({ children }: ShellProps) {
             </div>
           </div>
         )}
+        <PasswordExpiryBanner />
         {children}
       </div>
       <ToastContainer />

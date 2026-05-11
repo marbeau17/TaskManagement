@@ -186,6 +186,16 @@ export async function changePassword(
   if (error) {
     return { success: false, error: error.message }
   }
+
+  // パスワード変更日を記録 (期限切れバナーの判定に使用)
+  // 失敗してもパスワード変更自体は成功扱い — admin client で後追い修正可能
+  fetch('/api/auth/touch-password-changed-at', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+    credentials: 'include',
+  }).catch((e) => console.warn('[changePassword] touch-password-changed-at failed:', e))
+
   return { success: true }
 }
 

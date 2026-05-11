@@ -10,9 +10,10 @@ import { usePermission } from '@/hooks/usePermission'
 import { getSetting, setSetting } from '@/lib/data/settings'
 import { WebhookSettings } from '@/components/settings/WebhookSettings'
 import { CrmLineSettings } from '@/components/crm/CrmLineSettings'
+import { SecurityPolicySettings } from '@/components/settings/SecurityPolicySettings'
 import { APP_CONFIG } from '@/lib/config'
 
-type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook' | 'line'
+type SettingsTab = 'general' | 'theme' | 'language' | 'workload' | 'notification' | 'email' | 'ai' | 'webhook' | 'line' | 'security'
 
 function StorageUsageCard() {
   const [usage, setUsage] = useState<{ used_mb: number; limit_mb: number; file_count: number; usage_percent: number } | null>(null)
@@ -202,6 +203,10 @@ export default function SettingsPage() {
     { id: 'ai', labelKey: 'settings.ai' },
     { id: 'webhook', labelKey: 'settings.webhooks' },
     { id: 'line', labelKey: 'crm.line.title' },
+    // セキュリティタブは admin のみに表示 (下の filter で除外)
+    ...(user?.role === 'admin'
+      ? [{ id: 'security' as SettingsTab, labelKey: 'セキュリティ' }]
+      : []),
   ]
 
   return (
@@ -514,6 +519,11 @@ export default function SettingsPage() {
           {/* LINE Settings */}
           {activeTab === 'line' && (
             <CrmLineSettings />
+          )}
+
+          {/* Security Policy (admin only) */}
+          {activeTab === 'security' && user?.role === 'admin' && (
+            <SecurityPolicySettings />
           )}
 
           {/* AI Settings */}

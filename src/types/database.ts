@@ -46,6 +46,7 @@ export interface User {
   department: string
   access_domains: string[]
   title: string
+  password_changed_at?: string | null
   created_at: string
   updated_at: string
 }
