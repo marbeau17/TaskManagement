@@ -13,6 +13,11 @@ import type { Permission } from '@/lib/data/permissions'
 // 必要 — 書き換え系をアクセスドメインだけで開放するのは権限管理上危険なため。
 const SAFE_FALLBACK_ACTIONS = new Set(['read'])
 
+// 誰でも起票可能にしたいリソース・アクションの組み合わせ。
+// 課題 (issues) は社内全員が品質報告できるように、ロール / access_domains を
+// 問わずログイン済みユーザー全員に create を開放する (運用方針による特例)。
+const OPEN_TO_ALL_AUTHENTICATED = new Set<string>(['issues:create'])
+
 export function usePermission() {
   const { user } = useAuth()
 
@@ -25,6 +30,10 @@ export function usePermission() {
   const can = useCallback(
     (resource: string, action: string): boolean => {
       if (!user) return false
+
+      // 誰でも起票可ポリシー: ログイン済みであれば常に許可。
+      // 個別のロール / access_domains を問わない。
+      if (OPEN_TO_ALL_AUTHENTICATED.has(`${resource}:${action}`)) return true
 
       const allowedByRole =
         permissions?.some(

@@ -49,6 +49,7 @@ const DEFAULT_PERMISSIONS: Permission[] = [
   // Requester: can create tasks and view data
   { role: 'requester', resource: 'tasks', action: 'create', allowed: true },
   { role: 'requester', resource: 'tasks', action: 'read', allowed: true },
+  { role: 'requester', resource: 'issues', action: 'create', allowed: true },
   { role: 'requester', resource: 'issues', action: 'read', allowed: true },
   { role: 'requester', resource: 'projects', action: 'read', allowed: true },
   { role: 'requester', resource: 'members', action: 'read', allowed: true },
