@@ -128,7 +128,40 @@ export async function getTasks(
   }
 
   if (filters?.assigned_to) {
-    query = query.eq('assigned_to', filters.assigned_to)
+    // 担当者フィルタは UI の表示ロジック (TaskTable.tsx:834-878) を厳密に再現する:
+    //   - task_assignees に行があれば → task_assignees に user が含まれているか
+    //   - task_assignees に行が無ければ → 旧列 tasks.assigned_to が user か
+    // 旧列を残したままマルチ担当が変更されてもクリアされない設計のため、単純に
+    // OR で結合すると「自分が担当でないタスクが自分のフィルタで表示される」現象が
+    // 起きる。表示と整合する集合を 3 クエリで前計算し .in('id', ...) で絞る。
+    const userId = filters.assigned_to
+    const [
+      { data: aRows },
+      { data: bRows },
+      { data: legacyRows },
+    ] = await Promise.all([
+      supabase.from('task_assignees').select('task_id').eq('user_id', userId),
+      supabase.from('task_assignees').select('task_id'),
+      supabase.from('tasks').select('id').eq('assigned_to', userId),
+    ])
+    const setMultiForUser = new Set<string>(
+      (aRows ?? []).map((r: { task_id: string }) => r.task_id),
+    )
+    const setHasAnyMulti = new Set<string>(
+      (bRows ?? []).map((r: { task_id: string }) => r.task_id),
+    )
+    const legacyMatches: string[] = []
+    for (const r of (legacyRows ?? []) as { id: string }[]) {
+      // 旧列マッチで採用するのは「マルチ担当が一切無いタスク」のみ
+      if (!setHasAnyMulti.has(r.id)) legacyMatches.push(r.id)
+    }
+    const finalIds = Array.from(new Set([...setMultiForUser, ...legacyMatches]))
+    if (finalIds.length === 0) {
+      // フィルタにヒットなし — 不可能な条件で空結果を強制
+      query = query.eq('id', '00000000-0000-0000-0000-000000000000')
+    } else {
+      query = query.in('id', finalIds)
+    }
   }
 
   if (filters?.requested_by) {
