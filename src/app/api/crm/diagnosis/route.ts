@@ -205,13 +205,30 @@ export async function POST(request: NextRequest) {
       const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
       const jsonStr = jsonMatch ? jsonMatch[1].trim() : rawText.trim()
       diagnosis = JSON.parse(jsonStr)
-    } catch {
-      // If JSON parsing fails, return raw text as fallback
-      return NextResponse.json({
-        diagnosis: null,
-        raw: rawText,
-        error: 'Failed to parse diagnosis JSON from AI response',
-      })
+    } catch (parseErr) {
+      // パース失敗時は 502 を返してクライアント側でエラー扱いさせる
+      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr)
+      console.error('[diagnosis] JSON parse failed:', msg, '\nraw:', rawText.slice(0, 300))
+      return NextResponse.json(
+        {
+          error: 'Failed to parse diagnosis JSON from AI response',
+          details: msg,
+          raw: rawText.slice(0, 800),
+        },
+        { status: 502 },
+      )
+    }
+
+    // 期待スキーマの最低限の整合性チェック（swot 配下が無いと UI が落ちる）
+    if (!diagnosis || typeof diagnosis !== 'object' || !diagnosis.swot) {
+      console.error('[diagnosis] AI returned malformed structure:', JSON.stringify(diagnosis).slice(0, 300))
+      return NextResponse.json(
+        {
+          error: 'AI returned malformed structure (missing swot)',
+          raw: rawText.slice(0, 800),
+        },
+        { status: 502 },
+      )
     }
 
     return NextResponse.json({ diagnosis })

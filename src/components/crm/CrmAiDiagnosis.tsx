@@ -88,12 +88,25 @@ export function CrmAiDiagnosis() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId }),
       })
-      if (!res.ok) throw new Error('Diagnosis failed')
-      const result: DiagnosisResult = await res.json()
+      const payload = await res.json().catch(() => ({} as Record<string, unknown>))
+      if (!res.ok) {
+        const detail = (payload as { error?: string; details?: string }).error
+          ?? (payload as { details?: string }).details
+          ?? `HTTP ${res.status}`
+        throw new Error(detail)
+      }
+      // API は { diagnosis: DiagnosisResult } 形式で返すのでアンラップする
+      const result = (payload as { diagnosis?: DiagnosisResult | null }).diagnosis
+      if (!result || !result.swot) {
+        const raw = (payload as { raw?: string }).raw
+        throw new Error(raw ? `AI のレスポンス JSON が不正です: ${raw.slice(0, 120)}…` : 'AI レスポンスが空でした')
+      }
       setDiagnosisMap(prev => ({ ...prev, [leadId]: result }))
       toast.success('AI診断が完了しました')
-    } catch {
-      toast.error('AI診断に失敗しました。もう一度お試しください。')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'AI診断に失敗しました'
+      console.error('[diagnosis]', err)
+      toast.error(`AI診断に失敗しました: ${msg.slice(0, 200)}`)
     } finally {
       setDiagnosing(false)
     }
