@@ -10,6 +10,7 @@ import type { User, UserRole } from '@/types/database'
 import { useQueryClient } from '@tanstack/react-query'
 import { InviteMemberModal } from '@/components/members/InviteMemberModal'
 import { DeleteMemberDialog } from '@/components/members/DeleteMemberDialog'
+import { exportMembersCsv } from '@/lib/csv-export-members'
 import { OrgChart } from '@/components/members/OrgChart'
 import { OrgChartEditor } from '@/components/members/OrgChartEditor'
 import { useAllRoles, useAddCustomRole, useDeleteCustomRole } from '@/hooks/useRoles'
@@ -524,7 +525,7 @@ function RoleManagementPanel() {
 // ---------------------------------------------------------------------------
 
 export default function MembersPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { user } = useAuth()
   const router = useRouter()
   const { data: members, isLoading } = useMembers()
@@ -639,6 +640,14 @@ export default function MembersPage() {
                   <span className="text-text3">({t('members.totalPrefix')}{totalCount}{t('members.memberUnit')})</span>
                 )}
               </p>
+              <button
+                onClick={() => members && members.length > 0 && exportMembersCsv(members, locale)}
+                disabled={!members || members.length === 0}
+                className="px-[12px] py-[6px] text-[12px] text-text2 bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={t('members.exportCsv')}
+              >
+                {'\u{1F4E5} '}{t('members.exportCsv')}
+              </button>
             </div>
 
             <div className="mb-[12px]">
