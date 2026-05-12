@@ -17,12 +17,34 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.json()
     const body = rawBody.values ? { ...rawBody.values, formId: rawBody.formId, slug: rawBody.slug } : rawBody
 
-    // Validate
+    // Validate — 全 14 項目を必須化 (フロントで弾くが、API 側でも担保)
+    const requiredFields: Array<{ key: string; label: string; type?: 'array' }> = [
+      { key: 'company', label: '会社名・屋号' },
+      { key: 'industry', label: '業種' },
+      { key: 'name', label: 'ご担当者名' },
+      { key: 'position', label: '役職' },
+      { key: 'employees', label: '従業員数' },
+      { key: 'revenue', label: '年商規模' },
+      { key: 'email', label: 'メールアドレス' },
+      { key: 'themes', label: '相談テーマ', type: 'array' },
+      { key: 'issue', label: '現在の課題・状況' },
+      { key: 'tried', label: 'これまでに試したこと' },
+      { key: 'duration', label: 'お困りの期間' },
+      { key: 'urgency', label: '解決の緊急度' },
+      { key: 'budget', label: '投資予算感' },
+      { key: 'decision_maker', label: '意思決定者' },
+      { key: 'expectations', label: '期待すること', type: 'array' },
+      { key: 'expectations_other', label: 'その他ご要望' },
+    ]
     const missing: string[] = []
-    if (!body.company) missing.push('company')
-    if (!body.name) missing.push('name')
-    if (!body.email) missing.push('email')
-    if (!body.issue) missing.push('issue')
+    for (const { key, label, type } of requiredFields) {
+      const v = body[key]
+      if (type === 'array') {
+        if (!Array.isArray(v) || v.length === 0) missing.push(label)
+      } else if (v === undefined || v === null || (typeof v === 'string' && v.trim() === '')) {
+        missing.push(label)
+      }
+    }
     if (missing.length > 0) {
       return NextResponse.json({ success: false, error: `必須項目が不足しています: ${missing.join(', ')}` }, { status: 400, headers: corsHeaders })
     }

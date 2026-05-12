@@ -41,6 +41,7 @@ interface FormDefinition {
 }
 
 // ---------- hardcoded default form ----------
+// 注: 全項目 required: true。未回答状態を発生させないため。
 const DEFAULT_FORM: FormDefinition = {
   id: 'kiraboshi-hearing-2026',
   title: '事前ヒアリングシート',
@@ -53,8 +54,8 @@ const DEFAULT_FORM: FormDefinition = {
         { name: 'industry', label: '業種', type: 'text', required: true, placeholder: '例）製造業・卸売業' },
         { name: 'name', label: 'ご担当者名', type: 'text', required: true, placeholder: '例）山田 太郎' },
         { name: 'position', label: '役職', type: 'text', required: true, placeholder: '例）代表取締役' },
-        { name: 'employees', label: '従業員数', type: 'select', options: ['選択してください', '1〜5名', '6〜20名', '21〜50名', '51〜100名', '101〜300名', '301名以上'] },
-        { name: 'revenue', label: '年商規模', type: 'select', options: ['選択してください', '〜3,000万円', '3,000万〜1億円', '1億〜5億円', '5億〜10億円', '10億〜50億円', '50億円以上'] },
+        { name: 'employees', label: '従業員数', type: 'select', required: true, options: ['選択してください', '1〜5名', '6〜20名', '21〜50名', '51〜100名', '101〜300名', '301名以上'] },
+        { name: 'revenue', label: '年商規模', type: 'select', required: true, options: ['選択してください', '〜3,000万円', '3,000万〜1億円', '1億〜5億円', '5億〜10億円', '10億〜50億円', '50億円以上'] },
         { name: 'email', label: 'メールアドレス', type: 'email', required: true, placeholder: 'example@company.co.jp' },
       ],
     },
@@ -65,6 +66,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'themes',
           label: '相談したいテーマを選択してください（複数可）',
           type: 'checkbox-group',
+          required: true,
           options: [
             'EC・通販の売上拡大',
             'AI・デジタル活用',
@@ -79,8 +81,8 @@ const DEFAULT_FORM: FormDefinition = {
       title: '今一番困っていること',
       fields: [
         { name: 'issue', label: '具体的にお聞かせください', type: 'textarea', required: true, rows: 4, placeholder: '例）ECサイトの売上が伸びず、広告費ばかり増えている...' },
-        { name: 'tried', label: 'これまでに試したこと（任意）', type: 'textarea', rows: 3, placeholder: '例）リスティング広告を出したが費用対効果が合わない...' },
-        { name: 'duration', label: 'お困りの期間', type: 'select', options: ['選択してください', '1ヶ月未満', '1〜3ヶ月', '3〜6ヶ月', '6ヶ月〜1年', '1年以上'] },
+        { name: 'tried', label: 'これまでに試したこと', type: 'textarea', required: true, rows: 3, placeholder: '例）リスティング広告を出したが費用対効果が合わない...' },
+        { name: 'duration', label: 'お困りの期間', type: 'select', required: true, options: ['選択してください', '1ヶ月未満', '1〜3ヶ月', '3〜6ヶ月', '6ヶ月〜1年', '1年以上'] },
       ],
     },
     {
@@ -90,6 +92,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'urgency',
           label: '解決したい時期を教えてください',
           type: 'radio-group',
+          required: true,
           options: [
             '今すぐ解決したい\u{1F525}',
             '3ヶ月以内に解決したい\u26A1',
@@ -106,6 +109,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'budget',
           label: '月額のおおよその投資可能額',
           type: 'range',
+          required: true,
           min: 0,
           max: 5,
           step: 1,
@@ -119,6 +123,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'decision_maker',
           label: '今回のご相談について、最終的な意思決定者はどなたですか？',
           type: 'radio-group',
+          required: true,
           options: [
             'ご自身が最終決定者',
             '別の方（上長・役員など）の承認が必要',
@@ -133,6 +138,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'expectations',
           label: '相談後にどうなると嬉しいですか？（複数可）',
           type: 'checkbox-group',
+          required: true,
           options: [
             '具体的な改善プランの提示',
             '自社の課題の整理・明確化',
@@ -145,6 +151,7 @@ const DEFAULT_FORM: FormDefinition = {
           name: 'expectations_other',
           label: 'その他ご要望（自由記述）',
           type: 'textarea',
+          required: true,
           rows: 3,
           placeholder: '何かございましたらご自由にお書きください',
         },
@@ -154,6 +161,37 @@ const DEFAULT_FORM: FormDefinition = {
 }
 
 const BUDGET_LABELS = ['未定', '〜30万円', '30〜50万円', '50〜100万円', '100万円〜', '制限なし']
+
+// 全フィールド名を空値で初期化。受信トレイ・通知メールで「未回答」可視化のため、
+// 送信時に payload に常に全キーを含める。
+function emptyDefaultsFor(definition: FormDefinition): Record<string, string | string[]> {
+  const defaults: Record<string, string | string[]> = {}
+  for (const section of definition.sections) {
+    for (const field of section.fields) {
+      if (field.type === 'checkbox-group') {
+        defaults[field.name] = []
+      } else if (field.type === 'range') {
+        defaults[field.name] = String(field.min ?? 0)
+      } else {
+        defaults[field.name] = ''
+      }
+    }
+  }
+  return defaults
+}
+
+// 必須項目の未入力判定。checkbox-group は 1 つ以上、range は min から動かしたか、その他は空白以外。
+function isFieldFilled(field: FormField, value: string | string[] | undefined): boolean {
+  if (field.type === 'checkbox-group') {
+    return Array.isArray(value) && value.length > 0
+  }
+  if (field.type === 'range') {
+    const min = String(field.min ?? 0)
+    return typeof value === 'string' && value.length > 0 && value !== min
+  }
+  if (typeof value !== 'string') return false
+  return value.trim().length > 0
+}
 
 // ---------- component ----------
 export default function PublicFormPage() {
@@ -230,17 +268,13 @@ export default function PublicFormPage() {
   const validate = useCallback(() => {
     if (!form) return false
     const errs: Record<string, string> = {}
-    const requiredFields = ['company', 'industry', 'name', 'position', 'email', 'issue']
-    for (const fieldName of requiredFields) {
-      const val = values[fieldName]
-      if (!val || (typeof val === 'string' && !val.trim())) {
-        // find label
-        let label = fieldName
-        for (const s of form.sections) {
-          const f = s.fields.find(f => f.name === fieldName)
-          if (f) { label = f.label; break }
+    // 全 required フィールドを走査
+    for (const section of form.sections) {
+      for (const field of section.fields) {
+        if (!field.required) continue
+        if (!isFieldFilled(field, values[field.name])) {
+          errs[field.name] = `${field.label}は必須です`
         }
-        errs[fieldName] = `${label}は必須です`
       }
     }
     // email format
@@ -248,6 +282,12 @@ export default function PublicFormPage() {
       errs.email = '正しいメールアドレスを入力してください'
     }
     setErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      // 最初のエラー項目までスクロール
+      const firstErrorField = Object.keys(errs)[0]
+      const el = document.querySelector(`[data-field="${firstErrorField}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
     return Object.keys(errs).length === 0
   }, [form, values])
 
@@ -256,7 +296,9 @@ export default function PublicFormPage() {
     if (!validate() || !form) return
     setSubmitting(true)
     try {
-      const payload = { ...values, booking_slot_id: selectedSlot }
+      // 全フィールドを空値で初期化してから values をマージ。
+      // 未入力項目も crm_form_submissions.data に確実に保存されるようにする。
+      const payload = { ...emptyDefaultsFor(form), ...values, booking_slot_id: selectedSlot }
       const res = await fetch('/api/form/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -341,14 +383,15 @@ export default function PublicFormPage() {
 
             <div className={section.title === '基本情報' ? 'grid grid-cols-1 md:grid-cols-2 gap-5' : 'space-y-5'}>
               {section.fields.map(field => (
-                <FieldRenderer
-                  key={field.name}
-                  field={field}
-                  value={values[field.name]}
-                  error={errors[field.name]}
-                  onChange={set}
-                  onToggle={toggleCheckbox}
-                />
+                <div key={field.name} data-field={field.name} className="contents">
+                  <FieldRenderer
+                    field={field}
+                    value={values[field.name]}
+                    error={errors[field.name]}
+                    onChange={set}
+                    onToggle={toggleCheckbox}
+                  />
+                </div>
               ))}
             </div>
           </section>
