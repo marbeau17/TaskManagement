@@ -96,10 +96,49 @@ function buildPrompt(formData: Record<string, any>): string {
 }`
 }
 
+/**
+ * 直近 3 件を残して古い診断を削除する。
+ * Supabase の `.limit().offset()` + delete は使えないため、
+ * id を取得して slice(3) を delete .in() する。
+ */
+async function pruneOldDiagnoses(db: any, leadId: string) {
+  const { data: rows } = await db
+    .from('crm_lead_diagnoses')
+    .select('id')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+  if (!rows || rows.length <= 3) return
+  const oldIds = rows.slice(3).map((r: { id: string }) => r.id)
+  if (oldIds.length > 0) {
+    await db.from('crm_lead_diagnoses').delete().in('id', oldIds)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { leadId, formData: directFormData } = body
+    const { leadId, formData: directFormData, diagnosis: providedDiagnosis } = body
+
+    // 既存の診断結果をそのまま保存するモード（再生成なし）
+    if (leadId && providedDiagnosis && typeof providedDiagnosis === 'object') {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const db = createAdminClient() as any
+      const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+      const supa = await createServerSupabaseClient()
+      const { data: { user } } = await supa.auth.getUser()
+      const { data: saved, error: saveErr } = await db.from('crm_lead_diagnoses').insert({
+        lead_id: leadId,
+        diagnosis: providedDiagnosis,
+        model: 'manual-save',
+        created_by: user?.id ?? null,
+      }).select('id, created_at').single()
+      if (saveErr) {
+        console.error('[diagnosis] save-only insert failed:', saveErr.message)
+        return NextResponse.json({ error: saveErr.message }, { status: 500 })
+      }
+      await pruneOldDiagnoses(db, leadId)
+      return NextResponse.json({ diagnosis: providedDiagnosis, saved })
+    }
 
     let formData: Record<string, any>
 
@@ -257,7 +296,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ diagnosis })
+    // 永続化: leadId がある場合のみ保存。3 世代に制限。
+    let saved: { id: string; created_at: string } | null = null
+    if (leadId) {
+      try {
+        const { createAdminClient } = await import('@/lib/supabase/admin')
+        const db = createAdminClient() as any
+        const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+        const supa = await createServerSupabaseClient()
+        const { data: { user } } = await supa.auth.getUser()
+        const { data: ins, error: insErr } = await db.from('crm_lead_diagnoses').insert({
+          lead_id: leadId,
+          diagnosis,
+          model,
+          created_by: user?.id ?? null,
+        }).select('id, created_at').single()
+        if (insErr) {
+          console.error('[diagnosis] persist insert failed:', insErr.message)
+        } else {
+          saved = ins
+          await pruneOldDiagnoses(db, leadId)
+        }
+      } catch (persistErr) {
+        console.error('[diagnosis] persist threw:', persistErr)
+      }
+    }
+
+    return NextResponse.json({ diagnosis, saved })
   } catch (err) {
     const msg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err)
     console.error('[diagnosis] Unhandled error:', msg)
@@ -265,5 +330,38 @@ export async function POST(request: NextRequest) {
       { error: 'Diagnosis generation failed', details: msg.slice(0, 500) },
       { status: 500 }
     )
+  }
+}
+
+// 保存済み診断の取得
+// ?leadId=xxx  → そのリードの最新 3 件 (newest first) を { history: [...] } で返す
+// (no params) → 診断済リード ID 一覧を { leadIds: [...] } で返す
+export async function GET(request: NextRequest) {
+  try {
+    const url = new URL(request.url)
+    const leadId = url.searchParams.get('leadId')
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const db = createAdminClient() as any
+
+    if (leadId) {
+      const { data, error } = await db
+        .from('crm_lead_diagnoses')
+        .select('id, diagnosis, model, created_at, created_by')
+        .eq('lead_id', leadId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ history: data ?? [] })
+    }
+
+    const { data, error } = await db
+      .from('crm_lead_diagnoses')
+      .select('lead_id')
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const leadIds = Array.from(new Set((data ?? []).map((r: { lead_id: string }) => r.lead_id)))
+    return NextResponse.json({ leadIds })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

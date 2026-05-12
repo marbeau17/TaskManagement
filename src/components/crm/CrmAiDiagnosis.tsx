@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useI18n } from '@/hooks/useI18n'
 import { useCrmLeads } from '@/hooks/useCrm'
 import { toast } from '@/stores/toastStore'
@@ -8,7 +8,7 @@ import {
   Building2, TrendingUp, Target, Layers, AlertTriangle,
   Lightbulb, BarChart3, Copy, FileDown, Loader2, Sparkles,
   ChevronDown, ChevronRight, Shield, Zap, Package, DollarSign,
-  MapPin, Megaphone,
+  MapPin, Megaphone, History, Save,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -65,21 +65,67 @@ export function CrmAiDiagnosis() {
   const { data, isLoading: leadsLoading } = useCrmLeads({ page: 1, pageSize: 100 })
   const leads: Lead[] = (data?.data as Lead[] | undefined) ?? []
 
+  type HistoryEntry = { id: string; diagnosis: DiagnosisResult; model?: string; created_at: string }
+
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const [diagnosing, setDiagnosing] = useState(false)
-  const [diagnosisMap, setDiagnosisMap] = useState<Record<string, DiagnosisResult>>({})
+  // 履歴: lead_id → 最大 3 件 (newest first)
+  const [historyMap, setHistoryMap] = useState<Record<string, HistoryEntry[]>>({})
+  // 表示中の世代インデックス: lead_id → 0..2 (0=最新)
+  const [generationIndex, setGenerationIndex] = useState<Record<string, number>>({})
+  // 「保存済み診断あり」を持つリード ID のセット (バッジ表示用)
+  const [savedLeadIds, setSavedLeadIds] = useState<Set<string>>(new Set())
+  // 未保存の今回生成された結果 (再生成前のキャッシュ)
+  const [unsavedMap, setUnsavedMap] = useState<Record<string, DiagnosisResult>>({})
+  const [savingNow, setSavingNow] = useState(false)
   const [expandedMece, setExpandedMece] = useState<Record<string, boolean>>({})
 
   const selectedLead = leads.find(l => l.id === selectedLeadId) ?? null
-  const diagnosis = selectedLeadId ? diagnosisMap[selectedLeadId] ?? null : null
+  const history = selectedLeadId ? historyMap[selectedLeadId] ?? [] : []
+  const genIdx = selectedLeadId ? (generationIndex[selectedLeadId] ?? 0) : 0
+  const savedDiagnosis = history[genIdx]?.diagnosis ?? null
+  const unsaved = selectedLeadId ? unsavedMap[selectedLeadId] ?? null : null
+  // 表示優先順: 未保存があれば未保存、なければ保存済の選択世代
+  const diagnosis = unsaved ?? savedDiagnosis
 
   // -----------------------------------------------------------------------
-  // Run diagnosis
+  // マウント時: 診断済リード ID 一覧を取得 (バッジ用)
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/crm/diagnosis')
+      .then(r => r.ok ? r.json() : { leadIds: [] })
+      .then((j: { leadIds?: string[] }) => {
+        if (!cancelled) setSavedLeadIds(new Set(j.leadIds ?? []))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  // -----------------------------------------------------------------------
+  // 選択中リードの履歴を遅延ロード (最大 3 世代)
+  // -----------------------------------------------------------------------
+  const fetchHistory = useCallback(async (leadId: string): Promise<HistoryEntry[]> => {
+    const res = await fetch(`/api/crm/diagnosis?leadId=${encodeURIComponent(leadId)}`)
+    if (!res.ok) return []
+    const j = await res.json().catch(() => ({} as { history?: HistoryEntry[] }))
+    return j.history ?? []
+  }, [])
+
+  useEffect(() => {
+    if (!selectedLeadId) return
+    if (historyMap[selectedLeadId]) return // 既にロード済
+    fetchHistory(selectedLeadId).then(hist => {
+      setHistoryMap(prev => ({ ...prev, [selectedLeadId]: hist }))
+    })
+  }, [selectedLeadId, historyMap, fetchHistory])
+
+  // -----------------------------------------------------------------------
+  // Run diagnosis (新規生成 → DB に自動保存)
   // -----------------------------------------------------------------------
 
   const runDiagnosis = async (leadId: string) => {
     setSelectedLeadId(leadId)
-    if (diagnosisMap[leadId]) return // already cached
 
     setDiagnosing(true)
     try {
@@ -95,20 +141,66 @@ export function CrmAiDiagnosis() {
           ?? `HTTP ${res.status}`
         throw new Error(detail)
       }
-      // API は { diagnosis: DiagnosisResult } 形式で返すのでアンラップする
       const result = (payload as { diagnosis?: DiagnosisResult | null }).diagnosis
       if (!result || !result.swot) {
         const raw = (payload as { raw?: string }).raw
         throw new Error(raw ? `AI のレスポンス JSON が不正です: ${raw.slice(0, 120)}…` : 'AI レスポンスが空でした')
       }
-      setDiagnosisMap(prev => ({ ...prev, [leadId]: result }))
-      toast.success('AI診断が完了しました')
+      const saved = (payload as { saved?: { id: string; created_at: string } | null }).saved
+      if (saved) {
+        // 保存成功 → 履歴を再取得
+        const hist = await fetchHistory(leadId)
+        setHistoryMap(prev => ({ ...prev, [leadId]: hist }))
+        setGenerationIndex(prev => ({ ...prev, [leadId]: 0 }))
+        setSavedLeadIds(prev => new Set(prev).add(leadId))
+        setUnsavedMap(prev => {
+          const next = { ...prev }
+          delete next[leadId]
+          return next
+        })
+        toast.success('AI診断を実行し保存しました')
+      } else {
+        // 保存失敗 (例: RLS) → 未保存キャッシュに入れて「保存」ボタンから再試行できるように
+        setUnsavedMap(prev => ({ ...prev, [leadId]: result }))
+        toast.warning('AI診断は完了しましたが、保存に失敗しました。「保存」ボタンで再試行できます。')
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'AI診断に失敗しました'
       console.error('[diagnosis]', err)
       toast.error(`AI診断に失敗しました: ${msg.slice(0, 200)}`)
     } finally {
       setDiagnosing(false)
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // 表示中の診断 (未保存) を DB に保存
+  // -----------------------------------------------------------------------
+  const saveCurrent = async () => {
+    if (!selectedLeadId || !unsaved) return
+    setSavingNow(true)
+    try {
+      const res = await fetch('/api/crm/diagnosis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: selectedLeadId, diagnosis: unsaved }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const hist = await fetchHistory(selectedLeadId)
+      setHistoryMap(prev => ({ ...prev, [selectedLeadId]: hist }))
+      setGenerationIndex(prev => ({ ...prev, [selectedLeadId]: 0 }))
+      setSavedLeadIds(prev => new Set(prev).add(selectedLeadId))
+      setUnsavedMap(prev => {
+        const next = { ...prev }
+        delete next[selectedLeadId]
+        return next
+      })
+      toast.success('診断結果を保存しました')
+    } catch (err) {
+      console.error('[diagnosis save]', err)
+      toast.error('保存に失敗しました')
+    } finally {
+      setSavingNow(false)
     }
   }
 
@@ -177,7 +269,7 @@ export function CrmAiDiagnosis() {
           ) : (
             leads.map(lead => {
               const isSelected = lead.id === selectedLeadId
-              const hasDiagnosis = !!diagnosisMap[lead.id]
+              const hasDiagnosis = savedLeadIds.has(lead.id) || !!unsavedMap[lead.id]
               return (
                 <div
                   key={lead.id}
@@ -274,30 +366,75 @@ export function CrmAiDiagnosis() {
         ) : (
           <>
             {/* Results header */}
-            <div className="px-[20px] py-[12px] border-b border-border2 bg-surf2 flex items-center justify-between shrink-0">
-              <div>
-                <h3 className="text-[15px] font-bold text-text">{selectedLead.title}</h3>
-                {selectedLead.company?.name && (
-                  <p className="text-[11px] text-text2">{selectedLead.company.name} - AI経営診断レポート</p>
-                )}
+            <div className="px-[20px] py-[12px] border-b border-border2 bg-surf2 shrink-0">
+              <div className="flex items-center justify-between gap-[12px]">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-bold text-text truncate">{selectedLead.title}</h3>
+                  {selectedLead.company?.name && (
+                    <p className="text-[11px] text-text2 truncate">{selectedLead.company.name} - AI経営診断レポート</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-[6px] shrink-0">
+                  {unsaved && (
+                    <button
+                      onClick={saveCurrent}
+                      disabled={savingNow}
+                      className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-bold bg-amber-500 text-white border border-amber-600 rounded-[6px] hover:bg-amber-600 transition-colors disabled:opacity-50"
+                      title="この診断結果を DB に保存します"
+                    >
+                      {savingNow ? <Loader2 className="w-[12px] h-[12px] animate-spin" /> : <Save className="w-[12px] h-[12px]" />}
+                      {savingNow ? '保存中...' : '保存 (未保存)'}
+                    </button>
+                  )}
+                  <button
+                    onClick={copyResults}
+                    className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors text-text2"
+                  >
+                    <Copy className="w-[12px] h-[12px]" />
+                    コピー
+                  </button>
+                  <button
+                    disabled
+                    className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-surface border border-border2 rounded-[6px] text-text2 opacity-50 cursor-not-allowed"
+                    title="近日公開予定"
+                  >
+                    <FileDown className="w-[12px] h-[12px]" />
+                    PDFエクスポート
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-[6px]">
-                <button
-                  onClick={copyResults}
-                  className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors text-text2"
-                >
-                  <Copy className="w-[12px] h-[12px]" />
-                  コピー
-                </button>
-                <button
-                  disabled
-                  className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-surface border border-border2 rounded-[6px] text-text2 opacity-50 cursor-not-allowed"
-                  title="近日公開予定"
-                >
-                  <FileDown className="w-[12px] h-[12px]" />
-                  PDFエクスポート
-                </button>
-              </div>
+
+              {/* 履歴セレクタ (最大 3 世代) */}
+              {history.length > 0 && !unsaved && (
+                <div className="mt-[8px] flex items-center gap-[6px] flex-wrap">
+                  <History className="w-[12px] h-[12px] text-text2" />
+                  <span className="text-[11px] text-text2">履歴 {history.length}/3:</span>
+                  {history.map((h, i) => {
+                    const isActive = i === genIdx
+                    const dt = new Date(h.created_at)
+                    const dateStr = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`
+                    return (
+                      <button
+                        key={h.id}
+                        onClick={() => setGenerationIndex(prev => ({ ...prev, [selectedLeadId!]: i }))}
+                        className={`text-[10px] px-[8px] py-[3px] rounded-full font-semibold transition-colors ${
+                          isActive
+                            ? 'bg-mint-dd text-white'
+                            : 'bg-surface border border-border2 text-text2 hover:bg-surf2'
+                        }`}
+                        title={dateStr}
+                      >
+                        {i === 0 ? '最新' : `${i + 1}回前`} · {dateStr.slice(5)}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {unsaved && (
+                <p className="mt-[6px] text-[10px] text-amber-700 dark:text-amber-400">
+                  ⚠️ この結果はまだ DB に保存されていません。保存ボタンを押すと履歴 (最大 3 世代) に追加されます。
+                </p>
+              )}
             </div>
 
             {/* Results body */}
