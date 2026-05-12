@@ -45,12 +45,17 @@ export async function sendTaskCompletionEmail(params: TaskCompletionNotification
     locale,
   })
 
-  // Fire and forget - don't block the completion
-  sendEmail({
-    to: params.requesterEmail,
-    subject,
-    html,
-  }).catch(err => {
+  // WEB-46: must await — Vercel serverless freezes the function as soon as
+  // the API response is returned, so fire-and-forget kills the SMTP send
+  // before delivery. Caller-side fetch is already fire-and-forget, so awaiting
+  // here doesn't block the UI.
+  try {
+    await sendEmail({
+      to: params.requesterEmail,
+      subject,
+      html,
+    })
+  } catch (err) {
     console.error('[TaskCompletion] Email failed:', err)
-  })
+  }
 }
