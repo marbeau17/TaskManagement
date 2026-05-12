@@ -245,6 +245,19 @@ export default function PublicFormPage() {
 
   const availableSlots = useMemo(() => bookingSlots.filter(s => s.is_available), [bookingSlots])
 
+  // 未入力の必須項目数をライブ計算 → 送信ボタン横に表示
+  const missingRequiredCount = useMemo(() => {
+    if (!form) return 0
+    let count = 0
+    for (const section of form.sections) {
+      for (const field of section.fields) {
+        if (!field.required) continue
+        if (!isFieldFilled(field, values[field.name])) count++
+      }
+    }
+    return count
+  }, [form, values])
+
   // ---------- helpers ----------
   const set = useCallback((name: string, value: string | string[]) => {
     setValues(prev => ({ ...prev, [name]: value }))
@@ -372,6 +385,17 @@ export default function PublicFormPage() {
 
       {/* form body */}
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 py-10 pb-32 space-y-10">
+        {/* 必須項目凡例 */}
+        <div
+          role="note"
+          aria-label="必須項目の説明"
+          className="bg-white rounded-xl border-l-4 border-red-400 px-4 py-3 text-sm flex items-center gap-2 shadow-sm"
+          style={{ color: '#0d1f3c' }}
+        >
+          <span className="text-red-500 font-bold text-base">*</span>
+          <span>がついている項目はすべて<strong>必須</strong>です。全項目ご記入のうえ送信してください。</span>
+        </div>
+
         {form.sections.map((section, si) => (
           <section key={si} className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
@@ -464,6 +488,16 @@ export default function PublicFormPage() {
               <span>上記の個人情報の取り扱いに<strong style={{ color: '#0d1f3c' }}>同意</strong>の上、送信します。</span>
             </label>
           </div>
+          {/* 未入力件数ライブ表示 */}
+          <div
+            role="status"
+            aria-live="polite"
+            className={`mb-3 text-center text-sm font-medium ${missingRequiredCount > 0 ? 'text-red-600' : 'text-emerald-600'}`}
+          >
+            {missingRequiredCount > 0
+              ? `あと ${missingRequiredCount} 項目の入力が必要です`
+              : '✓ すべての必須項目が入力されました'}
+          </div>
           <button
             type="submit"
             disabled={submitting}
@@ -500,14 +534,34 @@ function FieldRenderer({
   const inputClasses = `w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition
     ${error ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50 focus:border-[#b8922a] focus:ring-1 focus:ring-[#b8922a]'}`
 
+  // ID 体系（label と control をスクリーンリーダー向けに紐付け）
+  const fieldId = `field-${field.name}`
+  const labelId = `${fieldId}-label`
+  const errorId = `${fieldId}-error`
+  const describedBy = error ? errorId : undefined
+
   const labelNode = (
-    <label className="block text-sm font-medium mb-1" style={{ color: '#0d1f3c' }}>
+    <label
+      id={labelId}
+      htmlFor={fieldId}
+      className="block text-sm font-medium mb-1"
+      style={{ color: '#0d1f3c' }}
+    >
       {field.label}
-      {field.required && <span className="text-red-500 ml-1">*</span>}
+      {field.required && (
+        <>
+          <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          <span className="sr-only">（必須）</span>
+        </>
+      )}
     </label>
   )
 
-  const errorNode = error ? <p className="text-red-500 text-xs mt-1">{error}</p> : null
+  const errorNode = error ? (
+    <p id={errorId} className="text-red-500 text-xs mt-1" role="alert">
+      {error}
+    </p>
+  ) : null
 
   switch (field.type) {
     case 'text':
@@ -516,11 +570,15 @@ function FieldRenderer({
         <div>
           {labelNode}
           <input
+            id={fieldId}
             type={field.type}
             className={inputClasses}
             placeholder={field.placeholder}
             value={(value as string) || ''}
             onChange={e => onChange(field.name, e.target.value)}
+            aria-required={field.required || undefined}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
           />
           {errorNode}
         </div>
@@ -531,9 +589,13 @@ function FieldRenderer({
         <div>
           {labelNode}
           <select
+            id={fieldId}
             className={inputClasses}
             value={(value as string) || ''}
             onChange={e => onChange(field.name, e.target.value)}
+            aria-required={field.required || undefined}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
           >
             {field.options?.map(opt => (
               <option key={opt} value={opt === (field.options?.[0] || '') ? '' : opt}>
@@ -550,11 +612,15 @@ function FieldRenderer({
         <div className="md:col-span-2">
           {labelNode}
           <textarea
+            id={fieldId}
             className={inputClasses}
             rows={field.rows || 3}
             placeholder={field.placeholder}
             value={(value as string) || ''}
             onChange={e => onChange(field.name, e.target.value)}
+            aria-required={field.required || undefined}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
           />
           {errorNode}
         </div>
@@ -564,13 +630,22 @@ function FieldRenderer({
       return (
         <div className="md:col-span-2">
           {labelNode}
-          <div className="flex flex-wrap gap-3 mt-2">
+          {/* role="group" は aria-required を仕様上サポートしないため、
+              必須要件は label 内の sr-only「（必須）」で伝える */}
+          <div
+            role="group"
+            aria-labelledby={labelId}
+            aria-describedby={describedBy}
+            className="flex flex-wrap gap-3 mt-2"
+          >
             {field.options?.map(opt => {
               const checked = ((value as string[]) || []).includes(opt)
               return (
                 <button
                   key={opt}
                   type="button"
+                  role="checkbox"
+                  aria-checked={checked}
                   onClick={() => onToggle(field.name, opt)}
                   className={`px-4 py-2 rounded-full text-sm border transition
                     ${checked
@@ -578,7 +653,7 @@ function FieldRenderer({
                       : 'bg-white border-gray-200 hover:border-[#b8922a]'}`}
                   style={checked ? { backgroundColor: '#0d1f3c', color: '#fff' } : { color: '#0d1f3c' }}
                 >
-                  {checked && <span className="mr-1">&#10003;</span>}
+                  {checked && <span className="mr-1" aria-hidden="true">&#10003;</span>}
                   {opt}
                 </button>
               )
@@ -592,13 +667,22 @@ function FieldRenderer({
       return (
         <div className="md:col-span-2">
           {labelNode}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+          <div
+            role="radiogroup"
+            aria-labelledby={labelId}
+            aria-required={field.required || undefined}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2"
+          >
             {field.options?.map(opt => {
               const selected = value === opt
               return (
                 <button
                   key={opt}
                   type="button"
+                  role="radio"
+                  aria-checked={selected}
                   onClick={() => onChange(field.name, opt)}
                   className={`px-4 py-3 rounded-xl text-sm border text-left transition
                     ${selected
@@ -606,7 +690,7 @@ function FieldRenderer({
                       : 'bg-white border-gray-200 hover:border-[#b8922a]'}`}
                   style={selected ? { backgroundColor: '#0d1f3c', color: '#fff' } : { color: '#0d1f3c' }}
                 >
-                  {selected && <span className="mr-1">&#9679;</span>}
+                  {selected && <span className="mr-1" aria-hidden="true">&#9679;</span>}
                   {opt}
                 </button>
               )
@@ -622,7 +706,10 @@ function FieldRenderer({
         <div className="md:col-span-2">
           {labelNode}
           <div className="mt-4">
+            {/* slider ロールは aria-required を仕様上サポートしないため、
+                必須要件は label 内の sr-only「（必須）」で伝える */}
             <input
+              id={fieldId}
               type="range"
               min={field.min ?? 0}
               max={field.max ?? 5}
@@ -630,6 +717,9 @@ function FieldRenderer({
               value={numVal}
               onChange={e => onChange(field.name, e.target.value)}
               className="w-full accent-[#b8922a]"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={describedBy}
+              aria-valuetext={BUDGET_LABELS[numVal] ?? String(numVal)}
             />
             <div className="flex justify-between text-xs mt-1" style={{ color: '#666' }}>
               {BUDGET_LABELS.map((lbl, i) => (
