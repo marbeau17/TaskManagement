@@ -245,6 +245,10 @@ export default function PublicFormPage() {
 
   const availableSlots = useMemo(() => bookingSlots.filter(s => s.is_available), [bookingSlots])
 
+  // 予約スロットも必須（ただし空き枠が存在する場合のみ）
+  const slotRequired = availableSlots.length > 0
+  const slotMissing = slotRequired && !selectedSlot
+
   // 未入力の必須項目数をライブ計算 → 送信ボタン横に表示
   const missingRequiredCount = useMemo(() => {
     if (!form) return 0
@@ -255,8 +259,9 @@ export default function PublicFormPage() {
         if (!isFieldFilled(field, values[field.name])) count++
       }
     }
+    if (slotMissing) count++
     return count
-  }, [form, values])
+  }, [form, values, slotMissing])
 
   // ---------- helpers ----------
   const set = useCallback((name: string, value: string | string[]) => {
@@ -294,15 +299,22 @@ export default function PublicFormPage() {
     if (values.email && typeof values.email === 'string' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
       errs.email = '正しいメールアドレスを入力してください'
     }
+    // 予約スロットは空き枠がある場合に必須
+    if (slotRequired && !selectedSlot) {
+      errs._booking_slot = 'ご希望の相談枠を選択してください'
+    }
     setErrors(errs)
     if (Object.keys(errs).length > 0) {
       // 最初のエラー項目までスクロール
       const firstErrorField = Object.keys(errs)[0]
-      const el = document.querySelector(`[data-field="${firstErrorField}"]`)
+      const selector = firstErrorField === '_booking_slot'
+        ? '[data-field="_booking_slot"]'
+        : `[data-field="${firstErrorField}"]`
+      const el = document.querySelector(selector)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
     return Object.keys(errs).length === 0
-  }, [form, values])
+  }, [form, values, slotRequired, selectedSlot])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -423,19 +435,46 @@ export default function PublicFormPage() {
 
         {/* Booking Calendar — after all sections, before submit */}
         {bookingSlots.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border-2 border-[#b8922a]/30">
+          <section
+            data-field="_booking_slot"
+            className={`bg-white rounded-2xl shadow-sm p-6 md:p-8 border-2 ${errors._booking_slot ? 'border-red-400' : 'border-[#b8922a]/30'}`}
+          >
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: '#0d1f3c' }}>
               <span className="text-xl">📅</span>
               ご希望の相談枠を選択してください
+              {slotRequired && (
+                <>
+                  <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+                  <span className="sr-only">（必須）</span>
+                </>
+              )}
             </h2>
             <p className="text-xs mb-4" style={{ color: '#8a8a9a' }}>2026年5月20日（水）｜30分 × 10社 ※ 空き枠のみ選択可</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              role="radiogroup"
+              aria-label="相談枠"
+              aria-required={slotRequired || undefined}
+              aria-invalid={errors._booking_slot ? true : undefined}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
               {bookingSlots.map(slot => {
                 const isBooked = !slot.is_available
                 const isSelected = selectedSlot === slot.id
                 return (
                   <button key={slot.id} type="button" disabled={isBooked}
-                    onClick={() => setSelectedSlot(isSelected ? null : slot.id)}
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => {
+                      setSelectedSlot(isSelected ? null : slot.id)
+                      // スロット選択時にエラーをクリア
+                      if (errors._booking_slot) {
+                        setErrors(prev => {
+                          const next = { ...prev }
+                          delete next._booking_slot
+                          return next
+                        })
+                      }
+                    }}
                     className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                       isBooked ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-50'
                       : isSelected ? 'border-[#b8922a] bg-[#fffbeb] shadow-md'
@@ -459,6 +498,11 @@ export default function PublicFormPage() {
               <div className="mt-3 p-3 rounded-lg bg-[#fffbeb] border border-[#b8922a]/30 text-sm" style={{ color: '#0d1f3c' }}>
                 ✓ 第{bookingSlots.find(s => s.id === selectedSlot)?.slot_number}回（{bookingSlots.find(s => s.id === selectedSlot)?.start_time}〜{bookingSlots.find(s => s.id === selectedSlot)?.end_time}）を選択しました
               </div>
+            )}
+            {errors._booking_slot && (
+              <p className="mt-3 text-red-500 text-sm font-medium" role="alert">
+                {errors._booking_slot}
+              </p>
             )}
           </section>
         )}
