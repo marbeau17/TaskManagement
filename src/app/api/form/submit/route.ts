@@ -60,23 +60,25 @@ export async function POST(req: NextRequest) {
 
     // =========================================================================
     // 1. CRM Company — find or create, update if exists
+    // 注: crm_companies の従業員数カラムは company_size。size ではない。
     // =========================================================================
     let companyId: string | null = null
     const { data: existingCompany } = await db.from('crm_companies').select('id').eq('name', body.company).maybeSingle()
     if (existingCompany) {
       companyId = existingCompany.id
-      // Update company with latest form data
-      await db.from('crm_companies').update({
+      const { error: updErr } = await db.from('crm_companies').update({
         industry: body.industry || undefined,
-        size: body.employees || undefined,
+        company_size: body.employees || undefined,
         updated_at: new Date().toISOString(),
       }).eq('id', companyId)
+      if (updErr) console.error('[form/submit] company update failed:', updErr.message)
     } else {
-      const { data: newComp } = await db.from('crm_companies').insert({
+      const { data: newComp, error: insErr } = await db.from('crm_companies').insert({
         name: body.company,
         industry: body.industry || null,
-        size: body.employees || null,
+        company_size: body.employees || null,
       }).select('id').single()
+      if (insErr) console.error('[form/submit] company insert failed:', insErr.message)
       companyId = newComp?.id
     }
 
@@ -98,30 +100,32 @@ export async function POST(req: NextRequest) {
 
     // =========================================================================
     // 3. CRM Contact — find or create, UPDATE if exists (fix dedup bug)
+    // 注: crm_contacts の役職カラムは title。job_title ではない。
     // =========================================================================
     let contactId: string | null = null
     const { data: existingContact } = await db.from('crm_contacts').select('id').eq('email', body.email).maybeSingle()
     if (existingContact) {
       contactId = existingContact.id
-      // Update with latest data (fixes dedup bug — company_id was never updated)
-      await db.from('crm_contacts').update({
+      const { error: updErr } = await db.from('crm_contacts').update({
         company_id: companyId,
-        job_title: body.position || undefined,
+        title: body.position || undefined,
         first_name: nameParts[0] || undefined,
         last_name: nameParts.slice(1).join(' ') || undefined,
         updated_at: new Date().toISOString(),
       }).eq('id', contactId)
+      if (updErr) console.error('[form/submit] contact update failed:', updErr.message)
     } else {
-      const { data: newContact } = await db.from('crm_contacts').insert({
+      const { data: newContact, error: insErr } = await db.from('crm_contacts').insert({
         first_name: nameParts[0] || body.name,
         last_name: nameParts.slice(1).join(' ') || '',
         email: body.email,
         company_id: companyId,
-        job_title: body.position || null,
+        title: body.position || null,
         lifecycle_stage: 'lead',
         lead_status: 'new',
         source: 'hearing_form',
       }).select('id').single()
+      if (insErr) console.error('[form/submit] contact insert failed:', insErr.message)
       contactId = newContact?.id
     }
 
@@ -177,14 +181,17 @@ export async function POST(req: NextRequest) {
       const { data: form } = await db.from('crm_forms').select('id').ilike('name', '%ヒアリング%').limit(1).maybeSingle()
       formId = form?.id
     }
-    if (formId && contactId) {
+    // contactId が null でも受信トレイ表示のためサブミッションは必ず保存する
+    if (formId) {
       const { error: subErr } = await db.from('crm_form_submissions').insert({
         form_id: formId,
         contact_id: contactId,
         data: body,
         status: 'new',
       })
-      if (subErr) console.error('[form/submit] Submission insert failed:', subErr.message)
+      if (subErr) console.error('[form/submit] submission insert failed:', subErr.message)
+    } else {
+      console.error('[form/submit] formId not resolved — submission skipped')
     }
 
     // =========================================================================
