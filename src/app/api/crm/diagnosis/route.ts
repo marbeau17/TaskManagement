@@ -166,6 +166,9 @@ export async function POST(request: NextRequest) {
     const prompt = buildPrompt(formData)
 
     const model = 'gemini-2.5-flash'
+    // responseMimeType=application/json で markdown ラップなしの純 JSON を強制。
+    // maxOutputTokens は構造化レポートが MAX_TOKENS で途切れる事象があったため
+    // 4096 → 8192 に増量。
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
@@ -173,7 +176,11 @@ export async function POST(request: NextRequest) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+          },
         }),
       }
     )
@@ -195,16 +202,35 @@ export async function POST(request: NextRequest) {
 
     const data = await res.json()
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const finishReason = data.candidates?.[0]?.finishReason
     if (!rawText) {
       console.error('[diagnosis] Empty response from Gemini:', JSON.stringify(data).slice(0, 500))
     }
+    if (finishReason === 'MAX_TOKENS') {
+      console.warn('[diagnosis] Gemini hit MAX_TOKENS — response may be truncated (len=' + rawText.length + ')')
+    }
 
-    // Parse JSON from Gemini response (may be wrapped in markdown code block)
+    // Parse JSON from Gemini response.
+    // responseMimeType=application/json で純 JSON が返るはずだが、念のため
+    // ```json ... ``` ラップ / 途中で切れた JSON への対応もする。
     let diagnosis: Record<string, any>
     try {
-      const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
-      const jsonStr = jsonMatch ? jsonMatch[1].trim() : rawText.trim()
-      diagnosis = JSON.parse(jsonStr)
+      // 1) ```...``` ラップを剥がす（閉じが無くても先頭の ``` だけは剥がす）
+      const fenceMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
+      let jsonStr = fenceMatch ? fenceMatch[1].trim() : rawText.trim().replace(/^```(?:json)?\s*/i, '')
+      // 2) 純パースを試す
+      try {
+        diagnosis = JSON.parse(jsonStr)
+      } catch {
+        // 3) 途切れている可能性 → 最後の閉じ括弧までで打ち切って再試行
+        const lastBrace = jsonStr.lastIndexOf('}')
+        if (lastBrace > 0) {
+          jsonStr = jsonStr.slice(0, lastBrace + 1)
+          diagnosis = JSON.parse(jsonStr)
+        } else {
+          throw new Error('No closing brace found')
+        }
+      }
     } catch (parseErr) {
       // パース失敗時は 502 を返してクライアント側でエラー扱いさせる
       const msg = parseErr instanceof Error ? parseErr.message : String(parseErr)
