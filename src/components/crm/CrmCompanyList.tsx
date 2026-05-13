@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { Pencil } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
-import { useCrmCompanies, useCreateCrmCompany, useDeleteCrmCompany } from '@/hooks/useCrm'
+import { useCrmCompanies, useCreateCrmCompany, useUpdateCrmCompany, useDeleteCrmCompany } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
-import type { CrmCompanyFilters } from '@/types/crm'
+import { SourceChannelFilter, SourceChannelBadge } from './SourceChannelFilter'
+import { type SourceChannel } from '@/lib/crm/source-resolver'
+import type { CrmCompanyFilters, CrmCompany } from '@/types/crm'
 
 const TYPE_BADGE: Record<string, string> = {
   prospect: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
@@ -27,20 +30,55 @@ export function CrmCompanyList() {
   const [filters, setFilters] = useState<CrmCompanyFilters>({ page: 1, pageSize: 20 })
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', domain: '', industry: '', phone: '', website: '', company_type: '', tier: '' })
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [filterChannel, setFilterChannel] = useState<'all' | SourceChannel>('all')
+  const emptyForm = { name: '', domain: '', industry: '', phone: '', website: '', company_type: '', tier: '' }
+  const [formData, setFormData] = useState(emptyForm)
 
   const { data, isLoading } = useCrmCompanies({ ...filters, q: search || undefined })
   const createMutation = useCreateCrmCompany()
+  const updateMutation = useUpdateCrmCompany()
   const deleteMutation = useDeleteCrmCompany()
 
   const companies = data?.data ?? []
   const total = data?.total ?? 0
 
-  const handleCreate = async () => {
+  const filteredCompanies = useMemo(() => {
+    if (filterChannel === 'all') return companies
+    return companies.filter(c => c.source_channel === filterChannel)
+  }, [companies, filterChannel])
+
+  const handleSubmit = async () => {
     if (!formData.name.trim()) return
-    await createMutation.mutateAsync(formData)
-    setFormData({ name: '', domain: '', industry: '', phone: '', website: '', company_type: '', tier: '' })
+    if (editingId) {
+      await updateMutation.mutateAsync({ id: editingId, data: formData })
+    } else {
+      await createMutation.mutateAsync(formData)
+    }
+    setFormData(emptyForm)
     setShowForm(false)
+    setEditingId(null)
+  }
+
+  const startEdit = (c: CrmCompany) => {
+    setFormData({
+      name: c.name ?? '',
+      domain: c.domain ?? '',
+      industry: c.industry ?? '',
+      phone: c.phone ?? '',
+      website: c.website ?? '',
+      company_type: c.company_type ?? '',
+      tier: c.tier ?? '',
+    })
+    setEditingId(c.id)
+    setShowForm(true)
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50)
+  }
+
+  const cancelForm = () => {
+    setFormData(emptyForm)
+    setShowForm(false)
+    setEditingId(null)
   }
 
   return (
@@ -55,16 +93,25 @@ export function CrmCompanyList() {
           className="flex-1 max-w-[300px] text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint"
         />
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm && !editingId) cancelForm()
+            else { setEditingId(null); setFormData(emptyForm); setShowForm(true) }
+          }}
           className="px-[14px] py-[6px] text-[12px] font-bold bg-mint-dd text-white rounded-[6px] hover:bg-mint-d transition-colors"
         >
           + {t('crm.companies')}
         </button>
       </div>
 
-      {/* Create form */}
+      {/* 流入経路フィルタ */}
+      <SourceChannelFilter availableSources={companies} value={filterChannel} onChange={setFilterChannel} />
+
+      {/* Create / Edit form */}
       {showForm && (
         <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow space-y-[8px]">
+          <h4 className="text-[13px] font-bold text-text">
+            {editingId ? `${t('common.edit')}: 企業` : `+ ${t('crm.companies')}`}
+          </h4>
           <input type="text" value={formData.name} onChange={e => setFormData(p => ({...p, name: e.target.value}))} placeholder={t('crm.company.name')} className="w-full text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
           <div className="flex gap-[8px]">
             <input type="text" value={formData.domain} onChange={e => setFormData(p => ({...p, domain: e.target.value}))} placeholder={t('crm.company.domain')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
@@ -88,8 +135,8 @@ export function CrmCompanyList() {
             </select>
           </div>
           <div className="flex gap-[8px] justify-end">
-            <button onClick={() => setShowForm(false)} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
-            <button onClick={handleCreate} disabled={createMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
+            <button onClick={cancelForm} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
+            <button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
           </div>
         </div>
       )}
@@ -105,19 +152,20 @@ export function CrmCompanyList() {
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden md:table-cell">{t('crm.company.industry')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.companyType')}</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.tier')}</th>
+                <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">流入経路</th>
                 <th className="text-left px-[12px] py-[8px] text-text2 font-semibold hidden lg:table-cell">{t('crm.company.owner')}</th>
-                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[60px]"></th>
+                <th className="text-right px-[12px] py-[8px] text-text2 font-semibold w-[120px]"></th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={7} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={8} className="px-[12px] py-[8px]"><div className="h-[16px] bg-surf2 rounded animate-pulse" /></td></tr>
                 ))
-              ) : companies.length === 0 ? (
-                <tr><td colSpan={7} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
+              ) : filteredCompanies.length === 0 ? (
+                <tr><td colSpan={8} className="px-[12px] py-[20px] text-center text-text3">{t('common.noData')}</td></tr>
               ) : (
-                companies.map(c => (
+                filteredCompanies.map(c => (
                   <tr key={c.id} className="border-b border-border2 hover:bg-surf2 transition-colors">
                     <td className="px-[12px] py-[8px] font-medium text-text">{c.name}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden md:table-cell">{c.domain}</td>
@@ -136,9 +184,17 @@ export function CrmCompanyList() {
                         </span>
                       )}
                     </td>
+                    <td className="px-[12px] py-[8px] hidden lg:table-cell">
+                      <SourceChannelBadge channel={c.source_channel} detail={c.source_detail} />
+                    </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden lg:table-cell">{c.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
-                      <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
+                      <div className="flex items-center justify-end gap-[6px]">
+                        <button onClick={() => startEdit(c)} className="flex items-center gap-[3px] text-[11px] text-mint-dd hover:underline" title={t('common.edit')}>
+                          <Pencil className="w-[10px] h-[10px]" /> {t('common.edit')}
+                        </button>
+                        <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
+                      </div>
                     </td>
                   </tr>
                 ))

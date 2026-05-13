@@ -55,6 +55,8 @@ export interface CrmCompany {
   last_activity_date: string | null
   lifecycle_stage: string
   notes: string
+  source_channel: string | null
+  source_detail: string | null
   created_at: string
   updated_at: string
   owner?: { id: string; name: string; avatar_color: string } | null
@@ -120,6 +122,8 @@ export interface CrmLead {
   tags: string[]
   custom_fields: Record<string, any>
   sales_contribution: number
+  source_channel: string | null
+  source_detail: string | null
   created_at: string
   updated_at: string
   // v2 fields (SPEC_CRM_LEAD_DEAL_V2)

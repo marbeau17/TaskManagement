@@ -142,6 +142,14 @@ export function useUpdateCrmLead() {
   })
 }
 
+export function useDeleteCrmLead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => mutateJson<{ success: boolean }>(`/api/crm/leads/${id}`, 'DELETE'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['crm', 'leads'] }) },
+  })
+}
+
 export function useConvertLead() {
   const qc = useQueryClient()
   return useMutation({

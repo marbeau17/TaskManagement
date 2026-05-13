@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useMemo, useRef } from 'react'
-import { ArrowUpDown, ArrowUp, ArrowDown, Download, Upload } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Download, Upload, Pencil } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
-import { useCrmContacts, useCreateCrmContact, useDeleteCrmContact } from '@/hooks/useCrm'
+import { useCrmContacts, useCreateCrmContact, useUpdateCrmContact, useDeleteCrmContact } from '@/hooks/useCrm'
 import { Pagination } from '@/components/shared'
 import { toast } from '@/stores/toastStore'
+import { SourceChannelFilter, SourceChannelBadge } from './SourceChannelFilter'
+import { type SourceChannel } from '@/lib/crm/source-resolver'
 import type { CrmContactFilters, CrmContact, LifecycleStage } from '@/types/crm'
 
 const LIFECYCLE_BADGE: Record<LifecycleStage, string> = {
@@ -33,16 +35,20 @@ export function CrmContactList() {
   const [importing, setImporting] = useState(false)
   const [filterStage, setFilterStage] = useState<string>('')
   const [filterDecisionMaker, setFilterDecisionMaker] = useState<string>('')
+  const [filterChannel, setFilterChannel] = useState<'all' | SourceChannel>('all')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState({
+  const emptyForm = {
     first_name: '', last_name: '', email: '', phone: '', mobile_phone: '',
     company_id: '', lifecycle_stage: 'lead' as LifecycleStage,
     address: '', preferred_language: 'ja', decision_maker: false,
-  })
+  }
+  const [formData, setFormData] = useState(emptyForm)
 
   const { data, isLoading } = useCrmContacts({ ...filters, q: search || undefined })
   const createMutation = useCreateCrmContact()
+  const updateMutation = useUpdateCrmContact()
   const deleteMutation = useDeleteCrmContact()
 
   const contacts = data?.data ?? []
@@ -54,8 +60,9 @@ export function CrmContactList() {
     if (filterStage) result = result.filter(c => c.lifecycle_stage === filterStage)
     if (filterDecisionMaker === 'yes') result = result.filter(c => c.decision_maker)
     if (filterDecisionMaker === 'no') result = result.filter(c => !c.decision_maker)
+    if (filterChannel !== 'all') result = result.filter(c => c.source_channel === filterChannel)
     return result
-  }, [contacts, filterStage, filterDecisionMaker])
+  }, [contacts, filterStage, filterDecisionMaker, filterChannel])
 
   const sorted = useMemo(() => {
     const copy = [...filtered]
@@ -185,11 +192,43 @@ export function CrmContactList() {
     }
   }
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     if (!formData.first_name.trim() && !formData.last_name.trim()) return
-    await createMutation.mutateAsync({ ...formData, company_id: formData.company_id || null })
-    setFormData({ first_name: '', last_name: '', email: '', phone: '', mobile_phone: '', company_id: '', lifecycle_stage: 'lead', address: '', preferred_language: 'ja', decision_maker: false })
+    const payload = { ...formData, company_id: formData.company_id || null }
+    if (editingId) {
+      await updateMutation.mutateAsync({ id: editingId, data: payload })
+      toast.success(t('common.save') + 'しました')
+    } else {
+      await createMutation.mutateAsync(payload)
+    }
+    setFormData(emptyForm)
     setShowForm(false)
+    setEditingId(null)
+  }
+
+  const startEdit = (c: CrmContact) => {
+    setFormData({
+      first_name: c.first_name ?? '',
+      last_name: c.last_name ?? '',
+      email: c.email ?? '',
+      phone: c.phone ?? '',
+      mobile_phone: c.mobile_phone ?? '',
+      company_id: c.company_id ?? '',
+      lifecycle_stage: c.lifecycle_stage,
+      address: c.address ?? '',
+      preferred_language: c.preferred_language ?? 'ja',
+      decision_maker: !!c.decision_maker,
+    })
+    setEditingId(c.id)
+    setShowForm(true)
+    // フォームへスクロール
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50)
+  }
+
+  const cancelForm = () => {
+    setFormData(emptyForm)
+    setShowForm(false)
+    setEditingId(null)
   }
 
   return (
@@ -198,7 +237,18 @@ export function CrmContactList() {
       <div className="flex items-center gap-[8px] flex-wrap">
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('common.search') + '...'}
           className="flex-1 min-w-[200px] max-w-[300px] text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
-        <button onClick={() => setShowForm(!showForm)} className="px-[14px] py-[6px] text-[12px] font-bold bg-mint-dd text-white rounded-[6px] hover:bg-mint-d">
+        <button
+          onClick={() => {
+            if (showForm && !editingId) {
+              cancelForm()
+            } else {
+              setEditingId(null)
+              setFormData(emptyForm)
+              setShowForm(true)
+            }
+          }}
+          className="px-[14px] py-[6px] text-[12px] font-bold bg-mint-dd text-white rounded-[6px] hover:bg-mint-d"
+        >
           + {t('crm.contacts')}
         </button>
         <button onClick={handleExport} disabled={contacts.length === 0} className="flex items-center gap-[4px] px-[10px] py-[6px] text-[11px] font-semibold text-text2 bg-surf2 border border-border2 rounded-[6px] hover:bg-border2 disabled:opacity-50">
@@ -220,9 +270,15 @@ export function CrmContactList() {
         </select>
       </div>
 
-      {/* Create form */}
+      {/* 流入経路フィルタ */}
+      <SourceChannelFilter availableSources={contacts} value={filterChannel} onChange={setFilterChannel} />
+
+      {/* Create / Edit form */}
       {showForm && (
         <div className="bg-surface border border-border2 rounded-[10px] p-[16px] shadow space-y-[8px]">
+          <h4 className="text-[13px] font-bold text-text">
+            {editingId ? `${t('common.edit')}: コンタクト` : `+ ${t('crm.contacts')}`}
+          </h4>
           <div className="flex gap-[8px]">
             <input type="text" value={formData.last_name} onChange={e => setFormData(p => ({...p, last_name: e.target.value}))} placeholder={t('crm.contact.lastName')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
             <input type="text" value={formData.first_name} onChange={e => setFormData(p => ({...p, first_name: e.target.value}))} placeholder={t('crm.contact.firstName')} className="flex-1 text-[13px] px-[10px] py-[6px] bg-surface border border-border2 rounded-[6px] outline-none focus:border-mint" />
@@ -249,8 +305,8 @@ export function CrmContactList() {
             {t('crm.contact.decisionMaker')}
           </label>
           <div className="flex gap-[8px] justify-end">
-            <button onClick={() => setShowForm(false)} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
-            <button onClick={handleCreate} disabled={createMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
+            <button onClick={cancelForm} className="px-[12px] py-[6px] text-[12px] text-text2 bg-surf2 rounded-[6px]">{t('common.cancel')}</button>
+            <button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} className="px-[12px] py-[6px] text-[12px] font-bold text-white bg-mint-dd rounded-[6px] disabled:opacity-50">{t('common.save')}</button>
           </div>
         </div>
       )}
@@ -295,12 +351,21 @@ export function CrmContactList() {
                     </td>
                     <td className="px-[12px] py-[8px] text-text2 text-right hidden lg:table-cell">{c.lead_score}</td>
                     <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">{c.mobile_phone || '—'}</td>
-                    <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">
-                      {c.source_channel ? <span className="text-[10px] bg-surf2 px-[5px] py-[1px] rounded">{c.source_channel}</span> : '—'}
+                    <td className="px-[12px] py-[8px] hidden xl:table-cell">
+                      <SourceChannelBadge channel={c.source_channel} detail={c.source_detail} />
                     </td>
                     <td className="px-[12px] py-[8px] text-text2 hidden xl:table-cell">{c.owner?.name ?? '—'}</td>
                     <td className="px-[12px] py-[8px] text-right">
-                      <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
+                      <div className="flex items-center justify-end gap-[6px]">
+                        <button
+                          onClick={() => startEdit(c)}
+                          className="flex items-center gap-[3px] text-[11px] text-mint-dd hover:underline"
+                          title={t('common.edit')}
+                        >
+                          <Pencil className="w-[10px] h-[10px]" /> {t('common.edit')}
+                        </button>
+                        <button onClick={() => { if(confirm(t('common.deleteConfirm'))) deleteMutation.mutate(c.id) }} className="text-[11px] text-danger hover:underline">{t('common.delete')}</button>
+                      </div>
                     </td>
                   </tr>
                 ))
