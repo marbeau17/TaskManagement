@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveSource } from '@/lib/crm/source-resolver'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,6 +59,29 @@ export async function POST(req: NextRequest) {
     const budgetDisplay = body.budget !== undefined ? (BUDGET_LABELS[parseInt(body.budget)] || body.budget) : '未定'
     const nameParts = (body.name || '').split(' ')
 
+    // ========================================================================
+    // 流入経路の解決 (channel + detail + UTM 系列)
+    // ========================================================================
+    const referrerHeader = req.headers.get('referer') || ''
+    const resolved = resolveSource({
+      utmSource: body._utm_source ?? body.utm_source ?? null,
+      utmMedium: body._utm_medium ?? body.utm_medium ?? null,
+      utmCampaign: body._utm_campaign ?? body.utm_campaign ?? null,
+      referrer: body._referrer_url ?? referrerHeader ?? null,
+      landingUrl: body._source_url ?? body._landing_url ?? null,
+      formKind: body.formKind || body.slug || 'hearing_form',
+    })
+    const firstAttribution = {
+      source_channel: resolved.channel,
+      source_detail: resolved.detail,
+      first_utm_source: body._utm_source ?? body.utm_source ?? null,
+      first_utm_medium: body._utm_medium ?? body.utm_medium ?? null,
+      first_utm_campaign: body._utm_campaign ?? body.utm_campaign ?? null,
+      first_referrer_url: body._referrer_url ?? referrerHeader ?? null,
+      first_landing_url: body._source_url ?? body._landing_url ?? null,
+      first_seen_at: new Date().toISOString(),
+    }
+
     // =========================================================================
     // 1. CRM Company — find or create, update if exists
     // 注: crm_companies の従業員数カラムは company_size。size ではない。
@@ -77,6 +101,8 @@ export async function POST(req: NextRequest) {
         name: body.company,
         industry: body.industry || null,
         company_size: body.employees || null,
+        source_channel: firstAttribution.source_channel,
+        source_detail: firstAttribution.source_detail,
       }).select('id').single()
       if (insErr) console.error('[form/submit] company insert failed:', insErr.message)
       companyId = newComp?.id
@@ -124,6 +150,7 @@ export async function POST(req: NextRequest) {
         lifecycle_stage: 'lead',
         lead_status: 'new',
         source: 'hearing_form',
+        ...firstAttribution,
       }).select('id').single()
       if (insErr) console.error('[form/submit] contact insert failed:', insErr.message)
       contactId = newContact?.id
@@ -171,6 +198,7 @@ export async function POST(req: NextRequest) {
         revenue: body.revenue || null,
         employees: body.employees || null,
       },
+      ...firstAttribution,
     }).select('id').single()
 
     // =========================================================================

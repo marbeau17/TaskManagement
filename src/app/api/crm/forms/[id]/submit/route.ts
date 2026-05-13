@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveSource } from '@/lib/crm/source-resolver'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const settings = (form.settings ?? {}) as Record<string, any>
     const submittedData = body.data ?? body
     let contactId: string | null = null
+
+    // 流入経路を解決
+    const referrerHeader = request.headers.get('referer') || ''
+    const resolved = resolveSource({
+      utmSource: body._utm_source ?? submittedData.utm_source ?? null,
+      utmMedium: body._utm_medium ?? submittedData.utm_medium ?? null,
+      utmCampaign: body._utm_campaign ?? submittedData.utm_campaign ?? null,
+      referrer: body._referrer_url ?? referrerHeader ?? null,
+      landingUrl: body._source_url ?? null,
+      // フォーム名から推定 (例: お問い合わせフォーム → contact_form)
+      formKind: form.name?.includes('資料') ? 'document' : (form.name?.includes('お問い合わせ') ? 'contact' : 'contact_form'),
+    })
+    const firstAttribution = {
+      source_channel: resolved.channel,
+      source_detail: resolved.detail,
+      first_utm_source: body._utm_source ?? submittedData.utm_source ?? null,
+      first_utm_medium: body._utm_medium ?? submittedData.utm_medium ?? null,
+      first_utm_campaign: body._utm_campaign ?? submittedData.utm_campaign ?? null,
+      first_referrer_url: body._referrer_url ?? referrerHeader ?? null,
+      first_landing_url: body._source_url ?? null,
+      first_seen_at: new Date().toISOString(),
+    }
 
     // 2. Auto-create/update CRM contact
     if (settings.createContact !== false) {
@@ -57,6 +80,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             lifecycle_stage: 'lead',
             lead_status: 'new',
             source: 'web_form',
+            ...firstAttribution,
             ...(settings.assignOwnerId ? { owner_id: settings.assignOwnerId } : {}),
           }
           const { data: newContact } = await db

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useI18n } from '@/hooks/useI18n'
 import { useCrmLeads } from '@/hooks/useCrm'
 import { toast } from '@/stores/toastStore'
@@ -8,8 +9,11 @@ import {
   Building2, TrendingUp, Target, Layers, AlertTriangle,
   Lightbulb, BarChart3, Copy, FileDown, Loader2, Sparkles,
   ChevronDown, ChevronRight, Shield, Zap, Package, DollarSign,
-  MapPin, Megaphone, History, Save,
+  MapPin, Megaphone, History, Save, Link2, ArrowDownAZ, ArrowDownNarrowWide,
 } from 'lucide-react'
+import {
+  SOURCE_CHANNELS, SOURCE_CHANNEL_LABELS, SOURCE_CHANNEL_COLORS, type SourceChannel,
+} from '@/lib/crm/source-resolver'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,11 +35,15 @@ interface Lead {
   title: string
   status: string
   source: string
+  source_channel?: SourceChannel | null
+  source_detail?: string | null
   company?: { name: string }
   contact?: { first_name: string; last_name: string }
   description?: string
   custom_fields?: Record<string, unknown>
 }
+
+type SortMode = 'channel' | 'latest_diagnosis' | 'created'
 
 // ---------------------------------------------------------------------------
 // Status badge colors
@@ -62,6 +70,8 @@ const IMPACT_COLORS: Record<string, string> = {
 
 export function CrmAiDiagnosis() {
   const { t } = useI18n()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { data, isLoading: leadsLoading } = useCrmLeads({ page: 1, pageSize: 100 })
   const leads: Lead[] = (data?.data as Lead[] | undefined) ?? []
 
@@ -79,6 +89,10 @@ export function CrmAiDiagnosis() {
   const [unsavedMap, setUnsavedMap] = useState<Record<string, DiagnosisResult>>({})
   const [savingNow, setSavingNow] = useState(false)
   const [expandedMece, setExpandedMece] = useState<Record<string, boolean>>({})
+  // 流入経路フィルタ ('all' or SourceChannel)
+  const [channelFilter, setChannelFilter] = useState<'all' | SourceChannel>('all')
+  // ソートモード
+  const [sortMode, setSortMode] = useState<SortMode>('created')
 
   const selectedLead = leads.find(l => l.id === selectedLeadId) ?? null
   const history = selectedLeadId ? historyMap[selectedLeadId] ?? [] : []
@@ -87,6 +101,48 @@ export function CrmAiDiagnosis() {
   const unsaved = selectedLeadId ? unsavedMap[selectedLeadId] ?? null : null
   // 表示優先順: 未保存があれば未保存、なければ保存済の選択世代
   const diagnosis = unsaved ?? savedDiagnosis
+  const activeDiagnosisId = (!unsaved && history[genIdx]?.id) || null
+
+  // -----------------------------------------------------------------------
+  // 流入経路フィルタ + ソート
+  // -----------------------------------------------------------------------
+  const availableChannels = useMemo(() => {
+    const set = new Set<SourceChannel>()
+    for (const l of leads) {
+      if (l.source_channel) set.add(l.source_channel)
+    }
+    return Array.from(set)
+  }, [leads])
+
+  const filteredAndSortedLeads = useMemo(() => {
+    const filtered = channelFilter === 'all'
+      ? leads
+      : leads.filter(l => l.source_channel === channelFilter)
+    const arr = [...filtered]
+    if (sortMode === 'channel') {
+      arr.sort((a, b) => (a.source_channel ?? 'zzz').localeCompare(b.source_channel ?? 'zzz'))
+    } else if (sortMode === 'latest_diagnosis') {
+      const score = (leadId: string) => {
+        const h = historyMap[leadId]?.[0]?.created_at
+        return h ? new Date(h).getTime() : 0
+      }
+      arr.sort((a, b) => score(b.id) - score(a.id))
+    }
+    return arr
+  }, [leads, channelFilter, sortMode, historyMap])
+
+  // -----------------------------------------------------------------------
+  // マウント時: URL クエリから leadId / diagnosisId を読み取り、初期選択
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const urlLeadId = searchParams.get('leadId')
+    if (urlLeadId && !selectedLeadId) {
+      setSelectedLeadId(urlLeadId)
+    }
+    // diagnosisId はリスト取得後に handleLeadHistoryLoaded で適用するため state には保持しないが、
+    // 直接 generationIndex 計算用に保持しておく
+    // ここでは set のみ。後段の useEffect で履歴ロード後に index 反映する。
+  }, [searchParams, selectedLeadId])
 
   // -----------------------------------------------------------------------
   // マウント時: 診断済リード ID 一覧を取得 (バッジ用)
@@ -117,8 +173,47 @@ export function CrmAiDiagnosis() {
     if (historyMap[selectedLeadId]) return // 既にロード済
     fetchHistory(selectedLeadId).then(hist => {
       setHistoryMap(prev => ({ ...prev, [selectedLeadId]: hist }))
+      // URL に diagnosisId が指定されていれば該当世代にジャンプ
+      const targetDiagId = searchParams.get('diagnosisId')
+      if (targetDiagId) {
+        const idx = hist.findIndex(h => h.id === targetDiagId)
+        if (idx >= 0) {
+          setGenerationIndex(prev => ({ ...prev, [selectedLeadId]: idx }))
+        }
+      }
     })
-  }, [selectedLeadId, historyMap, fetchHistory])
+  }, [selectedLeadId, historyMap, fetchHistory, searchParams])
+
+  // -----------------------------------------------------------------------
+  // 共有リンクをクリップボードへ
+  // -----------------------------------------------------------------------
+  const copyShareLink = useCallback(() => {
+    if (!selectedLeadId) return
+    const params = new URLSearchParams({ tab: 'diagnosis', leadId: selectedLeadId })
+    if (activeDiagnosisId) params.set('diagnosisId', activeDiagnosisId)
+    const url = `${window.location.origin}/crm?${params.toString()}`
+    navigator.clipboard.writeText(url).then(
+      () => toast.success('共有リンクをコピーしました'),
+      () => toast.error('クリップボードへのコピーに失敗しました'),
+    )
+  }, [selectedLeadId, activeDiagnosisId])
+
+  // -----------------------------------------------------------------------
+  // 世代切替時に URL クエリを更新 (シェアリンクが最新世代を指すように)
+  // -----------------------------------------------------------------------
+  const selectGeneration = useCallback((idx: number) => {
+    if (!selectedLeadId) return
+    setGenerationIndex(prev => ({ ...prev, [selectedLeadId]: idx }))
+    const hist = historyMap[selectedLeadId] ?? []
+    const diagId = hist[idx]?.id
+    if (diagId) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('tab', 'diagnosis')
+      params.set('leadId', selectedLeadId)
+      params.set('diagnosisId', diagId)
+      router.replace(`/crm?${params.toString()}`, { scroll: false })
+    }
+  }, [selectedLeadId, historyMap, router, searchParams])
 
   // -----------------------------------------------------------------------
   // Run diagnosis (新規生成 → DB に自動保存)
@@ -248,13 +343,78 @@ export function CrmAiDiagnosis() {
   return (
     <div className="flex gap-[16px] h-full min-h-[600px]">
       {/* ====== Left Panel: Lead List ====== */}
-      <div className="w-[340px] shrink-0 flex flex-col bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
-        <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2">
+      <div className="w-[360px] shrink-0 flex flex-col bg-surface border border-border2 rounded-[10px] shadow overflow-hidden">
+        <div className="px-[16px] py-[12px] border-b border-border2 bg-surf2 space-y-[8px]">
           <div className="flex items-center gap-[8px]">
             <Sparkles className="w-[16px] h-[16px] text-mint-dd" />
             <h3 className="text-[14px] font-bold text-text">AI経営診断</h3>
           </div>
-          <p className="text-[11px] text-text2 mt-[4px]">リードを選択してAI診断を実行</p>
+          <p className="text-[11px] text-text2">リードを選択してAI診断を実行</p>
+
+          {/* 流入経路フィルタ */}
+          {availableChannels.length > 0 && (
+            <div className="flex flex-wrap gap-[4px] pt-[2px]">
+              <button
+                onClick={() => setChannelFilter('all')}
+                className={`text-[10px] px-[8px] py-[2px] rounded-full font-semibold border transition-colors ${
+                  channelFilter === 'all'
+                    ? 'bg-mint-dd text-white border-mint-dd'
+                    : 'bg-surface border-border2 text-text2 hover:bg-surf2'
+                }`}
+              >
+                すべて
+              </button>
+              {SOURCE_CHANNELS.filter(ch => availableChannels.includes(ch)).map(ch => {
+                const isActive = channelFilter === ch
+                const baseColor = SOURCE_CHANNEL_COLORS[ch]
+                return (
+                  <button
+                    key={ch}
+                    onClick={() => setChannelFilter(ch)}
+                    className={`text-[10px] px-[8px] py-[2px] rounded-full font-semibold border transition-colors ${
+                      isActive
+                        ? 'bg-mint-dd text-white border-mint-dd'
+                        : `${baseColor} hover:opacity-80`
+                    }`}
+                    title={SOURCE_CHANNEL_LABELS[ch]}
+                  >
+                    {SOURCE_CHANNEL_LABELS[ch]}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ソート */}
+          <div className="flex items-center gap-[4px] pt-[2px]">
+            <span className="text-[10px] text-text3">並び替え:</span>
+            <button
+              onClick={() => setSortMode('created')}
+              className={`text-[10px] px-[8px] py-[2px] rounded-md font-semibold transition-colors flex items-center gap-[2px] ${
+                sortMode === 'created' ? 'bg-mint-dd text-white' : 'bg-surface border border-border2 text-text2 hover:bg-surf2'
+              }`}
+            >
+              既定
+            </button>
+            <button
+              onClick={() => setSortMode('channel')}
+              className={`text-[10px] px-[8px] py-[2px] rounded-md font-semibold transition-colors flex items-center gap-[2px] ${
+                sortMode === 'channel' ? 'bg-mint-dd text-white' : 'bg-surface border border-border2 text-text2 hover:bg-surf2'
+              }`}
+              title="流入経路 (チャネル) でソート"
+            >
+              <ArrowDownAZ className="w-[10px] h-[10px]" /> 流入経路
+            </button>
+            <button
+              onClick={() => setSortMode('latest_diagnosis')}
+              className={`text-[10px] px-[8px] py-[2px] rounded-md font-semibold transition-colors flex items-center gap-[2px] ${
+                sortMode === 'latest_diagnosis' ? 'bg-mint-dd text-white' : 'bg-surface border border-border2 text-text2 hover:bg-surf2'
+              }`}
+              title="最新診断日時 (新しい順)"
+            >
+              <ArrowDownNarrowWide className="w-[10px] h-[10px]" /> 診断日
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -262,14 +422,15 @@ export function CrmAiDiagnosis() {
             <div className="flex items-center justify-center py-[40px]">
               <Loader2 className="w-[20px] h-[20px] text-mint-dd animate-spin" />
             </div>
-          ) : leads.length === 0 ? (
+          ) : filteredAndSortedLeads.length === 0 ? (
             <div className="text-center py-[40px] text-[12px] text-text2">
-              リードがありません
+              {channelFilter === 'all' ? 'リードがありません' : 'このチャネルに該当するリードはありません'}
             </div>
           ) : (
-            leads.map(lead => {
+            filteredAndSortedLeads.map(lead => {
               const isSelected = lead.id === selectedLeadId
               const hasDiagnosis = savedLeadIds.has(lead.id) || !!unsavedMap[lead.id]
+              const ch = lead.source_channel as SourceChannel | undefined
               return (
                 <div
                   key={lead.id}
@@ -291,11 +452,18 @@ export function CrmAiDiagnosis() {
                           {lead.company.name}
                         </p>
                       )}
-                      <div className="flex items-center gap-[6px] mt-[4px]">
+                      <div className="flex items-center gap-[6px] mt-[4px] flex-wrap">
                         <span className={`text-[10px] px-[6px] py-[1px] rounded-full font-semibold ${STATUS_COLORS[lead.status] ?? 'bg-gray-100 text-gray-500'}`}>
                           {lead.status}
                         </span>
-                        <span className="text-[10px] text-text2">{lead.source}</span>
+                        {ch && (
+                          <span
+                            className={`text-[10px] px-[6px] py-[1px] rounded-full font-semibold border ${SOURCE_CHANNEL_COLORS[ch]}`}
+                            title={lead.source_detail ? `${SOURCE_CHANNEL_LABELS[ch]}: ${lead.source_detail}` : SOURCE_CHANNEL_LABELS[ch]}
+                          >
+                            {SOURCE_CHANNEL_LABELS[ch]}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="shrink-0 flex flex-col items-end gap-[4px]">
@@ -387,11 +555,19 @@ export function CrmAiDiagnosis() {
                     </button>
                   )}
                   <button
+                    onClick={copyShareLink}
+                    className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-mint-dd/10 border border-mint-dd/30 text-mint-dd rounded-[6px] hover:bg-mint-dd/20 transition-colors"
+                    title="このリード・世代の URL をクリップボードにコピー (社内シェア用)"
+                  >
+                    <Link2 className="w-[12px] h-[12px]" />
+                    リンクを共有
+                  </button>
+                  <button
                     onClick={copyResults}
                     className="flex items-center gap-[4px] px-[10px] py-[5px] text-[11px] font-semibold bg-surface border border-border2 rounded-[6px] hover:bg-surf2 transition-colors text-text2"
                   >
                     <Copy className="w-[12px] h-[12px]" />
-                    コピー
+                    全文コピー
                   </button>
                   <button
                     disabled
@@ -416,7 +592,7 @@ export function CrmAiDiagnosis() {
                     return (
                       <button
                         key={h.id}
-                        onClick={() => setGenerationIndex(prev => ({ ...prev, [selectedLeadId!]: i }))}
+                        onClick={() => selectGeneration(i)}
                         className={`text-[10px] px-[8px] py-[3px] rounded-full font-semibold transition-colors ${
                           isActive
                             ? 'bg-mint-dd text-white'
