@@ -20,21 +20,42 @@ const s = createClient(url, key, { auth: { autoRefreshToken: false, persistSessi
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // source-resolver.ts の inferChannelFromLegacySource と同期した推定ロジック
+// 注: substring 検索だと "pipeline" が "line" にマッチして social と誤判定されるため、
+//     トークン分割 + 完全一致または接頭辞/接尾辞照合を使う。
 function inferChannel(source) {
   const s = (source ?? '').trim().toLowerCase();
   if (!s) return 'other';
-  if (s.includes('hearing') || s.includes('form') || s.includes('contact_form') || s.includes('document_request')) return 'form';
-  if (s.includes('line')) return 'social';
-  if (s.includes('partner') || s.includes('bank')) return 'partner';
-  if (s.includes('referral')) return 'referral';
-  if (s.includes('event') || s.includes('seminar') || s.includes('webinar')) return 'event';
-  if (s.includes('email') || s.includes('newsletter')) return 'email';
-  if (s.includes('social') || s.includes('twitter') || s.includes('facebook') || s.includes('instagram')) return 'social';
-  if (s.includes('search') || s.includes('google') || s.includes('yahoo')) return 'organic_search';
-  if (s.includes('ads') || s.includes('cpc') || s.includes('ppc')) return 'paid_search';
-  if (s.includes('direct')) return 'direct';
-  if (s.includes('cold') || s.includes('outbound')) return 'outbound';
-  if (s.includes('pipeline')) return 'other';
+
+  // トークン分割 (_, -, スペース, /, , で区切る)
+  const tokens = new Set(s.split(/[_\-\s,/]+/).filter(Boolean));
+  const has = (token) => tokens.has(token);
+
+  // 1. 完全一致 / 既知のエイリアス (最優先)
+  if (s === 'pipeline') return 'other';                          // 社内パイプライン経由
+  if (s === 'website' || s === 'direct') return 'direct';
+
+  // 2. フォーム系 (token 一致)
+  if (has('form') || has('hearing') || s.includes('hearing_form') || s.includes('contact_form') || s.includes('document_request') || s.includes('web_form')) return 'form';
+
+  // 3. SNS (LINE は token として完全一致のみ、"pipeline" はマッチしない)
+  if (has('line') || has('twitter') || has('facebook') || has('instagram') || has('tiktok') || has('linkedin') || has('x')) return 'social';
+
+  // 4. パートナー / 紹介
+  if (has('partner') || has('bank') || s.includes('partner_referral')) return 'partner';
+  if (has('referral')) return 'referral';
+
+  // 5. イベント / メール / 検索
+  if (has('event') || has('seminar') || has('webinar') || has('expo')) return 'event';
+  if (has('email') || has('newsletter') || has('mail')) return 'email';
+  if (has('google') || has('yahoo') || has('bing') || has('search') || has('organic')) return 'organic_search';
+  if (has('ads') || has('cpc') || has('ppc') || s.includes('google_ads') || s.includes('yahoo_ads')) return 'paid_search';
+
+  // 6. アウトバウンド
+  if (has('cold') || has('outbound') || has('cold_call') || has('cold_email')) return 'outbound';
+
+  // 7. 一般 social キーワード
+  if (has('social')) return 'social';
+
   return 'other';
 }
 
